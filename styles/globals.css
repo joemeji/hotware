@@ -1,0 +1,193 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --ring: 240 5% 64.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+
+    --ring: 240 3.7% 15.9%;
+  }
+
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    --sidebar-width: 300px;
+    --header-height: 70px;
+    --headerTopSideBarWidth: 300px;
+    --headerTopSideBarWidthMd: 96px;
+    font-size: 14px;
+  }
+
+  .quickSearch-categories::-webkit-scrollbar {
+    @apply w-[7px] absolute;
+  }
+
+  .quickSearch-categories::-webkit-scrollbar-thumb {
+    @apply bg-zinc-800;
+  }
+  .quickSearch-categories::-webkit-scrollbar-thumb {
+    @apply rounded-lg;
+  }
+
+  .quickSearch-categories::-webkit-scrollbar-track-piece:start {
+    background: transparent;
+  }
+
+  .quickSearch-categories::-webkit-scrollbar-track-piece:end {
+    background: transparent;
+  }
+
+  .root-category > div {
+    @apply border-none;
+  }
+
+  .root-category .category-button[data-state="open"] {
+    @apply rounded-bl-none rounded-br-none border-b border-b-transparent font-medium;
+  }
+
+  .root-category .accordion-content[data-state="open"] {
+    @apply border rounded-bl-lg rounded-br-lg;
+  }
+
+  .root-category .accordion-content[data-state="open"] > div {
+    @apply pb-0;
+  }
+
+  button.loading {
+    @apply relative overflow-hidden;
+  }
+
+  button.loading:after {
+    @apply absolute border-2 border-stone-300 border-t-transparent rounded-full w-[20px] h-[20px] animate-spin;
+    content: "";
+  }
+
+  button.loading:before {
+    @apply absolute inset-0 bg-stone-400/60;
+    content: "";
+  }
+
+  .form-image svg {
+    @apply w-full h-full;
+  }
+
+  .form_number-selector {
+    @apply fixed;
+  }
+
+  .form-image svg circle[id]:hover,
+  .form-image svg path[id]:hover {
+    @apply cursor-pointer;
+  }
+
+  .alert-enter {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  .alert-enter-active {
+    opacity: 1;
+    transform: translateX(0);
+    transition: opacity 300ms, transform 300ms;
+  }
+  .alert-exit {
+    opacity: 1;
+  }
+  .alert-exit-active {
+    opacity: 0;
+    transform: scale(0.9);
+    transition: opacity 300ms, transform 300ms;
+  }
+
+  .combobox-selector div[data-radix-scroll-area-viewport] {
+    /* min-height: 100px; */
+    max-height: 250px;
+  }
+
+  .truncate {
+    @apply whitespace-nowrap overflow-hidden text-ellipsis;
+  }
+
+  #html5qr-code-full-region video {
+    @apply !w-full;
+  }
+
+  .input-app {
+    @apply !bg-stone-100 !border-0;
+  }
+
+  .progress-ring__circle {
+    transition: stroke-dashoffset 0.35s;
+  }
+
+  header {
+    background: blue;
+    height: var(--header-height);
+    transition: all 400ms ease-in-out;
+    z-index: 100;
+  }
+
+  header.fixedToTop + .content {
+    margin-top: calc(var(--header-height) + 4px);
+  }
+}
