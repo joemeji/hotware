@@ -24,7 +24,8 @@ import { useSession } from "next-auth/react";
 
 function OfferCalculationModal(props: OfferCalculationModalProps) {
   const { data: session }: any = useSession();
-  const { open, onOpenChange, offer_item_id, onAdded, currency } = props;
+  const { open, onOpenChange, offer_item_id, onAdded, currency, offer_id } =
+    props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate } = useSWRConfig();
 
@@ -271,7 +272,7 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
       if (json.success) {
         onAdded && onAdded(json.items[0]);
         mutate([
-          `/api/projects/offers/items/${offer_item_id}`,
+          `/api/projects/offers/items/${offer_id}`,
           session?.user?.access_token,
         ]);
         onReset();
@@ -1183,6 +1184,7 @@ export default memo(OfferCalculationModal);
 type OfferCalculationModalProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  offer_id: string;
   offer_item_id: any;
   currency: string;
   onAdded?: (updatedItem?: any) => void;

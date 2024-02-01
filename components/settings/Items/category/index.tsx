@@ -78,7 +78,7 @@ export const SettingsItemsCategory = () => {
             <div
               className={cn("bg-white p-7", {
                 "col-span-5 p-7": roleId <= 2,
-                "col-span-8 p-7": roleId > 2,
+                "col-span-8 p-7": roleId > 2 || !roleId,
               })}
             >
               <div className='flex items-center justify-between '>

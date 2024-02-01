@@ -585,6 +585,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       <OfferCalculationModal
         onOpenChange={setOpenCalculationModal}
         open={openCalculationModal}
+        offer_id={offer_id}
         offer_item_id={selectedItem}
         currency={currency || "$"}
       />
@@ -611,7 +612,10 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
 
       <div className="w-3/4 flex flex-col">
         <div className="relative min-h-[calc(100vh-var(--header-height)-40px)]">
-          <DetailsHeader _offer_id={router.query.offer_id?.toString()} />
+          <DetailsHeader
+            _offer_id={router.query.offer_id?.toString()}
+            data={_data}
+          />
           <table className="w-full sticky top-[var(--header-height)] z-10 rounded-sm overflow-hidden">
             <thead>
               <tr>

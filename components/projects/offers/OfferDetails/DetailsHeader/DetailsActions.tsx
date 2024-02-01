@@ -17,6 +17,7 @@ import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import { previewPdf } from "@/services/projects/offer";
 import { useSession } from "next-auth/react";
+import { useSWRConfig } from "swr";
 
 const ChangeStatusModal = dynamic(
   () => import("../../modals/ChangeStatusModal")
@@ -30,6 +31,7 @@ type DetailsActionsParams = {
 };
 
 function DetailsActions({ _offer_id }: DetailsActionsParams) {
+  const { mutate } = useSWRConfig();
   const router = useRouter();
   const { data: session }: any = useSession();
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -41,6 +43,7 @@ function DetailsActions({ _offer_id }: DetailsActionsParams) {
         variant: "success",
         duration: 2000,
       });
+      mutate([`/api/projects/offers?`, session?.user?.access_token], undefined);
       setTimeout(() => {
         router.push("/projects/offers");
       }, 300);

@@ -9,6 +9,7 @@ import {
   Trash2,
   FileSearch,
   FileText,
+  BanIcon,
 } from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/projects/offers/StatusChip";
@@ -35,6 +36,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { useDelete } from "@/components/projects/offers/useDelete";
+import { useCancel } from "@/components/projects/offers/useCancel";
 import { previewPdf } from "@/services/projects/offer";
 
 const ActivityLogSheetModal = dynamic(
@@ -53,7 +55,7 @@ export default function Offers({ access_token }: any) {
   if (router.query.search) payload["search"] = router.query.search;
   const queryString = new URLSearchParams(payload).toString();
 
-  const { data, isLoading } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     [`/api/projects/offers?${queryString}`, access_token],
     fetchApi,
     {
@@ -65,6 +67,18 @@ export default function Offers({ access_token }: any) {
     onDelete: (item: string) => {
       const offers =
         list?.offers?.filter((offer: any) => offer._offer_id != item) || [];
+      setList({ ...list, offers });
+    },
+  });
+  const { mutateCancel, Dialog: CancelDialog } = useCancel({
+    onDelete: (item: string) => {
+      const offers = list?.offers;
+      let offer = offers?.find((offer: any) => offer._offer_id === item);
+
+      if (offer) {
+        offer.offer_status = "cancelled";
+      }
+
       setList({ ...list, offers });
     },
   });
@@ -114,6 +128,7 @@ export default function Offers({ access_token }: any) {
   return (
     <AdminLayout>
       <DeleteDialog />
+      <CancelDialog />
       <ActivityLogSheetModal
         _offer_id={selectedOffer}
         open={activityOpen}
@@ -266,6 +281,13 @@ export default function Offers({ access_token }: any) {
                         <Pencil className="w-[18px] h-[18px] text-blue-500" />
                         <span className="text-sm font-medium">Update</span>
                       </Link>
+                      <div
+                        onClick={() => mutateCancel(row._offer_id)}
+                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                      >
+                        <BanIcon className="w-[18px] h-[18px] text-red-500" />
+                        <span className="text-sm font-medium">Lost</span>
+                      </div>
                       <div
                         onClick={() => mutateDelete(row._offer_id)}
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"

@@ -18,7 +18,7 @@ import { AccessTokenContext } from "@/context/access-token-context";
 
 export const SettingsItemsMainCategory = () => {
   const { data }: any = useSession();
-  const roleId = parseInt(data?.user?.role_id);
+  const roleId = parseInt(data?.user?.role_id) ?? null;
 
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +48,7 @@ export const SettingsItemsMainCategory = () => {
     } finally { }
   };
 
+
   return (
     <div className=''>
       <div className='p-[20px] w-full max-w-[1600px] mx-auto xl:min-h-screen'>
@@ -70,7 +71,7 @@ export const SettingsItemsMainCategory = () => {
             <div
               className={cn("bg-white p-7", {
                 "col-span-5 p-7": roleId <= 2,
-                "col-span-8 p-7": roleId > 2,
+                "col-span-8 p-7": roleId > 2 || !roleId,
               })}
             >
               <div className='flex items-center justify-between '>
