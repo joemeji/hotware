@@ -24,6 +24,7 @@ import { useDeleteItem } from "./useDeleteItem";
 import ReceiptTotals from "./ReceiptTotals";
 import TextBlocks from "./TextBlocks";
 import EditableTextareaCell from "./table/EditableTextAreaCell";
+import { isOpen } from "@/lib/invoice";
 
 // modals
 const AddEquipmentModal = dynamic(
@@ -46,6 +47,14 @@ const AdditionalHeaderTextModal = dynamic(
   () =>
     import("@/components/projects/invoices/modals/AdditionalHeaderTextModal")
 );
+
+interface Vat {
+  // Define the structure of each object in the array
+  id: number;
+  description: string;
+  amount: number;
+  // Add other properties as needed
+}
 
 const iconProps = (colorClassName?: any) => ({
   className: cn("mr-2 h-[18px] w-[18px]", colorClassName),
@@ -80,6 +89,10 @@ const EditableInputCell = ({ getValue, row, column, table }: any) => {
       setEditable(false);
     }
   };
+
+  if (!column?.columnDef?.meta?.editable) {
+    return <div>{value}</div>;
+  }
 
   if (editable) {
     return (
@@ -116,10 +129,17 @@ const EditableVatCell = ({ getValue, row, column, table }: any) => {
     setEditable(false);
   };
 
-  return <VatSelect onChangeValue={onChange} value={value} />;
+  return (
+    <VatSelect
+      onChangeValue={onChange}
+      value={value}
+      disabled={!column?.columnDef?.meta?.editable}
+    />
+  );
 };
 
-function InvoiceItemContent({ invoice_id, currency }: any) {
+function InvoiceItemContent({ invoice_id, currency, _data }: any) {
+  const isExclusiveVat = _data ? _data.invoice_is_exclusive_vat : 0;
   const { data: session }: any = useSession();
   const router = useRouter();
   const [addEquipmentOpenModal, setAddEquipmentOpenModal] = useState(false);
@@ -143,8 +163,10 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       setItems(updatedList);
     },
   });
+  const editable = _data && isOpen(_data);
 
-  const Actions = ({ row }: any) => {
+  const Actions = ({ row, column }: any) => {
+    if (!column?.columnDef?.meta?.editable) return;
     return (
       <MoreOption>
         <ItemMenu
@@ -175,6 +197,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "9%",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_name", {
@@ -183,6 +206,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       meta: {
         width: "31%",
         id: "invoice_item_id",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_quantity", {
@@ -190,6 +214,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "8%",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_price", {
@@ -197,6 +222,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_vat", {
@@ -204,6 +230,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: EditableVatCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_discount", {
@@ -211,6 +238,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_line_total", {
@@ -218,6 +246,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: ({ getValue }) => (+getValue()).toLocaleString(),
       meta: {
         width: "11%",
+        editable,
       },
     }),
     columnHelper.accessor("", {
@@ -225,6 +254,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
       cell: Actions,
       meta: {
         width: "7%",
+        editable,
       },
     }),
   ];
@@ -305,27 +335,180 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
     }
   );
 
-  const subtotal = useMemo(() => {
+  let subtotal = useMemo(() => {
     return (
       items?.reduce(
         (prev: number, item: any) =>
-          prev + Number(item.invoice_item_line_total),
+          prev + parseFloat(item.invoice_item_line_total),
         0
       ) || 0
     );
   }, [items]);
 
-  const subtotalWithReceiptTotal = useMemo(() => {
-    if (!receiptTotals || !receiptTotals.length) return subtotal;
+  const subtotalWithReceiptTotal = () => {
+    const BASE_SUBTOTAL = subtotal;
+    let vatTotal: number = 0;
+    let vats: Vat[] = [];
 
-    return receiptTotals?.reduce((prev: number, receiptTotal: any) => {
-      const value =
-        receiptTotal.irt_is_surcharge == 1
-          ? Number(receiptTotal.irt_value)
-          : Number(receiptTotal.irt_value) * -1;
-      return prev + value;
-    }, subtotal);
-  }, [subtotal, receiptTotals]);
+    if (items && items.length > 0) {
+      items.map((row: any, key: any) => {
+        let vat =
+          vats && vats.find((vatTemp) => vatTemp.id == row.invoice_item_vat);
+        let divisible =
+          100 +
+          (isExclusiveVat == 1
+            ? 0
+            : parseFloat(row.invoice_item_vat_percentage));
+        let percentage =
+          parseFloat(row.invoice_item_vat_percentage) / divisible;
+        let amount = parseFloat(row.invoice_item_line_total) * percentage;
+
+        if (vat) {
+          vat.amount = vat.amount + amount;
+        } else if (row.invoice_item_vat != 0) {
+          vats = [
+            ...vats,
+            {
+              id: row.invoice_item_vat,
+              description: row.vat_description,
+              amount: amount,
+            },
+          ];
+        }
+      });
+    }
+
+    let chargeRows = receiptTotals?.map((receiptTotal: any) => {
+      let amount =
+        parseInt(receiptTotal.irt_type) == 2
+          ? (receiptTotal.irt_value / 100) * BASE_SUBTOTAL
+          : receiptTotal.irt_value;
+      amount =
+        parseInt(receiptTotal.irt_is_surcharge) == 1 ? amount : amount * -1;
+      subtotal += parseFloat(amount);
+      let vat =
+        vats && vats.find((vatTemp) => vatTemp.id == receiptTotal.irt_vat);
+      let divisible =
+        100 +
+        (isExclusiveVat == 1 ? 0 : parseFloat(receiptTotal.irt_vat_percentage));
+
+      let percentage = parseFloat(receiptTotal.irt_vat_percentage) / divisible;
+      let vatAmount = parseFloat(amount) * percentage;
+
+      if (vat) {
+        vat.amount = vat.amount + vatAmount;
+      } else if (parseInt(receiptTotal.irt_vat) != 0) {
+        vats = [
+          ...vats,
+          {
+            id: receiptTotal.irt_vat,
+            description: receiptTotal.vat_description,
+            amount: vatAmount,
+          },
+        ];
+      }
+
+      return (
+        <tr
+          key={receiptTotal.someUniqueKey}
+          className="w-full bg-white rounded-sm px-4 py-1"
+        >
+          <td className="w-[2%]"></td>
+          <td className="w-[9%]"></td>
+          <td className="w-[31%] py-3 px-2 font-bold">
+            {receiptTotal.irt_text}
+          </td>
+          <td className="w-[8%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]">
+            {receiptTotal.irt_vat == 0 ? "No VAT" : receiptTotal.vat_code}
+          </td>
+          <td className="w-[10%]"></td>
+          <td className="w-[11%] py-3 px-2 font-bold">
+            {amount.toLocaleString()}
+          </td>
+          <td className="w-[7%]"></td>
+        </tr>
+      );
+    });
+
+    if (chargeRows && chargeRows.length > 0) {
+      chargeRows.push(
+        <tr key="subtotalRow" className="w-full bg-white rounded-sm px-4 py-1">
+          <td className="w-[2%]"></td>
+          <td className="w-[9%]"></td>
+          <td className="w-[31%] py-3 px-2 font-bold">SUBTOTAL</td>
+          <td className="w-[8%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[11%] py-3 px-2 font-bold">
+            {subtotal.toLocaleString()}
+          </td>
+          <td className="w-[7%]"></td>
+        </tr>
+      );
+    }
+
+    if (receiptTotals && receiptTotals.length == 0) {
+      chargeRows.push(
+        <tr key="subtotalRow" className="w-full bg-white rounded-sm px-4 py-1">
+          <td className="w-[2%]"></td>
+          <td className="w-[9%]"></td>
+          <td className="w-[31%] py-3 px-2 font-bold">SUBTOTAL</td>
+          <td className="w-[8%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[11%] py-3 px-2 font-bold">
+            {subtotal.toLocaleString()}
+          </td>
+          <td className="w-[7%]"></td>
+        </tr>
+      );
+    }
+
+    chargeRows = vats.reduce((prev, row) => {
+      var vatAmount = row.amount.toFixed(2);
+      vatTotal += parseFloat(vatAmount);
+
+      if (row.amount !== 0) {
+        prev.push(
+          <tr key={row.id} className="w-full bg-white rounded-sm px-4 py-1">
+            <td className="w-[2%]"></td>
+            <td className="w-[9%]"></td>
+            <td className="w-[31%] py-3 px-2 font-bold">{row.description}</td>
+            <td className="w-[8%]"></td>
+            <td className="w-[10%]"></td>
+            <td className="w-[10%]"></td>
+            <td className="w-[10%]"></td>
+            <td className="w-[11%] py-3 px-2 font-bold">{vatAmount}</td>
+            <td className="w-[7%]"></td>
+          </tr>
+        );
+      }
+
+      return prev;
+    }, chargeRows || []);
+
+    let total = isExclusiveVat == 1 ? subtotal + vatTotal : subtotal;
+    chargeRows.push(
+      <tr key="totalRow" className="w-full bg-white rounded-sm px-4 py-1">
+        <td className="w-[2%]"></td>
+        <td className="w-[9%]"></td>
+        <td className="w-[31%] py-3 px-2 font-bold">TOTAL</td>
+        <td className="w-[8%]"></td>
+        <td className="w-[10%]"></td>
+        <td className="w-[10%]"></td>
+        <td className="w-[10%]"></td>
+        <td className="w-[11%] py-3 px-2 font-bold">
+          {total.toLocaleString()}
+        </td>
+        <td className="w-[7%]"></td>
+      </tr>
+    );
+    return chargeRows;
+  };
 
   const onClickAddEquipment = useCallback(() => {
     setAddEquipmentOpenModal(!addEquipmentOpenModal);
@@ -432,7 +615,10 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
 
       <div className="w-3/4 flex flex-col">
         <div className="relative min-h-[calc(100vh-var(--header-height)-40px)]">
-          <DetailsHeader _invoice_id={router.query.invoice_id?.toString()} />
+          <DetailsHeader
+            _invoice_id={router.query.invoice_id?.toString()}
+            data={_data}
+          />
           <table className="w-full sticky top-[var(--header-height)] z-10 rounded-sm overflow-hidden">
             <thead>
               <tr>
@@ -465,7 +651,7 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
             </thead>
           </table>
           <div className="flex flex-col py-1 gap-[5px]">
-            {!isLoading && Array.isArray(data) && data.length === 0 && (
+            {!isLoading && Array.isArray(items) && items.length === 0 && (
               <div className="flex justify-center">
                 <Image
                   src="/images/No data-rafiki.svg"
@@ -514,9 +700,11 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
                                 {...provided.draggableProps}
                               >
                                 <td className="py-3 px-2 w-[2%] border-b border-b-stone-100 group-last:border-0 align-top">
-                                  <div {...provided.dragHandleProps}>
-                                    <GripVertical />
-                                  </div>
+                                  {editable ? (
+                                    <div {...provided.dragHandleProps}>
+                                      <GripVertical />
+                                    </div>
+                                  ) : null}
                                 </td>
                                 {row.getVisibleCells().map((cell, index) => {
                                   return (
@@ -541,8 +729,14 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
                         );
                       })}
                       {provided.placeholder}
-                      {Array.isArray(data) && data.length !== 0 ? (
-                        <tr className="w-full bg-white rounded-sm px-4 py-1">
+                      {Array.isArray(items) &&
+                      items.length !== 0 &&
+                      receiptTotals &&
+                      receiptTotals.length > 0 ? (
+                        <tr
+                          key="subtotalRow"
+                          className="w-full bg-white rounded-sm px-4 py-1"
+                        >
                           <td className="w-[2%]"></td>
                           <td className="w-[9%]"></td>
                           <td className="w-[31%] py-3 px-2 font-bold">
@@ -558,54 +752,24 @@ function InvoiceItemContent({ invoice_id, currency }: any) {
                           <td className="w-[7%]"></td>
                         </tr>
                       ) : null}
-                      <ReceiptTotals list={receiptTotals} />
-                      {Array.isArray(receiptTotals) &&
-                      receiptTotals.length !== 0 ? (
-                        <>
-                          <tr className="w-full bg-white rounded-sm px-4 py-1">
-                            <td className="w-[2%]"></td>
-                            <td className="w-[9%]"></td>
-                            <td className="w-[31%] py-3 px-2 font-bold">
-                              SUBTOTAL
-                            </td>
-                            <td className="w-[8%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[11%] py-3 px-2 font-bold">
-                              {subtotalWithReceiptTotal.toLocaleString()}
-                            </td>
-                            <td className="w-[7%]"></td>
-                          </tr>
-                          <tr className="w-full bg-white rounded-sm px-4 py-1">
-                            <td className="w-[2%]"></td>
-                            <td className="w-[9%]"></td>
-                            <td className="w-[31%] py-3 px-2 font-bold">
-                              TOTAL
-                            </td>
-                            <td className="w-[8%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[11%] py-3 px-2 font-bold">
-                              {subtotalWithReceiptTotal.toLocaleString()}
-                            </td>
-                            <td className="w-[7%]"></td>
-                          </tr>
-                        </>
-                      ) : null}
+                      {Array.isArray(items) && items.length !== 0
+                        ? subtotalWithReceiptTotal()
+                        : null}
                     </tbody>
-                    <TextBlocks
-                      list={textBlocks}
-                      invoice_id={router.query.invoice_id}
-                    />
+                    {Array.isArray(items) && items.length !== 0 ? (
+                      <TextBlocks
+                        list={textBlocks}
+                        invoice_id={router.query.invoice_id}
+                        editable={editable}
+                      />
+                    ) : null}
                   </table>
                 )}
               </Droppable>
             </DragDropContext>
           </div>
         </div>
-        {!isLoading && (
+        {editable && !isLoading && (
           <div className="flex justify-center gap-2 items-center mt-auto sticky bottom-0 p-2">
             <AddButtonPopover
               onClickAddCustomEquipment={() => setOpenCustomAddItemModal(true)}

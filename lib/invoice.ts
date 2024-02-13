@@ -34,3 +34,26 @@ export const getInvoiceStatus = ({
     return "open";
   }
 };
+
+export const isOpen = ({
+  invoice_status,
+  invoice_is_booked,
+  invoice_has_credit_note,
+}: {
+  invoice_status: string;
+  invoice_is_booked: boolean;
+  invoice_has_credit_note: string;
+}) => {
+  const hasCreditNote =
+    isNaN(parseInt(invoice_has_credit_note)) ||
+    Number(invoice_has_credit_note) != 0;
+  if (
+    invoice_status == "active" &&
+    !Number(invoice_is_booked) &&
+    !hasCreditNote
+  ) {
+    return true;
+  }
+
+  return false;
+};

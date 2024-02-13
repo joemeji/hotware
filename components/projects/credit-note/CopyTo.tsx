@@ -30,6 +30,7 @@ const CopyTo = ({
               <CmsSelect
                 shipping_id={creditDetails && creditDetails._credit_note_id}
                 value={value}
+                defaultValue={value}
                 onChangeValue={onChangeValue}
               />
             </div>

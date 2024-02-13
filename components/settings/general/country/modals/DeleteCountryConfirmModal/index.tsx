@@ -43,10 +43,8 @@ export const DeleteCountryConfirmModal = (props: ICountryModal) => {
           <AlertCircle size="100" strokeWidth={1} className="text-orange-300" />
           <h2 className="text-2xl font-bold text-gray-600">Are you sure ?</h2>
           <p className="text-lg w-1/2 text-center">
-            {`Are you sure you want to delete ${{
-              countryName,
-            }}? You won't be able to
-            revert this.`}
+            Are you sure you want to delete {countryName}? You won&apos;t be able to
+            revert this.
           </p>
           <div className="flex gap-2">
             <Button

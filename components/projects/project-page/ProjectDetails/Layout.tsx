@@ -71,9 +71,10 @@ const TabLink = ({ href, label }: { href?: any; label?: string }) => {
     <Link
       href={`/projects/${path}`}
       className={cn(
-        "px-3 py-3 font-medium hover:bg-stone-200 rounded-app",
-        active &&
-          "pointer-events-none text-red-600 relative after:content-[''] after:absolute after:-bottom-2 after:h-1 after:w-full after:bg-red-600 after:left-0 after:rounded-[3px]"
+        "px-3 py-2 font-medium hover:bg-white/70 rounded-app",
+        active && "bg-white/80 pointer-events-none text-back"
+        // active &&
+        // "pointer-events-none text-red-600 relative after:content-[''] after:absolute after:-bottom-2 after:h-1 after:w-full after:bg-red-600 after:left-0 after:rounded-[3px]"
       )}
     >
       {label}
@@ -104,15 +105,18 @@ const Layout = ({ render }: Layout) => {
   return (
     <ProjectDetailsContext.Provider value={{ data, isLoading }}>
       <div className="pt-[20px] px-[20px] pb-[20px] w-full max-w-[1600px] mx-auto">
-        <div ref={headerRef}>
-          <div className="py-3 px-3 bg-background flex items-start justify-between rounded-t-xl">
+        <div
+          ref={headerRef}
+          className="bg-[url(/images/wave-bg.jpg)] rounded-xl relative z-0 after:content-[''] after:absolute after:top-0 after:left-0 after:w-full after:h-full after:bg-stone-100/30 after:z-[-1]"
+        >
+          <div className="py-3 px-3 flex items-start justify-between">
             <div className="flex flex-col gap-1">
-              <p className="text-xl font-bold">Atlantic Hardware</p>
-              <p className="text-stone-500">P.023.1009.0</p>
+              <p className="text-xl font-bold text-white">Atlantic Hardware</p>
+              <p className="opacity-90 text-white">P.023.1009.0</p>
             </div>
             <Button>Edit Project</Button>
           </div>
-          <div className="bg-background flex items-start rounded-b-xl mt-[1px] px-3 py-2">
+          <div className="flex items-start mt-[1px] px-3 py-2 gap-1">
             {links.map((item: any, key: number) => (
               <TabLink key={key} href={item.href} label={item.label} />
             ))}

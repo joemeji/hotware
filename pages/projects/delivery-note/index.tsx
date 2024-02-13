@@ -9,6 +9,7 @@ import {
   Trash2,
   FileSearch,
   FileText,
+  Copy,
 } from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/projects/delivery-note/StatusChip";
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { addressFormat } from "@/lib/shipping";
 import { cn } from "@/lib/utils";
-import { getDeliveryStatus } from "@/lib/delivery";
+import { getDeliveryStatus, isClosed } from "@/lib/delivery";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
@@ -35,7 +36,19 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { useDelete } from "@/components/projects/delivery-note/useDelete";
+import { useCopy } from "@/components/projects/delivery-note/useCopy";
+import { useChangeStatus } from "@/components/projects/delivery-note/useChangeStatus";
+import { useCreateOrderConfirmation } from "@/components/projects/delivery-note/useCreateOrderConfirmation";
+import { useCreateOffer } from "@/components/projects/delivery-note/useCreateOffer";
+import { useCreateInvoice } from "@/components/projects/delivery-note/useCreateInvoice";
+import { useCreateShippingList } from "@/components/projects/delivery-note/useCreateShippingList";
+import { CreateOrderConfirmationButton } from "@/components/projects/buttons/CreateOrderConfirmationButton";
+import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
+import { CreateInvoiceButton } from "@/components/projects/buttons/CreateInvoiceButton";
+import { CreateShippingListButton } from "@/components/projects/buttons/CreateShippingListButton";
+
 import { previewPdf } from "@/services/projects/delivery";
+import { FileOutput } from "lucide-react";
 
 const ActivityLogSheetModal = dynamic(
   () =>
@@ -56,7 +69,7 @@ export default function DeliveryNote({ access_token }: any) {
   if (router.query.search) payload["search"] = router.query.search;
   const queryString = new URLSearchParams(payload).toString();
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     [`/api/projects/deliveries?${queryString}`, access_token],
     fetchApi,
     {
@@ -74,6 +87,53 @@ export default function DeliveryNote({ access_token }: any) {
       setList({ ...list, delivery_note });
     },
   });
+
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      mutate();
+      router.push(`/projects/delivery-note/${item}`);
+    },
+  });
+
+  const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
+    onChange: (item: string) => {
+      mutate();
+    },
+  });
+
+  const {
+    mutateCreate: mutateCreateOrderConfirmation,
+    Dialog: OrderConfirmationDialog,
+  } = useCreateOrderConfirmation({
+    onSuccess: (item: string) => {
+      mutate();
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+
+  const { mutateCreate: mutateCreateInvoice, Dialog: InvoiceDialog } =
+    useCreateInvoice({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/invoices/${item}`);
+      },
+    });
+
+  const { mutateCreate: mutateCreateOffer, Dialog: OfferDialog } =
+    useCreateOffer({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/offers/${item}`);
+      },
+    });
+
+  const { mutateCreate: mutateCreateShipping, Dialog: ShippingDialog } =
+    useCreateShippingList({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/shipping-list/${item}`);
+      },
+    });
 
   const onPaginate = (page: string) => {
     router.query.page = page;
@@ -120,6 +180,12 @@ export default function DeliveryNote({ access_token }: any) {
   return (
     <AdminLayout>
       <DeleteDialog />
+      <CopyDialog />
+      <ChangeStatusDialog />
+      <OrderConfirmationDialog />
+      <OfferDialog />
+      <InvoiceDialog />
+      <ShippingDialog />
       <ActivityLogSheetModal
         _delivery_note_id={selectedDeliveryNote}
         open={activityOpen}
@@ -265,20 +331,68 @@ export default function DeliveryNote({ access_token }: any) {
                         <ArrowRight className="w-[18px] h-[18px] text-violet-500" />
                         <span className="text-sm font-medium">View</span>
                       </Link>
-                      <Link
-                        href={`/projects/delivery-note/${row._delivery_note_id}/edit`}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <Pencil className="w-[18px] h-[18px] text-blue-500" />
-                        <span className="text-sm font-medium">Update</span>
-                      </Link>
+                      {!isClosed(row) ? (
+                        <>
+                          <div
+                            onClick={() => mutateChange(row._delivery_note_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                            <span className="text-sm font-medium">
+                              Change Status
+                            </span>
+                          </div>
+                          <Link
+                            href={`/projects/delivery-note/${row._delivery_note_id}/edit`}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Pencil className="w-[18px] h-[18px] text-blue-500" />
+                            <span className="text-sm font-medium">Update</span>
+                          </Link>
+                          <div
+                            onClick={() => mutateDelete(row._delivery_note_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </div>
+                        </>
+                      ) : null}
                       <div
-                        onClick={() => mutateDelete(row._delivery_note_id)}
+                        onClick={() => mutateCopy(row._delivery_note_id)}
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                       >
-                        <Trash2 className="w-[18px] h-[18px] text-red-500" />
-                        <span className="text-sm font-medium">Delete</span>
+                        <Copy className="w-[18px] h-[18px] text-teal-500" />
+                        <span className="text-sm font-medium">Copy</span>
                       </div>
+                      <Separator className="my-2" />
+                      <CreateOfferButton
+                        _offer_id={row.delivery_note_has_offer}
+                        onCreate={() =>
+                          mutateCreateOffer(row._delivery_note_id)
+                        }
+                      />
+                      <CreateOrderConfirmationButton
+                        _order_confirmation_id={
+                          row.delivery_note_has_order_confirmation
+                        }
+                        onCreate={() =>
+                          mutateCreateOrderConfirmation(row._delivery_note_id)
+                        }
+                      />
+                      <CreateInvoiceButton
+                        _invoice_id={row.delivery_note_has_invoice}
+                        invoice_number={row.delivery_note_original_number}
+                        onCreate={() =>
+                          mutateCreateInvoice(row._delivery_note_id)
+                        }
+                      />
+                      <CreateShippingListButton
+                        _shipping_id={row.delivery_note_has_shipping}
+                        onCreate={() =>
+                          mutateCreateShipping(row._delivery_note_id)
+                        }
+                      />
                       <Separator className="my-2" />
                       <div
                         onClick={() =>

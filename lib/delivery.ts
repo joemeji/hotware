@@ -24,3 +24,15 @@ export const getDeliveryStatus = ({
     return "open";
   }
 };
+
+export const isClosed = ({
+  delivery_note_status,
+}: {
+  delivery_note_status: string;
+}) => {
+  if (delivery_note_status == "closed") {
+    return true;
+  } else {
+    return false;
+  }
+};

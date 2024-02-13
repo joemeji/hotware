@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { memo } from "react";
 import { StatusChip } from "@/components/PurchaseOrder/StatusChip";
-import { getPurchaseStatus } from "@/lib/purchase";
+import { getPurchaseStatus, isOpen } from "@/lib/purchase";
 
 function PurchaseDetails({ data }: PurchaseDetailsProps) {
   return (
@@ -30,7 +30,7 @@ function PurchaseDetails({ data }: PurchaseDetailsProps) {
           )}
         </ScrollArea>
 
-        {data && (
+        {data && isOpen(data) && (
           <Link href={`/purchase-order/${data._po_id}/edit`}>
             <Button
               className={cn(

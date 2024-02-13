@@ -8,15 +8,22 @@ import {
   History,
   Trash2,
   FileText,
+  Copy,
+  FileOutput,
 } from "lucide-react";
 import React, { memo, useState } from "react";
 import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
-import { useDelete } from "@/components/PurchaseOrder/useDelete";
 import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import { previewPdf } from "@/services/projects/purchases";
 import { useSession } from "next-auth/react";
+import { useSWRConfig } from "swr";
+import { isOpen } from "@/lib/purchase";
+import { useDelete } from "@/components/PurchaseOrder/useDelete";
+import { useCopy } from "@/components/PurchaseOrder/useCopy";
+import { useRevision } from "@/components/PurchaseOrder/useRevision";
+import { useChangeStatus } from "@/components/PurchaseOrder/useChangeStatus";
 
 const ChangeStatusModal = dynamic(
   () => import("../../modals/ChangeStatusModal")
@@ -27,9 +34,11 @@ const ActivityLogSheetModal = dynamic(
 
 type DetailsActionsParams = {
   _po_id: string | undefined;
+  data: any;
 };
 
-function DetailsActions({ _po_id }: DetailsActionsParams) {
+function DetailsActions({ _po_id, data }: DetailsActionsParams) {
+  const { mutate } = useSWRConfig();
   const router = useRouter();
   const { data: session }: any = useSession();
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -41,9 +50,28 @@ function DetailsActions({ _po_id }: DetailsActionsParams) {
         variant: "success",
         duration: 2000,
       });
+      mutate([`/api/purchases?`, session?.user?.access_token], undefined);
       setTimeout(() => {
         router.push("/purchase-order");
       }, 300);
+    },
+  });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      router.push(`/purchase-order/${item}`);
+    },
+  });
+  const { mutateRevision, Dialog: RevisionDialog } = useRevision({
+    onRevision: (item: string) => {
+      router.push(`/purchase-order/${item}`);
+    },
+  });
+  const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
+    onChange: (item: string) => {
+      mutate(
+        [`/api/purchases/details/${_po_id}`, session?.user?.access_token],
+        undefined
+      );
     },
   });
 
@@ -72,6 +100,9 @@ function DetailsActions({ _po_id }: DetailsActionsParams) {
   return (
     <React.Fragment>
       <DeleteDialog />
+      <CopyDialog />
+      <RevisionDialog />
+      <ChangeStatusDialog />
 
       <ChangeStatusModal
         onOpenChange={(open: any) => setStatusModalOpen(open)}
@@ -96,21 +127,46 @@ function DetailsActions({ _po_id }: DetailsActionsParams) {
             </DetailAction>
           }
         >
-          <DetailActionDropdownItem
-            onClick={() => setActivityOpen(true)}
-            label="History"
-            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
-          />
-          <DetailActionDropdownItem
-            label="Delete"
-            onClick={() => mutateDelete(_po_id)}
-            icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
-          />
+          {data && isOpen(data) ? (
+            <>
+              <div
+                onClick={() => mutateRevision(_po_id)}
+                className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+              >
+                <FileOutput className="w-[18px] h-[18px] text-cyan-500" />
+                <span className="text-sm font-medium">Revision</span>
+              </div>
+              <div
+                onClick={() => mutateChange(_po_id)}
+                className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+              >
+                <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                <span className="text-sm font-medium">Change Status</span>
+              </div>
+              <DetailActionDropdownItem
+                label="Delete"
+                onClick={() => mutateDelete(_po_id)}
+                icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
+              />
+            </>
+          ) : null}
+          <div
+            onClick={() => mutateCopy(_po_id)}
+            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+          >
+            <Copy className="w-[18px] h-[18px] text-teal-500" />
+            <span className="text-sm font-medium">Copy</span>
+          </div>
           <Separator className="my-2" />
           <ItemMenu className="gap-3" onClick={() => onDownloadPdf(_po_id)}>
             <FileText className="w-[18px] h-[18px] text-red-500" />
             <span className="font-medium">Save as Pdf</span>
           </ItemMenu>
+          <DetailActionDropdownItem
+            onClick={() => setActivityOpen(true)}
+            label="History"
+            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
+          />
         </MoreOption>
       </div>
     </React.Fragment>

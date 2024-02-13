@@ -16,10 +16,11 @@ const Categories = (props: categoryProps) => {
   const access_token = useContext(AccessTokenContext);
   const router = useRouter();
   const item_id = router.query.item_id ? router.query.item_id : null;
-  const [home, setHome] = useState<any>(onLoad);
   const [previousCategory, setPreviousCategory] = useState<any>(null);
   const [showMainCategories, setShowMainCategories] = useState(true);
-  const [mainCategory, setMainCategory] = useState<any>([]);
+  const [mainCategory, setMainCategory] = useState<any>({});
+  const [selectedCategory, setSelectedCategory] = useState<any>({});
+  const [selectedSubCategory, setSelectedSubCategory] = useState<any>({});
   const [showCategories, setShowCategories] = useState(false);
   const [categories, setCategories] = useState<any>([]);
   const [showSubCategories, setShowSubCategories] = useState(false);
@@ -42,6 +43,55 @@ const Categories = (props: categoryProps) => {
     }
   );
 
+  function filterNavigateEvent(event: any) {
+    if (event == "mainCategory") {
+      setSelectedCategory({});
+      setSelectedSubCategory({});
+      setShowMainCategories(false);
+      setShowCategories(true);
+      setShowSubCategories(false);
+      setShowItemList(false);
+      setPreviousCategory("main");
+    } else if (event == "category") {
+      setSelectedSubCategory({});
+      setShowMainCategories(false);
+      setShowCategories(false);
+      setShowSubCategories(true);
+      setShowItemList(false);
+      setPreviousCategory("category");
+    }
+  }
+
+  function mainCategoryEvent(item: any) {
+    setCategories(item.categories);
+    setShowMainCategories(false);
+    setShowCategories(true);
+    setShowSubCategories(false);
+    setPreviousCategory("main");
+    setShowItemList(false);
+    setMainCategory(item);
+  }
+
+  function categoryEvent(item: any) {
+    setSubCategories(item.sub_categories);
+    setShowMainCategories(false);
+    setShowCategories(false);
+    setShowSubCategories(true);
+    setPreviousCategory("category");
+    setShowItemList(false);
+    setSelectedCategory(item);
+  }
+
+  function subCategoryEvent(item: any) {
+    setSelectedSubCategory(item);
+    setSubCategoryId(item.item_sub_category_id);
+    setShowMainCategories(false);
+    setShowCategories(false);
+    setShowSubCategories(false);
+    setPreviousCategory("subCategory");
+    setShowItemList(true);
+  }
+
   useEffect(() => {
     let item: any;
     let mainCat: any;
@@ -61,6 +111,7 @@ const Categories = (props: categoryProps) => {
         (_item: any) =>
           _item.item_main_category_id === item?.item_main_category_id
       );
+      setMainCategory(mainCat);
     }
 
     if (mainCat) {
@@ -68,17 +119,23 @@ const Categories = (props: categoryProps) => {
         (_item: any) => _item.item_category_id === item?.item_category_id
       );
       setCategories(mainCat.categories);
+      if (previousCategory !== "main" && previousCategory !== null) {
+        setSelectedCategory(category);
+      }
     }
 
     if (category) {
-      // subCat = category.sub_categories.find(
-      //   (_item: any) => _item.item_sub_category_id === item?.item_sub_category_id
-      // );
+      subCat = category.sub_categories.find(
+        (_item: any) =>
+          _item.item_sub_category_id === item?.item_sub_category_id
+      );
       setSubCategories(category.sub_categories);
+      if (previousCategory !== "main" && previousCategory !== null) {
+        setSelectedSubCategory(subCat);
+      }
     }
 
     if (activeItem) {
-      setSubCategoryId(router.query.sub_id);
       setShowMainCategories(false);
       setShowCategories(false);
       setShowSubCategories(false);
@@ -92,6 +149,7 @@ const Categories = (props: categoryProps) => {
     main_categories,
     router.query?.item_id,
     router.query.sub_id,
+    previousCategory,
   ]);
 
   return (
@@ -107,8 +165,9 @@ const Categories = (props: categoryProps) => {
       >
         <span
           className={cn(
-            "text-lg h-[120px] flex flex-col items-start gap-2 px-3 sticky top-0",
-            "backdrop-blur-sm bg-white/40 z-[1]"
+            "text-lg h-[100px] flex flex-col items-start gap-2 px-3 sticky top-0",
+            "backdrop-blur-sm bg-white/40 z-[1]",
+            Object.keys(mainCategory).length > 0 && "h-[140px]"
           )}
         >
           <div className="text-lg flex items-center gap-2 mt-2">
@@ -117,7 +176,7 @@ const Categories = (props: categoryProps) => {
                 className="hover:bg-stone-300 hover:cursor-pointer rounded-full"
                 color="gray"
                 onClick={() => {
-                  if (previousCategory == null) {
+                  if (previousCategory === null) {
                     setShowMainCategories(true);
                     setShowCategories(false);
                     setShowSubCategories(false);
@@ -242,7 +301,7 @@ const Categories = (props: categoryProps) => {
                       setPreviousCategory("subCategory");
                       setSubCategoryId(item.item_sub_category_id);
                       setShowItemList(true);
-                      setHome(false);
+                      // setHome(false);
                     }}
                   >
                     <span className="text-stone-500 flex text-base">
@@ -313,92 +372,59 @@ type categoryProps = {
 
 export default memo(Categories);
 
-const CategoryNavs = ({ mainCategory }: { mainCategory?: any }) => {
+const CategoryNavs = ({
+  mainCategory,
+  category,
+  subCategory,
+  onClickCategory,
+}: {
+  mainCategory?: any;
+  category?: any;
+  subCategory?: any;
+  onClickCategory?: (event: any) => void;
+}) => {
   const router = useRouter();
-  const selectedEquipment: any = useContext(SelectedEquipmentContext);
-  let dirs: any = [];
   const query: any = router.query;
-
-  if (router.query?.dirs) {
-    dirs = JSON.parse(query?.dirs);
-  }
-
-  const onNavigateItem = () => {
-    if (selectedEquipment) {
-      router.push(
-        `/documents/equipment?item_id=${selectedEquipment._item_id}&parent_id=0`
-      );
-    }
-  };
-
-  const onNavigateFolder = (dir: any) => {
-    const _query: any = {};
-    let dirs = jsonDirs();
-
-    _query.parent_id = dir.id;
-    // _query.sub_id = query.sub_id
-
-    if (selectedEquipment) {
-      _query.item_id = selectedEquipment._item_id;
-    }
-
-    if (Array.isArray(dirs)) {
-      const currDirIndex = dirs.findIndex((item: any) => item.id === dir.id);
-      if (currDirIndex === 0) {
-        dirs.splice(1);
-      }
-
-      if (currDirIndex > 0) {
-        dirs.splice(currDirIndex);
-      }
-
-      _query.dirs = JSON.stringify(dirs);
-    }
-
-    let searchParams = new URLSearchParams(_query);
-
-    router.push(`/documents/equipment?${searchParams.toString()}`);
-  };
-
-  const jsonDirs = () => {
-    const query: any = { ...router.query };
-    try {
-      if (query.dirs) {
-        return JSON.parse(query.dirs);
-      }
-      return [];
-    } catch (err) {
-      return [];
-    }
-  };
 
   return (
     <div className="flex gap-1 items-center">
-      <div className="flex gap-1 items-center">
-        <span
-          className="flex gap-1 items-center hover:underline cursor-pointer text-sm"
-          tabIndex={0}
-          onClick={onNavigateItem}
-        >
-          {mainCategory && mainCategory.item_main_category_name}
-        </span>
-        {Array.isArray(dirs) && dirs.length !== 0 && (
-          <ChevronRight className="w-[15px]" />
-        )}
-      </div>
-      {Array.isArray(dirs) &&
-        dirs.map((item: any, key: number) => (
-          <div className="flex gap-1" key={key}>
-            <span
-              className="hover:underline cursor-pointer"
-              tabIndex={0}
-              onClick={() => onNavigateFolder(item)}
-            >
-              {item.name}
-            </span>
-            {key !== dirs.length - 1 && <ChevronRight className="w-[15px]" />}
-          </div>
-        ))}
+      {mainCategory && (
+        <div className="flex gap-1 items-center">
+          <span
+            className="flex gap-1 items-center hover:underline cursor-pointer text-sm"
+            tabIndex={0}
+            onClick={() => onClickCategory && onClickCategory("mainCategory")}
+          >
+            {mainCategory.item_main_category_name}
+          </span>
+          {Object.keys(category).length > 0 && (
+            <ChevronRight className="w-[15px]" />
+          )}
+        </div>
+      )}
+
+      {category && (
+        <div className="flex gap-1 items-center">
+          <span
+            className="flex gap-1 items-center hover:underline cursor-pointer text-sm"
+            tabIndex={1}
+            onClick={() => onClickCategory && onClickCategory("category")}
+          >
+            {category.item_category_name}
+          </span>
+          {Object.keys(subCategory).length > 0 && (
+            <ChevronRight className="w-[15px]" />
+          )}
+        </div>
+      )}
+
+      {subCategory && (
+        <div className="flex gap-1 items-center">
+          <span className="flex gap-1 items-center text-sm" tabIndex={2}>
+            {subCategory.item_sub_category_name}
+          </span>
+        </div>
+      )}
     </div>
   );
 };

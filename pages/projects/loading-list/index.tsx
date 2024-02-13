@@ -31,18 +31,16 @@ export default function LoadingListPage(access_token: any) {
 
   const showNewLoadingListModal = () => {
     setNewLoadingListModal(true);
-  }
+  };
 
   const closeLoadingDetailsContent = (e: any) => {
     setIsCloseLoadingDetail(true);
-  }
+  };
 
   const handleSetLoadingDetails = (loadingDetails: any) => {
     setLoadingDetails(loadingDetails);
     setIsCloseLoadingDetail(false);
-  }
-
-
+  };
 
   return (
     <AdminLayout>
@@ -56,61 +54,97 @@ export default function LoadingListPage(access_token: any) {
             <ScrollArea viewPortClassName="h-[calc(100vh-var(--header-height)-40px)]">
               <div className="flex flex-col">
                 <LoadingList
-                  onClickItem={(loadingDetails) => handleSetLoadingDetails(loadingDetails)}
+                  onClickItem={() => handleSetLoadingDetails(loadingDetails)}
                   access_token={access_token}
                 />
               </div>
               <div className="p-2 sticky bottom-0">
-                <Button className="w-full" onClick={showNewLoadingListModal}>New Loading List</Button>
+                <Button className="w-full" onClick={showNewLoadingListModal}>
+                  New Loading List
+                </Button>
               </div>
             </ScrollArea>
           </div>
-          <div className={`bg-white rounded-app shadow-sm h-[calc(100vh-var(--header-height)-40px)] max-h-screen overflow-hidden ${isCloseLoadingDetail && isCloseLoadingDetail ? 'w-[100%]' : 'w-[60%]'} transition-width duration-300 ease-in-out`}>
+          <div
+            className={`bg-white rounded-app shadow-sm h-[calc(100vh-var(--header-height)-40px)] max-h-screen overflow-hidden ${
+              isCloseLoadingDetail && isCloseLoadingDetail
+                ? "w-[100%]"
+                : "w-[60%]"
+            } transition-width duration-300 ease-in-out`}
+          >
             <LoadingListDetailsContext.Provider value={loadingDetails}>
               <LoadingListHeader />
             </LoadingListDetailsContext.Provider>
             <ScrollArea viewPortClassName="h-[calc(100vh-var(--header-height)-40px)]">
               <LoadingListDetailsContext.Provider value={loadingDetails}>
-                <LoadingListItem
-                />
+                <LoadingListItem />
               </LoadingListDetailsContext.Provider>
             </ScrollArea>
           </div>
 
-          <div className={`bg-white w-[20%] rounded-app shadow-sm p-2 h-[calc(100vh-var(--header-height)-40px)] ${isCloseLoadingDetail && isCloseLoadingDetail ? 'hidden' : 'block'} transition-width duration-300 ease-in-out`}>
+          <div
+            className={`bg-white w-[20%] rounded-app shadow-sm p-2 h-[calc(100vh-var(--header-height)-40px)] ${
+              isCloseLoadingDetail && isCloseLoadingDetail ? "hidden" : "block"
+            } transition-width duration-300 ease-in-out`}
+          >
             <div className="float-right w-fit p-1.5 rounded-full bg-stone-100 hover:bg-stone-200">
-              <X className="cursor-pointer"
+              <X
+                className="cursor-pointer"
                 onClick={(e: any) => closeLoadingDetailsContent(e)}
               />
             </div>
             <div className="p-3">
-              <p className="font-medium text-lg mb-4">Loading Description Details</p>
+              <p className="font-medium text-lg mb-4">
+                Loading Description Details
+              </p>
 
               {/* <div className="flex flex-col gap-3"> */}
               {/* <ScrollArea viewPortClassName="h-[calc(100vh-var(--header-height)-40px)]"> */}
               <LoadingListDetailsContext.Provider value={loadingDetails}>
-                <LoadingListDetail
-                  open={isCloseLoadingDetail}
-                />
+                <LoadingListDetail open={isCloseLoadingDetail} />
               </LoadingListDetailsContext.Provider>
               {/* </ScrollArea> */}
               {/* </div> */}
             </div>
           </div>
-
         </div>
-      </AccessTokenContext.Provider >
-    </AdminLayout >
-  )
-
+      </AccessTokenContext.Provider>
+    </AdminLayout>
+  );
 }
 
-export const TH = ({ className, children }: { className?: string, children?: React.ReactNode }) => (
-  <td className={cn('py-3 px-2 text-sm bg-stone-200 text-stone-600 font-medium', className)}>{children}</td>
+export const TH = ({
+  className,
+  children,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+}) => (
+  <td
+    className={cn(
+      "py-3 px-2 text-sm bg-stone-200 text-stone-600 font-medium",
+      className
+    )}
+  >
+    {children}
+  </td>
 );
 
-export const TD = ({ className, children, image }: { className?: string, children?: React.ReactNode, image: React.ReactNode }) => (
-  <td className={cn('py-2 px-2 border-b border-b-stone-100 group-last:border-0', className)}>
+export const TD = ({
+  className,
+  children,
+  image,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+  image: React.ReactNode;
+}) => (
+  <td
+    className={cn(
+      "py-2 px-2 border-b border-b-stone-100 group-last:border-0",
+      className
+    )}
+  >
     <div className="flex items-center gap-2">
       {image} {children}
     </div>
@@ -126,15 +160,15 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   } else {
     return {
       redirect: {
-        destination: '/auth/signin',
+        destination: "/auth/signin",
         permanent: false,
       },
-    }
+    };
   }
 
   return {
     props: {
       access_token: token,
     },
-  }
+  };
 }

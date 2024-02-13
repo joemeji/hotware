@@ -16,9 +16,9 @@ import LoadingMore from "../LoadingMore";
 export const ARROWDOWM_WIDTH = 16;
 
 export type Content = {
-  text?: React.ReactNode
-  value?: string | any
-  label: string
+  text?: React.ReactNode;
+  value?: string | any;
+  label: string;
 };
 
 type ComboboxMultiProps = {
@@ -34,7 +34,7 @@ type ComboboxMultiProps = {
   onSelectedItem?: (item?: any) => void;
   onOpenChange?: (open: boolean) => void;
   modal?: boolean;
-  defaultValue?: any
+  defaultValue?: any;
 };
 
 const ComboboxMulti = (props: ComboboxMultiProps) => {
@@ -52,12 +52,12 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
     onSelectedItem,
     onOpenChange,
     modal = false,
-    defaultValue
+    defaultValue,
   } = props;
 
   const buttonPopOverRef = useRef<HTMLButtonElement>(null);
   const buttonPopOverRefCurrent = buttonPopOverRef.current;
-  const [__value, setValue] = useState<string[]>(defaultValue ?? []);
+  const [__value, setValue] = useState<string[]>(defaultValue ?? value ?? []);
 
   const buttonWidth = () => {
     if (buttonPopOverRefCurrent) {
@@ -67,13 +67,17 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
     return null;
   };
 
-
   const _data = () => {
-    return  __value.map((v) =>  contents?.find((j) => j.value === v)?.label ).join(', ')
+    return (
+      value &&
+      value.length > 0 &&
+      value
+        .map((v: any) => contents?.find((j) => j.value === v)?.label)
+        .join(", ")
+    );
   };
 
   const onSelect = (currentValue?: any, renderedItem?: Content) => {
-
     // select
     if (__value.length > 0) {
       // double check if value exists
@@ -87,9 +91,14 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
       setValue([...__value, currentValue]);
     }
 
-  
     onChangeValue && onChangeValue([...__value, currentValue]);
   };
+
+  useEffect(() => {
+    // check current values exists from the contents
+    __value &&
+      setValue(__value.filter((i) => contents?.find((c) => c.value === i)));
+  }, [__value, contents]);
 
   return (
     <Popover
@@ -102,8 +111,8 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
     >
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
-          role="combobox"
+          variant='outline'
+          role='combobox'
           aria-expanded={open}
           className={cn(
             "bg-stone-100 border-0 w-full h-auto py-3",
@@ -112,10 +121,10 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
             className
           )}
           ref={buttonPopOverRef}
-          type="button"
+          type='button'
         >
           <span className={`w-[calc(100%-${ARROWDOWM_WIDTH}px)] line-clamp-1`}>
-            {isLoading ? "..." : __value ?  _data() : placeholder || ""}
+            {isLoading ? "..." : __value ? _data() : placeholder || ""}
           </span>
           <ChevronDown
             className={`ml-2 h-[${ARROWDOWM_WIDTH}px] w-[${ARROWDOWM_WIDTH}px] shrink-0 opacity-50`}
@@ -127,21 +136,21 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
           "w-full p-0 border-stone-00 shadow-sm rounded-app",
           popOverContentClassName
         )}
-        align="start"
+        align='start'
       >
         {Array.isArray(contents) && contents.length === 0 && (
-          <div className="py-4 text-center font-medium px-3">List empty</div>
+          <div className='py-4 text-center font-medium px-3'>List empty</div>
         )}
         {!contents && (
-          <div className="py-4 text-center font-medium px-3">List empty</div>
+          <div className='py-4 text-center font-medium px-3'>List empty</div>
         )}
         <Command>
           <ScrollArea
             onScrollEndViewPort={onScrollEnd}
-            className="combobox-multi-selector"
+            className='combobox-multi-selector'
             style={{ minWidth: buttonWidth() + "px", maxWidth: "500px" }}
           >
-            <CommandGroup className="p-0">
+            <CommandGroup className='p-0'>
               {contents &&
                 contents.map((item: Content, key: number) => (
                   <CommandItem
@@ -149,8 +158,7 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
                     onSelect={(currentValue) => onSelect(currentValue, item)}
                     value={item.value}
                     className={cn(
-                      "rounded-none py-2 cursor-pointer items-start",
-                        __value.includes(item.value)
+                      "rounded-none py-2 cursor-pointer items-start"
                     )}
                   >
                     <Check
@@ -164,7 +172,7 @@ const ComboboxMulti = (props: ComboboxMultiProps) => {
                     {item.text}
                   </CommandItem>
                 ))}
-              {isLoadingMore && <LoadingMore className="py-1" />}
+              {isLoadingMore && <LoadingMore className='py-1' />}
             </CommandGroup>
           </ScrollArea>
         </Command>

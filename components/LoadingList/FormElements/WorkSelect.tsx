@@ -12,20 +12,27 @@ export const WorkSelect = (props: WorkSelectProps) => {
     revalidateIfStale: false,
   };
 
-  const { data, isLoading, error } = useSWR('/api/loading-list/works', fetcher, swrOptions);
+  const { data, isLoading, error } = useSWR(
+    "/api/loading-list/works",
+    fetcher,
+    swrOptions
+  );
 
   const contentData = () => {
-    return data && data.map((work: any) => {
-      return {
-        text: (
-          <div>
-            <span className="font-medium">{work.loading_work_name}</span>
-          </div>
-        ),
-        value: work.loading_work_id,
-      }
-    });
-  }
+    return (
+      data &&
+      data.map((work: any) => {
+        return {
+          text: (
+            <div>
+              <span className="font-medium">{work.loading_work_name}</span>
+            </div>
+          ),
+          value: work.loading_work_id,
+        };
+      })
+    );
+  };
 
   return (
     <div className="flex flex-col gap-2">
@@ -34,14 +41,14 @@ export const WorkSelect = (props: WorkSelectProps) => {
         onChangeValue={onChangeValue}
         contents={contentData()}
         className="h-10"
-      // disabled={disabled}
+        // disabled={disabled}
       />
     </div>
-  )
-}
+  );
+};
 
 type WorkSelectProps = {
-  onChangeValue?: any,
-  value?: any,
+  onChangeValue?: any;
+  value?: any;
   disabled?: boolean;
-}
+};

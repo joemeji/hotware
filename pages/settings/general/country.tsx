@@ -5,8 +5,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
 
-export default function Currency({accessToken} : any) {
-
+export default function Country({ accessToken }: any) {
   return (
     <AdminLayout>
       <AccessTokenContext.Provider value={accessToken}>

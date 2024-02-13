@@ -23,9 +23,11 @@ const iconProps = (colorClassName?: any) => ({
 export default function TextBlocks({
   invoice_id,
   list,
+  editable,
 }: {
   invoice_id: any;
   list: any[];
+  editable: boolean;
 }) {
   const { data: session }: any = useSession();
   const [items, setItems] = useState<any[]>([]);
@@ -62,6 +64,7 @@ export default function TextBlocks({
       meta: {
         width: "9%",
         colspan: 1,
+        editable,
       },
     }),
     columnHelper.accessor("itb_text", {
@@ -71,6 +74,7 @@ export default function TextBlocks({
         width: "49%",
         colspan: 3,
         id: "itb_id",
+        editable,
       },
     }),
     columnHelper.accessor("invoice_item_line_total", {
@@ -78,6 +82,7 @@ export default function TextBlocks({
       meta: {
         width: "31%",
         colspan: 3,
+        editable,
       },
     }),
     columnHelper.accessor("itb_extra_text", {
@@ -86,6 +91,7 @@ export default function TextBlocks({
       meta: {
         width: "49%",
         id: "itb_id",
+        editable,
       },
     }),
   ];
@@ -177,9 +183,11 @@ export default function TextBlocks({
                           {...provided.draggableProps}
                         >
                           <td className="py-3 px-2 w-[2%] border-b border-b-stone-100 group-last:border-0 align-center">
-                            <div {...provided.dragHandleProps}>
-                              <Move />
-                            </div>
+                            {editable ? (
+                              <div {...provided.dragHandleProps}>
+                                <Move />
+                              </div>
+                            ) : null}
                           </td>
                           <td className="w-[9%]"></td>
                           <td
@@ -199,7 +207,7 @@ export default function TextBlocks({
                             width="7%"
                             className="py-3 px-2 border-b border-b-stone-100 group-last:border-0 align-top"
                           >
-                            <Actions row={row} />
+                            {editable ? <Actions row={row} /> : null}
                           </td>
                         </tr>
                         <tr

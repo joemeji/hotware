@@ -15,11 +15,11 @@ export const status: any = {
 export const getCreditStatus = ({
   credit_note_is_booked,
 }: {
-  credit_note_is_booked: number;
+  credit_note_is_booked: string;
 }) => {
-  if (credit_note_is_booked == 0) {
-    return "no";
-  } else {
+  if (parseInt(credit_note_is_booked) == 1) {
     return "yes";
+  } else {
+    return "no";
   }
 };

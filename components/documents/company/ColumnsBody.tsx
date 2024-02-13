@@ -54,8 +54,6 @@ const ColumnsBody = ({
   const [onDeleteDocument, setOnDeleteDocument] = useState(false);
   const [onViewDocumentDetails, setOnViewDocumentDetails] = useState(false);
 
-  console.log({ dir: dir })
-
   const expiryDate = (date: any) => {
     if (!date) return "";
     return dayjs(date).format("DD/MM/YYYY");

@@ -56,8 +56,6 @@ const ColumnsBody = ({
   const [onDeleteDocument, setOnDeleteDocument] = useState(false);
   const [onViewDocumentDetails, setOnViewDocumentDetails] = useState(false);
 
-  console.log({ dir: dir })
-
   const expiryDate = (date: any) => {
     if (!date) return "";
     return dayjs(date).format("DD/MM/YYYY");
@@ -261,7 +259,6 @@ export default memo(ColumnsBody);
 
 const Directory = ({ dir }: { dir: any }) => {
   const router = useRouter();
-  console.log({ eqp: dir })
   const onClick = () => {
     const query: any = { ...router.query };
     query.parent_id = dir.id;

@@ -25,6 +25,7 @@ const InvoiceTo = ({
               <CmsSelect
                 shipping_id={offerDetails && offerDetails._offer_id}
                 value={value}
+                defaultValue={value}
                 onChangeValue={onChangeValue}
                 error={error}
               />

@@ -21,7 +21,10 @@ export default function OrderView({ order_confirmation_id, user }: any) {
     <AdminLayout>
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex gap-5">
-          <OrderItemContent order_confirmation_id={order_confirmation_id} />
+          <OrderItemContent
+            order_confirmation_id={order_confirmation_id}
+            _data={data}
+          />
           <OrderDetails data={data} />
         </div>
       </div>

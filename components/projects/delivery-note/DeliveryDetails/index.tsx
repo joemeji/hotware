@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { memo } from "react";
 import { StatusChip } from "@/components/projects/delivery-note/StatusChip";
-import { getDeliveryStatus } from "@/lib/delivery";
+import { getDeliveryStatus, isClosed } from "@/lib/delivery";
 
 function DeliveryDetails({ data }: DeliveryDetailsProps) {
   return (
@@ -30,7 +30,7 @@ function DeliveryDetails({ data }: DeliveryDetailsProps) {
           )}
         </ScrollArea>
 
-        {data && (
+        {data && !isClosed(data) && (
           <Link href={`/projects/delivery-note/${data._delivery_note_id}/edit`}>
             <Button
               className={cn(

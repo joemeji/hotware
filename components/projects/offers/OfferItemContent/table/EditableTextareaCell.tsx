@@ -39,6 +39,15 @@ const EditableTextareaCell = ({ getValue, row, column, table }: any) => {
     }
   };
 
+  if (!column?.columnDef?.meta?.editable) {
+    return (
+      <div
+        className="whitespace-pre-line"
+        dangerouslySetInnerHTML={{ __html: value }}
+      ></div>
+    );
+  }
+
   if (editable) {
     return (
       <div

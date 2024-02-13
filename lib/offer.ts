@@ -33,3 +33,26 @@ export const getOfferStatus = ({
     return "open";
   }
 };
+
+export const isOpen = ({
+  offer_has_order_confirmation,
+  offer_status,
+}: {
+  offer_has_order_confirmation: number;
+  offer_status: string;
+}) => {
+  const hasOC = offer_has_order_confirmation ?? 0;
+  if (hasOC != 0 || offer_status == "cancelled") {
+    return false;
+  } else {
+    return true;
+  }
+};
+
+export const isLost = ({ offer_status }: { offer_status: string }) => {
+  if (offer_status == "cancelled") {
+    return true;
+  } else {
+    return false;
+  }
+};

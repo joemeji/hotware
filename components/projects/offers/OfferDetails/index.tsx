@@ -8,11 +8,12 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { memo } from "react";
 import { StatusChip } from "@/components/projects/offers/StatusChip";
-import { getOfferStatus } from "@/lib/offer";
-import { OfferDetailsContext } from "@/context/offer-details-context";
-import OfferItemContent from "../OfferItemContent";
+import { getOfferStatus, isOpen } from "@/lib/offer";
+// import { OfferDetailsContext } from "@/context/offer-details-context";
+// import OfferItemContent from "../OfferItemContent";
 
 function OfferDetails({ data }: OfferDetailsProps) {
+  console.log({ data });
   return (
     <>
       <div className="w-1/4 h-[calc(100vh-var(--header-height)-40px)] top-[calc(var(--header-height)+20px)] rounded-sm overflow-hidden sticky">
@@ -32,7 +33,7 @@ function OfferDetails({ data }: OfferDetailsProps) {
           )}
         </ScrollArea>
 
-        {data && (
+        {data && isOpen(data) && (
           <Link href={`/projects/offers/${data._offer_id}/edit`}>
             <Button
               className={cn(

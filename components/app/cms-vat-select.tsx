@@ -1,9 +1,11 @@
 import Combobox from "../ui/combobox";
 import useSWR from "swr";
-import { fetcher } from "@/utils/api.config";
+import { fetchApi } from "@/utils/api.config";
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 const CmsVatSelect = (props: CmsVatSelectProps) => {
+  const { data: session }: any = useSession();
   const { value, onChangeValue, placeholder, cms_id } = props;
   const [isOpenPopover, setIsOpenPopover] = useState(false);
   const [cmsId, setCmsId] = useState(null);
@@ -12,9 +14,12 @@ const CmsVatSelect = (props: CmsVatSelectProps) => {
     setCmsId(cms_id);
   }, [cms_id]);
 
-  const { data, isLoading, error, mutate } = useSWR(
-    `/api/cms/cms_vats/${cms_id}`,
-    fetcher
+  const { data, isLoading } = useSWR(
+    session?.user?.access_token
+      ? [`/api/cms/cms_vats/${cmsId}`, session?.user?.access_token]
+      : null,
+    fetchApi,
+    { revalidateOnFocus: false }
   );
 
   const contentData = () => {

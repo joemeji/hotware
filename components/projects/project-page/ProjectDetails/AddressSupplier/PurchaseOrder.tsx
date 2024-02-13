@@ -34,9 +34,9 @@ const PurchaseOrder = ({ headerSize }: { headerSize?: any }) => {
     isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
 
   const onscrollend = () => {
-    const currentPage = beginScrollDataPagerForInfiniteswr(_data);
+    const currentPage = beginScrollDataPagerForInfiniteswr(_data, size);
     if (currentPage) {
-      setSize(size + 1);
+      setSize(currentPage);
     }
   };
 
@@ -74,7 +74,7 @@ const PurchaseOrder = ({ headerSize }: { headerSize?: any }) => {
           })}
       </div>
 
-      {isLoadingMore && (
+      {(project.isLoading || isLoadingMore) && (
         <div className="pb-3">
           <LoadingMore />
         </div>

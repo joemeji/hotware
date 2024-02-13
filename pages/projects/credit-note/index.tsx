@@ -9,10 +9,10 @@ import {
   Trash2,
   FileSearch,
   FileText,
+  CoinsIcon,
 } from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/projects/credit-note/StatusChip";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
@@ -35,6 +35,7 @@ import { useState, useEffect } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { useDelete } from "@/components/projects/credit-note/useDelete";
+import { useChangeBookStatus } from "@/components/projects/credit-note/useChangeBookStatus";
 import { previewPdf } from "@/services/projects/credit";
 
 const ActivityLogSheetModal = dynamic(
@@ -55,7 +56,7 @@ export default function CreditNote({ access_token }: any) {
   if (router.query.search) payload["search"] = router.query.search;
   const queryString = new URLSearchParams(payload).toString();
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     [`/api/projects/credits?${queryString}`, access_token],
     fetchApi,
     {
@@ -71,6 +72,12 @@ export default function CreditNote({ access_token }: any) {
           (credit_note: any) => credit_note._credit_note_id != item
         ) || [];
       setList({ ...list, credit_note });
+    },
+  });
+
+  const { mutateBook, Dialog: BookDialog } = useChangeBookStatus({
+    onBook: (item: string, isBooked: boolean) => {
+      mutate();
     },
   });
 
@@ -115,10 +122,11 @@ export default function CreditNote({ access_token }: any) {
     a.download = (filename as string) + ".pdf";
     a.click();
   };
-
+  console.log(list);
   return (
     <AdminLayout>
       <DeleteDialog />
+      <BookDialog />
       <ActivityLogSheetModal
         _credit_note_id={selectedCreditNote}
         open={activityOpen}
@@ -149,7 +157,7 @@ export default function CreditNote({ access_token }: any) {
                 <TH>Amount</TH>
                 <TH className="w-[200px]">Date</TH>
                 <TH>Added By</TH>
-                <TH>Status</TH>
+                <TH>Booked</TH>
                 <TH className="text-right pe-4">Actions</TH>
               </tr>
             </thead>
@@ -189,9 +197,7 @@ export default function CreditNote({ access_token }: any) {
               {list?.credit_note?.map((row: any, key: number) => (
                 <tr key={key} className="group">
                   <TD className="ps-4 align-top">
-                    <Link
-                      href={`${router.pathname}/${row._credit_note_id}?vat=credit_note_is_exclusive_vat`}
-                    >
+                    <Link href={`${router.pathname}/${row._credit_note_id}`}>
                       <span className="text-blue-600 font-medium">
                         {row.credit_note_number}
                       </span>
@@ -283,6 +289,40 @@ export default function CreditNote({ access_token }: any) {
                         <Trash2 className="w-[18px] h-[18px] text-red-500" />
                         <span className="text-sm font-medium">Delete</span>
                       </div>
+                      <Separator className="my-2" />
+                      <div
+                        onClick={() =>
+                          mutateBook(
+                            row._credit_note_id,
+                            row.credit_note_is_booked
+                          )
+                        }
+                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                      >
+                        <CoinsIcon
+                          className={`w-[18px] h-[18px] ${
+                            parseInt(row.credit_note_is_booked) == 1
+                              ? "text-red-500"
+                              : "text-green-500"
+                          }`}
+                        />
+                        <span className="text-sm font-medium">
+                          {parseInt(row.credit_note_is_booked) == 1
+                            ? "Unbook"
+                            : "Book"}{" "}
+                          (Accounting)
+                        </span>
+                      </div>
+                      <Separator className="my-2" />
+                      <Link
+                        href={`/projects/invoices/${row._invoice_id}`}
+                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                      >
+                        <FileText className="w-[18px] h-[18px] text-violet-500" />
+                        <span className="text-sm font-medium">
+                          Open Invoice
+                        </span>
+                      </Link>
                       <Separator className="my-2" />
                       <div
                         onClick={() => handleClickHistory(row._credit_note_id)}

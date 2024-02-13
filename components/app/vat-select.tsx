@@ -8,11 +8,20 @@ import { useSession } from "next-auth/react";
 
 const VatSelect = (props: VatSelectProps) => {
   const { data: session }: any = useSession();
-  const { value, onChangeValue, placeholder, error: formError, modal = false } = props;
+  const {
+    value,
+    onChangeValue,
+    placeholder,
+    error: formError,
+    modal = false,
+    disabled = false,
+    byCompany = false,
+    allowNoVat = true,
+  } = props;
 
   const { data, isLoading } = useSWR(
     session?.user?.access_token
-      ? ["/api/vats", session?.user?.access_token]
+      ? [`/api/vats${byCompany ? "/company" : ""}`, session?.user?.access_token]
       : null,
     fetchApi,
     { revalidateOnFocus: false }
@@ -20,13 +29,18 @@ const VatSelect = (props: VatSelectProps) => {
 
   const contentData = () => {
     if (Array.isArray(data) && data.length > 0) {
-      const list = [{ vat_id: '0', vat_description: 'No VAT' }, ...data];
+      const list = allowNoVat
+        ? [{ vat_id: "0", vat_description: "No VAT" }, ...data]
+        : data;
       return list.map((item: any) => {
         return {
           value: item.vat_id,
           text: (
             <div className="flex gap-2 items-center justify-between w-full">
-              <span className="font-medium">{item.vat_description} {item.vat_percentage ? `(${item.vat_percentage}%)` : ''} </span>
+              <span className="font-medium">
+                {item.vat_description}{" "}
+                {item.vat_percentage ? `(${item.vat_percentage}%)` : ""}{" "}
+              </span>
             </div>
           ),
         };
@@ -34,6 +48,10 @@ const VatSelect = (props: VatSelectProps) => {
     }
     return;
   };
+
+  if (disabled) {
+    return contentData()?.find((data) => data.value == value)?.text || "";
+  }
 
   return (
     <div className="flex flex-col gap-1">
@@ -55,7 +73,10 @@ type VatSelectProps = {
   onChangeValue?: (value?: any) => void;
   placeholder?: any;
   error?: any;
-  modal?: boolean
+  modal?: boolean;
+  disabled?: boolean;
+  byCompany?: boolean;
+  allowNoVat?: boolean;
 };
 
 export default VatSelect;

@@ -46,10 +46,12 @@ function EditOrderDetails({ id, order_confirmation }: any) {
     formState: { errors },
     getValues,
     setValue,
+    watch,
   } = useForm({
     resolver: yupResolver(orderSchema),
     defaultValues: order_confirmation,
   });
+  const invoiceCmsId = watch("order_confirmation_supplier_id");
 
   useEffect(() => {
     // Set the initial value for the file input when editing
@@ -227,7 +229,7 @@ function EditOrderDetails({ id, order_confirmation }: any) {
                   control={control}
                   render={({ field }) => (
                     <CmsVatSelect
-                      cms_id={getValues("order_confirmation_supplier_id")}
+                      cms_id={invoiceCmsId}
                       value={field.value}
                       onChangeValue={(value) => field.onChange(value)}
                       placeholder="Select VAT"

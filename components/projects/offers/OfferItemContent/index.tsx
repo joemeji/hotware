@@ -1,14 +1,7 @@
 import useSWR from "swr";
 import dynamic from "next/dynamic";
 import { authHeaders, baseUrl, fetchApi } from "@/utils/api.config";
-import React, {
-  memo,
-  useCallback,
-  useEffect,
-  useState,
-  useMemo,
-  useContext,
-} from "react";
+import React, { memo, useCallback, useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 import AddButtonPopover from "@/components/projects/offers/OfferDetails/AddButtonPopover";
@@ -30,6 +23,7 @@ import { ItemMenu } from "@/components/items";
 import { useDeleteItem } from "./useDeleteItem";
 import TextBlocks from "./TextBlocks";
 import EditableTextareaCell from "./table/EditableTextareaCell";
+import { isOpen } from "@/lib/offer";
 
 // modals
 const AddEquipmentModal = dynamic(
@@ -96,6 +90,10 @@ const EditableInputCell = ({ getValue, row, column, table }: any) => {
     }
   };
 
+  if (!column?.columnDef?.meta?.editable) {
+    return <div>{value}</div>;
+  }
+
   if (editable) {
     return (
       <input
@@ -131,7 +129,13 @@ const EditableVatCell = ({ getValue, row, column, table }: any) => {
     setEditable(false);
   };
 
-  return <VatSelect onChangeValue={onChange} value={value} />;
+  return (
+    <VatSelect
+      onChangeValue={onChange}
+      value={value}
+      disabled={!column?.columnDef?.meta?.editable}
+    />
+  );
 };
 
 function OfferItemContent({ offer_id, currency, _data }: any) {
@@ -160,11 +164,9 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       setItems(updatedList);
     },
   });
+  const editable = _data && isOpen(_data);
 
-  if (!openReceiptTotalModal) {
-  }
-
-  const Actions = ({ row }: any) => {
+  const Actions = ({ row, column }: any) => {
     return (
       <MoreOption>
         <ItemMenu
@@ -176,23 +178,27 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
           <CalculatorIcon {...iconProps()} />
           <span className="font-medium">Offer Calculation</span>
         </ItemMenu>
-        <ItemMenu
-          onClick={() => {
-            setSelectedItem(row.original);
-            setOpenEditItemModal(true);
-          }}
-        >
-          <Pencil {...iconProps()} />
-          <span className="font-medium">Edit</span>
-        </ItemMenu>
-        <ItemMenu
-          onClick={() => {
-            mutateDelete(row.original.offer_item_id);
-          }}
-        >
-          <Trash {...iconProps()} />
-          <span className="font-medium">Delete</span>
-        </ItemMenu>
+        {column?.columnDef?.meta?.editable ? (
+          <>
+            <ItemMenu
+              onClick={() => {
+                setSelectedItem(row.original);
+                setOpenEditItemModal(true);
+              }}
+            >
+              <Pencil {...iconProps()} />
+              <span className="font-medium">Edit</span>
+            </ItemMenu>
+            <ItemMenu
+              onClick={() => {
+                mutateDelete(row.original.offer_item_id);
+              }}
+            >
+              <Trash {...iconProps()} />
+              <span className="font-medium">Delete</span>
+            </ItemMenu>
+          </>
+        ) : null}
       </MoreOption>
     );
   };
@@ -204,6 +210,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "9%",
+        editable,
       },
     }),
     columnHelper.accessor("offer_item_name", {
@@ -212,6 +219,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       meta: {
         width: "31%",
         id: "offer_item_id",
+        editable,
       },
     }),
     columnHelper.accessor("offer_item_quantity", {
@@ -219,6 +227,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "8%",
+        editable,
       },
     }),
     columnHelper.accessor("offer_item_price", {
@@ -226,6 +235,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("offer_item_vat", {
@@ -233,6 +243,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: EditableVatCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("offer_item_discount", {
@@ -240,6 +251,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("offer_item_line_total", {
@@ -247,6 +259,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: ({ getValue }) => (+getValue()).toLocaleString(),
       meta: {
         width: "11%",
+        editable,
       },
     }),
     columnHelper.accessor("", {
@@ -254,6 +267,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
       cell: Actions,
       meta: {
         width: "7%",
+        editable,
       },
     }),
   ];
@@ -459,6 +473,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
         </tr>
       );
     }
+
     chargeRows = vats.reduce((prev, row) => {
       var vatAmount = row.amount.toFixed(2);
       vatTotal += parseFloat(vatAmount);
@@ -588,6 +603,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
         offer_id={offer_id}
         offer_item_id={selectedItem}
         currency={currency || "$"}
+        editable={editable}
       />
       <EditOfferItemModal
         offer={selectedItem}
@@ -648,7 +664,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
             </thead>
           </table>
           <div className="flex flex-col py-1 gap-[5px]">
-            {!isLoading && Array.isArray(data) && data.length === 0 && (
+            {!isLoading && Array.isArray(items) && items.length === 0 && (
               <div className="flex justify-center">
                 <Image
                   src="/images/No data-rafiki.svg"
@@ -697,9 +713,11 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
                                 {...provided.draggableProps}
                               >
                                 <td className="py-3 px-2 w-[2%] border-b border-b-stone-100 group-last:border-0 align-top">
-                                  <div {...provided.dragHandleProps}>
-                                    <GripVertical />
-                                  </div>
+                                  {editable ? (
+                                    <div {...provided.dragHandleProps}>
+                                      <GripVertical />
+                                    </div>
+                                  ) : null}
                                 </td>
                                 {row.getVisibleCells().map((cell, index) => {
                                   return (
@@ -724,7 +742,9 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
                         );
                       })}
                       {provided.placeholder}
-                      {receiptTotals && receiptTotals.length > 0 ? (
+                      {items?.length &&
+                      receiptTotals &&
+                      receiptTotals.length > 0 ? (
                         <tr
                           key="subtotalRow"
                           className="w-full bg-white rounded-sm px-4 py-1"
@@ -744,14 +764,15 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
                           <td className="w-[7%]"></td>
                         </tr>
                       ) : null}
-                      {Array.isArray(data) && data.length !== 0
+                      {Array.isArray(items) && items.length !== 0
                         ? subtotalWithReceiptTotal()
                         : null}
                     </tbody>
-                    {Array.isArray(data) && data.length !== 0 ? (
+                    {Array.isArray(items) && items.length !== 0 ? (
                       <TextBlocks
                         list={textBlocks}
                         offer_id={router.query.offer_id}
+                        editable={editable}
                       />
                     ) : null}
                   </table>
@@ -760,7 +781,7 @@ function OfferItemContent({ offer_id, currency, _data }: any) {
             </DragDropContext>
           </div>
         </div>
-        {!isLoading && (
+        {editable && !isLoading && (
           <div className="flex justify-center gap-2 items-center mt-auto sticky bottom-0 p-2">
             <AddButtonPopover
               onClickAddCustomEquipment={() => setOpenCustomAddItemModal(true)}

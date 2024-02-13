@@ -8,32 +8,43 @@ import {
   History,
   Trash2,
   FileText,
+  FileOutput,
 } from "lucide-react";
 import React, { memo, useState } from "react";
 import { useSWRConfig } from "swr";
 import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
-import { useDelete } from "@/components/projects/delivery-note/useDelete";
 import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import { previewPdf } from "@/services/projects/delivery";
 import { useSession } from "next-auth/react";
+import { useDelete } from "@/components/projects/delivery-note/useDelete";
+import { isClosed } from "@/lib/delivery";
+import { useCopy } from "@/components/projects/delivery-note/useCopy";
+import { useChangeStatus } from "@/components/projects/delivery-note/useChangeStatus";
+import { useCreateOrderConfirmation } from "@/components/projects/delivery-note/useCreateOrderConfirmation";
+import { useCreateOffer } from "@/components/projects/delivery-note/useCreateOffer";
+import { useCreateInvoice } from "@/components/projects/delivery-note/useCreateInvoice";
+import { useCreateShippingList } from "@/components/projects/delivery-note/useCreateShippingList";
+import { CreateOrderConfirmationButton } from "@/components/projects/buttons/CreateOrderConfirmationButton";
+import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
+import { CreateInvoiceButton } from "@/components/projects/buttons/CreateInvoiceButton";
+import { CreateShippingListButton } from "@/components/projects/buttons/CreateShippingListButton";
+import { Copy } from "lucide-react";
 
-const ChangeStatusModal = dynamic(
-  () => import("../../modals/ChangeStatusModal")
-);
 const ActivityLogSheetModal = dynamic(
   () => import("../../modals/ActivityLogSheetModal")
 );
 
 type DetailsActionsParams = {
   _delivery_note_id: string | undefined;
+  data: any;
 };
 
-function DetailsActions({ _delivery_note_id }: DetailsActionsParams) {
+function DetailsActions({ _delivery_note_id, data }: DetailsActionsParams) {
+  const { mutate } = useSWRConfig();
   const router = useRouter();
   const { data: session }: any = useSession();
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const { mutateDelete, Dialog: DeleteDialog } = useDelete({
     onDelete: () => {
@@ -42,11 +53,68 @@ function DetailsActions({ _delivery_note_id }: DetailsActionsParams) {
         variant: "success",
         duration: 2000,
       });
+      mutate(
+        [`/api/projects/deliveries?`, session?.user?.access_token],
+        undefined
+      );
       setTimeout(() => {
         router.push("/projects/delivery-note");
       }, 300);
     },
   });
+
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      mutate(
+        [`/api/projects/deliveries?`, session?.user?.access_token],
+        undefined
+      );
+
+      router.push(`/projects/delivery-note/${item}`);
+    },
+  });
+
+  const {
+    mutateCreate: mutateCreateOrderConfirmation,
+    Dialog: OrderConfirmationDialog,
+  } = useCreateOrderConfirmation({
+    onSuccess: (item: string) => {
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+
+  const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
+    onChange: (item: string) => {
+      mutate(
+        [
+          `/api/projects/deliveries/details/${_delivery_note_id}`,
+          session?.user?.access_token,
+        ],
+        undefined
+      );
+    },
+  });
+
+  const { mutateCreate: mutateCreateInvoice, Dialog: InvoiceDialog } =
+    useCreateInvoice({
+      onSuccess: (item: string) => {
+        router.push(`/projects/invoices/${item}`);
+      },
+    });
+
+  const { mutateCreate: mutateCreateOffer, Dialog: OfferDialog } =
+    useCreateOffer({
+      onSuccess: (item: string) => {
+        router.push(`/projects/offers/${item}`);
+      },
+    });
+
+  const { mutateCreate: mutateCreateShipping, Dialog: ShippingDialog } =
+    useCreateShippingList({
+      onSuccess: (item: string) => {
+        router.push(`/projects/shipping-list/${item}`);
+      },
+    });
 
   const onPreviewPdf = async (_delivery_note_id: any) => {
     const res = await previewPdf(
@@ -79,18 +147,17 @@ function DetailsActions({ _delivery_note_id }: DetailsActionsParams) {
   return (
     <React.Fragment>
       <DeleteDialog />
-
-      <ChangeStatusModal
-        onOpenChange={(open: any) => setStatusModalOpen(open)}
-        open={statusModalOpen}
-      />
-
+      <CopyDialog />
+      <OrderConfirmationDialog />
+      <OfferDialog />
+      <InvoiceDialog />
+      <ShippingDialog />
+      <ChangeStatusDialog />
       <ActivityLogSheetModal
         _delivery_note_id={_delivery_note_id}
         open={activityOpen}
         onOpenChange={(open: any) => setActivityOpen(open)}
       />
-
       <div className="flex items-center gap-1">
         <DetailAction onClick={() => onPreviewPdf(_delivery_note_id)}>
           <FileSearch className="w-4 h-4 mr-2" strokeWidth={1} />
@@ -103,15 +170,46 @@ function DetailsActions({ _delivery_note_id }: DetailsActionsParams) {
             </DetailAction>
           }
         >
-          <DetailActionDropdownItem
-            onClick={() => setActivityOpen(true)}
-            label="History"
-            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
+          <ItemMenu
+            onClick={() => mutateCopy(_delivery_note_id)}
+            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+          >
+            <Copy className="w-[18px] h-[18px] text-teal-500" />
+            <span className="text-sm font-medium">Copy</span>
+          </ItemMenu>
+          {data && !isClosed(data) ? (
+            <>
+              <ItemMenu
+                onClick={() => mutateChange(_delivery_note_id)}
+                className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+              >
+                <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                <span className="text-sm font-medium">Change Status</span>
+              </ItemMenu>
+              <DetailActionDropdownItem
+                label="Delete"
+                onClick={() => mutateDelete(_delivery_note_id)}
+                icon={<Trash2 className="w-[18px] h-[18px] text-red-500" />}
+              />
+            </>
+          ) : null}
+          <Separator className="my-2" />
+          <CreateOfferButton
+            _offer_id={data?.delivery_note_has_offer}
+            onCreate={() => mutateCreateOffer(_delivery_note_id)}
           />
-          <DetailActionDropdownItem
-            label="Delete"
-            onClick={() => mutateDelete(_delivery_note_id)}
-            icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
+          <CreateOrderConfirmationButton
+            _order_confirmation_id={data?.delivery_note_has_order_confirmation}
+            onCreate={() => mutateCreateOrderConfirmation(_delivery_note_id)}
+          />
+          <CreateInvoiceButton
+            _invoice_id={data?.delivery_note_has_invoice}
+            invoice_number={data?.delivery_note_original_number}
+            onCreate={() => mutateCreateInvoice(_delivery_note_id)}
+          />
+          <CreateShippingListButton
+            _shipping_id={data?.delivery_note_has_shipping}
+            onCreate={() => mutateCreateShipping(_delivery_note_id)}
           />
           <Separator className="my-2" />
           <ItemMenu
@@ -121,6 +219,11 @@ function DetailsActions({ _delivery_note_id }: DetailsActionsParams) {
             <FileText className="w-[18px] h-[18px] text-red-500" />
             <span className="font-medium">Save as Pdf</span>
           </ItemMenu>
+          <DetailActionDropdownItem
+            onClick={() => setActivityOpen(true)}
+            label="History"
+            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
+          />
         </MoreOption>
       </div>
     </React.Fragment>

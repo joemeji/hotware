@@ -30,3 +30,19 @@ export const getOrderStatus = ({
     return "open";
   }
 };
+
+export const isOpen = ({
+  order_confirmation_status,
+}: {
+  order_confirmation_status: string;
+}) => {
+  return order_confirmation_status === "active" ? true : false;
+};
+
+export const isCancelled = ({
+  order_confirmation_status,
+}: {
+  order_confirmation_status: string;
+}) => {
+  return order_confirmation_status === "cancelled" ? true : false;
+};

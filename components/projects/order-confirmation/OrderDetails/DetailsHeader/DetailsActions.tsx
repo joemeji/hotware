@@ -8,32 +8,47 @@ import {
   History,
   Trash2,
   FileText,
+  Copy,
+  BanIcon,
+  FileOutput,
 } from "lucide-react";
 import React, { memo, useState } from "react";
 import { useSWRConfig } from "swr";
 import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
-import { useDelete } from "@/components/projects/order-confirmation/useDelete";
 import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import { previewPdf } from "@/services/projects/order";
 import { useSession } from "next-auth/react";
+import { useDelete } from "@/components/projects/order-confirmation/useDelete";
+import { useCopy } from "@/components/projects/order-confirmation/useCopy";
+import { useChangeStatus } from "@/components/projects/order-confirmation/useChangeStatus";
+import { useCreateOffer } from "@/components/projects/order-confirmation/useCreateOffer";
+import { useCreateDeliveryNote } from "@/components/projects/order-confirmation/useCreateDeliveryNote";
+import { useCreateInvoice } from "@/components/projects/order-confirmation/useCreateInvoice";
+import { useCreateProject } from "@/components/projects/order-confirmation/useCreateProject";
+import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
+import { CreateDeliveryNoteButton } from "@/components/projects/buttons/CreateDeliveryNoteButton";
+import { CreateInvoiceButton } from "@/components/projects/buttons/CreateInvoiceButton";
+import { CreateProjectButton } from "@/components/projects/buttons/CreateProjectButton";
+import { isCancelled, isOpen } from "@/lib/order";
 
-const ChangeStatusModal = dynamic(
-  () => import("../../modals/ChangeStatusModal")
-);
 const ActivityLogSheetModal = dynamic(
   () => import("../../modals/ActivityLogSheetModal")
 );
 
 type DetailsActionsParams = {
   _order_confirmation_id: string | undefined;
+  data: any;
 };
 
-function DetailsActions({ _order_confirmation_id }: DetailsActionsParams) {
+function DetailsActions({
+  _order_confirmation_id,
+  data,
+}: DetailsActionsParams) {
+  const { mutate } = useSWRConfig();
   const router = useRouter();
   const { data: session }: any = useSession();
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
   const { mutateDelete, Dialog: DeleteDialog } = useDelete({
     onDelete: () => {
@@ -42,11 +57,52 @@ function DetailsActions({ _order_confirmation_id }: DetailsActionsParams) {
         variant: "success",
         duration: 2000,
       });
+      mutate([`/api/projects/orders?`, session?.user?.access_token], undefined);
       setTimeout(() => {
         router.push("/projects/order-confirmation");
       }, 300);
     },
   });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+  const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
+    onChange: (item: string) => {
+      mutate(
+        [
+          `/api/projects/orders/details/${_order_confirmation_id}`,
+          session?.user?.access_token,
+        ],
+        undefined
+      );
+    },
+  });
+  const { mutateCreate: mutateCreateOffer, Dialog: OfferDialog } =
+    useCreateOffer({
+      onSuccess: (item: string) => {
+        router.push(`/projects/offers/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateDeliveryNote, Dialog: DeliveryNoteDialog } =
+    useCreateDeliveryNote({
+      onSuccess: (item: string) => {
+        router.push(`/projects/delivery-note/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateInvoice, Dialog: InvoiceDialog } =
+    useCreateInvoice({
+      onSuccess: (item: string) => {
+        router.push(`/projects/invoices/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateProject, Dialog: ProjectDialog } =
+    useCreateProject({
+      onSuccess: (id: string) => {
+        router.push(`/projects/add/${id}`);
+      },
+    });
 
   const onPreviewPdf = async (_order_confirmation_id: any) => {
     const res = await previewPdf(
@@ -79,11 +135,12 @@ function DetailsActions({ _order_confirmation_id }: DetailsActionsParams) {
   return (
     <React.Fragment>
       <DeleteDialog />
-
-      <ChangeStatusModal
-        onOpenChange={(open: any) => setStatusModalOpen(open)}
-        open={statusModalOpen}
-      />
+      <CopyDialog />
+      <ChangeStatusDialog />
+      <OfferDialog />
+      <DeliveryNoteDialog />
+      <InvoiceDialog />
+      <ProjectDialog />
 
       <ActivityLogSheetModal
         _order_confirmation_id={_order_confirmation_id}
@@ -103,16 +160,55 @@ function DetailsActions({ _order_confirmation_id }: DetailsActionsParams) {
             </DetailAction>
           }
         >
-          <DetailActionDropdownItem
-            onClick={() => setActivityOpen(true)}
-            label="History"
-            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
-          />
-          <DetailActionDropdownItem
-            label="Delete"
-            onClick={() => mutateDelete(_order_confirmation_id)}
-            icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
-          />
+          <ItemMenu
+            onClick={() => mutateCopy(_order_confirmation_id)}
+            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+          >
+            <Copy className="w-[18px] h-[18px] text-teal-500" />
+            <span className="text-sm font-medium">Copy</span>
+          </ItemMenu>
+          {data && isOpen(data) ? (
+            <>
+              <ItemMenu
+                onClick={() => mutateChange(_order_confirmation_id)}
+                className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+              >
+                <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                <span className="text-sm font-medium">Change Status</span>
+              </ItemMenu>
+              <ItemMenu
+                onClick={() => mutateDelete(_order_confirmation_id)}
+                className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+              >
+                <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                <span className="text-sm font-medium">Delete</span>
+              </ItemMenu>
+            </>
+          ) : null}
+          {data && isCancelled(data) ? null : (
+            <>
+              <Separator className="my-2" />
+              <CreateOfferButton
+                _offer_id={data?.order_confirmation_has_offer}
+                onCreate={() => mutateCreateOffer(_order_confirmation_id)}
+              />
+              <CreateDeliveryNoteButton
+                _delivery_note_id={data?.order_confirmation_has_delivery_note}
+                onCreate={() =>
+                  mutateCreateDeliveryNote(_order_confirmation_id)
+                }
+              />
+              <CreateInvoiceButton
+                _invoice_id={data?.order_confirmation_has_invoice}
+                invoice_number={data?.order_confirmation_original_number}
+                onCreate={() => mutateCreateInvoice(_order_confirmation_id)}
+              />
+              <CreateProjectButton
+                _project_id={data?.order_confirmation_has_project}
+                onCreate={() => mutateCreateProject(data.order_confirmation_id)}
+              />
+            </>
+          )}
           <Separator className="my-2" />
           <ItemMenu
             className="gap-3"
@@ -121,6 +217,11 @@ function DetailsActions({ _order_confirmation_id }: DetailsActionsParams) {
             <FileText className="w-[18px] h-[18px] text-red-500" />
             <span className="font-medium">Save as Pdf</span>
           </ItemMenu>
+          <DetailActionDropdownItem
+            onClick={() => setActivityOpen(true)}
+            label="History"
+            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
+          />
         </MoreOption>
       </div>
     </React.Fragment>

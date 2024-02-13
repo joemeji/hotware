@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 
-export const useCancel = ({ onDelete }: any) => {
+export const useCancel = ({ onCancel }: any) => {
   const { data: session }: any = useSession();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -36,7 +36,7 @@ export const useCancel = ({ onDelete }: any) => {
     );
     const result = await response.json();
     if (result.success) {
-      onDelete(item);
+      onCancel(item);
     }
 
     setLoading(false);

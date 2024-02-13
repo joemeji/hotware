@@ -18,7 +18,10 @@ export default function DeliveryView({ delivery_note_id, user }: any) {
     <AdminLayout>
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex gap-5">
-          <DeliveryItemContent delivery_note_id={delivery_note_id} />
+          <DeliveryItemContent
+            delivery_note_id={delivery_note_id}
+            _data={data}
+          />
           <DeliveryDetails data={data} />
         </div>
       </div>

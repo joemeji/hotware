@@ -9,6 +9,8 @@ import {
   Trash2,
   FileSearch,
   FileText,
+  Copy,
+  FileOutput,
 } from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/PurchaseOrder/StatusChip";
@@ -24,7 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import { addressFormat } from "@/lib/shipping";
 import { cn } from "@/lib/utils";
-import { getPurchaseStatus } from "@/lib/purchase";
+import { getPurchaseStatus, isOpen } from "@/lib/purchase";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
@@ -34,8 +36,11 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
-import { useDelete } from "@/components/PurchaseOrder/useDelete";
 import { previewPdf } from "@/services/projects/purchases";
+import { useDelete } from "@/components/PurchaseOrder/useDelete";
+import { useCopy } from "@/components/PurchaseOrder/useCopy";
+import { useRevision } from "@/components/PurchaseOrder/useRevision";
+import { useChangeStatus } from "@/components/PurchaseOrder/useChangeStatus";
 
 const ActivityLogSheetModal = dynamic(
   () => import("@/components/PurchaseOrder/modals/ActivityLogSheetModal")
@@ -55,7 +60,7 @@ export default function PurchaseOrder({ access_token }: any) {
   if (router.query.search) payload["search"] = router.query.search;
   const queryString = new URLSearchParams(payload).toString();
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     [`/api/purchases?${queryString}`, access_token],
     fetchApi,
     {
@@ -71,6 +76,23 @@ export default function PurchaseOrder({ access_token }: any) {
 
       const po = list?.po?.filter((po: any) => po._po_id != item) || [];
       setList({ ...list, po });
+    },
+  });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      mutate();
+      router.push(`/purchase-order/${item}`);
+    },
+  });
+  const { mutateRevision, Dialog: RevisionDialog } = useRevision({
+    onRevision: (item: string) => {
+      mutate();
+      router.push(`/purchase-order/${item}`);
+    },
+  });
+  const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
+    onChange: (item: string) => {
+      mutate();
     },
   });
 
@@ -119,6 +141,9 @@ export default function PurchaseOrder({ access_token }: any) {
   return (
     <AdminLayout>
       <DeleteDialog />
+      <CopyDialog />
+      <RevisionDialog />
+      <ChangeStatusDialog />
       <ActivityLogSheetModal
         _po_id={selectedPurchaseOrder}
         open={activityOpen}
@@ -276,19 +301,48 @@ export default function PurchaseOrder({ access_token }: any) {
                         <ArrowRight className="w-[18px] h-[18px] text-violet-500" />
                         <span className="text-sm font-medium">View</span>
                       </Link>
-                      <Link
-                        href={`/purchase-order/${row._po_id}/edit`}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <Pencil className="w-[18px] h-[18px] text-blue-500" />
-                        <span className="text-sm font-medium">Update</span>
-                      </Link>
+                      {isOpen(row) ? (
+                        <>
+                          <Link
+                            href={`/purchase-order/${row._po_id}/edit`}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Pencil className="w-[18px] h-[18px] text-blue-500" />
+                            <span className="text-sm font-medium">Update</span>
+                          </Link>
+                          <div
+                            onClick={() => mutateRevision(row._po_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <FileOutput className="w-[18px] h-[18px] text-cyan-500" />
+                            <span className="text-sm font-medium">
+                              Revision
+                            </span>
+                          </div>
+                          <div
+                            onClick={() => mutateChange(row._po_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                            <span className="text-sm font-medium">
+                              Change Status
+                            </span>
+                          </div>
+                          <div
+                            onClick={() => mutateDelete(row._po_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </div>
+                        </>
+                      ) : null}
                       <div
-                        onClick={() => mutateDelete(row._po_id)}
+                        onClick={() => mutateCopy(row._po_id)}
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                       >
-                        <Trash2 className="w-[18px] h-[18px] text-red-500" />
-                        <span className="text-sm font-medium">Delete</span>
+                        <Copy className="w-[18px] h-[18px] text-teal-500" />
+                        <span className="text-sm font-medium">Copy</span>
                       </div>
                       <Separator className="my-2" />
                       <div

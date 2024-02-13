@@ -123,7 +123,8 @@ const EditableVatCell = ({ getValue, row, column, table }: any) => {
   return <VatSelect onChangeValue={onChange} value={value} />;
 };
 
-function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
+function CreditItemContent({ credit_note_id, currency, _data }: any) {
+  const isExclusiveVat = _data ? _data.credit_note_is_exclusive_vat : 0;
   const { data: session }: any = useSession();
   const router = useRouter();
   const [addEquipmentOpenModal, setAddEquipmentOpenModal] = useState(false);
@@ -319,20 +320,21 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
   }, [items]);
 
   const subtotalWithReceiptTotal = () => {
-    let vatTotal = 0;
-    let vats: Vat[] = [];
     const BASE_SUBTOTAL = subtotal;
+    let vatTotal: number = 0;
+    let vats: Vat[] = [];
 
     if (items && items.length > 0) {
       items.map((row: any, key: any) => {
         let vat = vats && vats.find((vatTemp) => vatTemp.id == row.cn_item_vat);
         let divisible =
-          100 + (router.query.vat == "1" ? 0 : +row.cn_item_vat_percentage);
-        let percentage = +row.cn_item_vat_percentage / divisible;
-        let amount = +(+row.cn_item_line_total * percentage);
+          100 +
+          (isExclusiveVat == 1 ? 0 : parseFloat(row.cn_item_vat_percentage));
+        let percentage = parseFloat(row.cn_item_vat_percentage) / divisible;
+        let amount = parseFloat(row.cn_item_line_total) * percentage;
 
         if (vat) {
-          vat.amount = +vat.amount + amount;
+          vat.amount = vat.amount + amount;
         } else if (row.cn_item_vat != 0) {
           vats = [
             ...vats,
@@ -348,24 +350,26 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
 
     let chargeRows = receiptTotals?.map((receiptTotal: any) => {
       let amount =
-        receiptTotal.cnrt_type == 2
+        parseInt(receiptTotal.cnrt_type) == 2
           ? (receiptTotal.cnrt_value / 100) * BASE_SUBTOTAL
           : receiptTotal.cnrt_value;
-      amount = receiptTotal.cnrt_is_surcharge == 1 ? amount : amount * -1;
-
-      subtotal += +amount;
-
+      amount =
+        parseInt(receiptTotal.cnrt_is_surcharge) == 1 ? amount : amount * -1;
+      subtotal += parseFloat(amount);
       let vat =
         vats && vats.find((vatTemp) => vatTemp.id == receiptTotal.cnrt_vat);
       let divisible =
         100 +
-        (router.query.vat == "1" ? 0 : +receiptTotal.cn_item_vat_percentage);
-      let percentage = +receiptTotal.cnrt_vat_percentage / divisible;
-      let vatAmount = +(+amount * percentage);
+        (isExclusiveVat == 1
+          ? 0
+          : parseFloat(receiptTotal.cnrt_vat_percentage));
+
+      let percentage = parseFloat(receiptTotal.cnrt_vat_percentage) / divisible;
+      let vatAmount = parseFloat(amount) * percentage;
 
       if (vat) {
-        vat.amount = +vat.amount + vatAmount;
-      } else if (receiptTotal.cnrt_vat != 0) {
+        vat.amount = vat.amount + vatAmount;
+      } else if (parseInt(receiptTotal.cnrt_vat) != 0) {
         vats = [
           ...vats,
           {
@@ -393,7 +397,7 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
           </td>
           <td className="w-[10%]"></td>
           <td className="w-[11%] py-3 px-2 font-bold">
-            {(+amount).toLocaleString()}
+            {amount.toLocaleString()}
           </td>
           <td className="w-[7%]"></td>
         </tr>
@@ -437,10 +441,10 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
     }
 
     chargeRows = vats.reduce((prev, row) => {
-      var vatAmount = +(+row.amount).toFixed(2);
-      vatTotal += vatAmount;
+      var vatAmount = row.amount.toFixed(2);
+      vatTotal += parseFloat(vatAmount);
 
-      if (+row.amount !== 0) {
+      if (row.amount !== 0) {
         prev.push(
           <tr key={row.id} className="w-full bg-white rounded-sm px-4 py-1">
             <td className="w-[2%]"></td>
@@ -450,9 +454,7 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
             <td className="w-[10%]"></td>
             <td className="w-[10%]"></td>
             <td className="w-[10%]"></td>
-            <td className="w-[11%] py-3 px-2 font-bold">
-              {vatAmount.toLocaleString()}
-            </td>
+            <td className="w-[11%] py-3 px-2 font-bold">{vatAmount}</td>
             <td className="w-[7%]"></td>
           </tr>
         );
@@ -461,7 +463,7 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
       return prev;
     }, chargeRows || []);
 
-    let total = router.query.vat === "1" ? subtotal + vatTotal : subtotal;
+    let total = isExclusiveVat == 1 ? subtotal + vatTotal : subtotal;
     chargeRows.push(
       <tr key="totalRow" className="w-full bg-white rounded-sm px-4 py-1">
         <td className="w-[2%]"></td>
@@ -472,7 +474,7 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
         <td className="w-[10%]"></td>
         <td className="w-[10%]"></td>
         <td className="w-[11%] py-3 px-2 font-bold">
-          {(+total).toLocaleString()}
+          {total.toLocaleString()}
         </td>
         <td className="w-[7%]"></td>
       </tr>
@@ -585,6 +587,7 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
         <div className="relative min-h-[calc(100vh-var(--header-height)-40px)]">
           <DetailsHeader
             _credit_note_id={router.query.credit_note_id?.toString()}
+            data={_data}
           />
           <table className="w-full sticky top-[var(--header-height)] z-10 rounded-sm overflow-hidden">
             <thead>
@@ -618,7 +621,7 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
             </thead>
           </table>
           <div className="flex flex-col py-1 gap-[5px]">
-            {!isLoading && Array.isArray(data) && data.length === 0 && (
+            {!isLoading && Array.isArray(items) && items.length === 0 && (
               <div className="flex justify-center">
                 <Image
                   src="/images/No data-rafiki.svg"
@@ -694,31 +697,38 @@ function CreditItemContent({ credit_note_id, currency, exclusive_vat }: any) {
                         );
                       })}
                       {provided.placeholder}
-                      <tr
-                        key="subtotalRow"
-                        className="w-full bg-white rounded-sm px-4 py-1"
-                      >
-                        <td className="w-[2%]"></td>
-                        <td className="w-[9%]"></td>
-                        <td className="w-[31%] py-3 px-2 font-bold">
-                          SUBTOTAL
-                        </td>
-                        <td className="w-[8%]"></td>
-                        <td className="w-[10%]"></td>
-                        <td className="w-[10%]"></td>
-                        <td className="w-[10%]"></td>
-                        <td className="w-[11%] py-3 px-2 font-bold">
-                          {subtotal.toLocaleString()}
-                        </td>
-                        <td className="w-[7%]"></td>
-                      </tr>
-
-                      {subtotalWithReceiptTotal()}
+                      {items?.length &&
+                      receiptTotals &&
+                      receiptTotals.length > 0 ? (
+                        <tr
+                          key="subtotalRow"
+                          className="w-full bg-white rounded-sm px-4 py-1"
+                        >
+                          <td className="w-[2%]"></td>
+                          <td className="w-[9%]"></td>
+                          <td className="w-[31%] py-3 px-2 font-bold">
+                            SUBTOTAL
+                          </td>
+                          <td className="w-[8%]"></td>
+                          <td className="w-[10%]"></td>
+                          <td className="w-[10%]"></td>
+                          <td className="w-[10%]"></td>
+                          <td className="w-[11%] py-3 px-2 font-bold">
+                            {subtotal.toLocaleString()}
+                          </td>
+                          <td className="w-[7%]"></td>
+                        </tr>
+                      ) : null}
+                      {Array.isArray(items) && items.length !== 0
+                        ? subtotalWithReceiptTotal()
+                        : null}
                     </tbody>
-                    <TextBlocks
-                      list={textBlocks}
-                      credit_note_id={router.query.credit_note_id}
-                    />
+                    {Array.isArray(items) && items.length !== 0 ? (
+                      <TextBlocks
+                        list={textBlocks}
+                        credit_note_id={router.query.credit_note_id}
+                      />
+                    ) : null}
                   </table>
                 )}
               </Droppable>

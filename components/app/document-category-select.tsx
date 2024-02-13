@@ -36,8 +36,8 @@ const DocumentCategorySelect = (props: DocumentCategorySelectProps) => {
         return {
           value: item.document_category_id,
           text: (
-            <div className="flex gap-2 items-center justify-between w-full">
-              <span className="font-medium">{item.document_category_name}</span>
+            <div className='flex gap-2 items-center justify-between w-full'>
+              <span className='font-medium'>{item.document_category_name}</span>
             </div>
           ),
         };
@@ -47,7 +47,7 @@ const DocumentCategorySelect = (props: DocumentCategorySelectProps) => {
   };
 
   return (
-    <div className="flex flex-col gap-1">
+    <div className='flex flex-col gap-1'>
       <Combobox
         contents={contentData()}
         placeholder={placeholder}

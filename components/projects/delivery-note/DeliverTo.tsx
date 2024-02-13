@@ -22,6 +22,7 @@ const DeliverTo = (props: DeliverToProps) => {
                   deliveryDetails && deliveryDetails._delivery_note_id
                 }
                 value={value}
+                defaultValue={value}
                 onChangeValue={onChangeValue}
                 error={error}
               />

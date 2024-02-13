@@ -9,6 +9,7 @@ import {
   Trash2,
   FileSearch,
   FileText,
+  Copy,
 } from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/projects/invoices/StatusChip";
@@ -24,7 +25,7 @@ import {
 } from "@/components/ui/tooltip";
 import { addressFormat } from "@/lib/shipping";
 import { cn } from "@/lib/utils";
-import { BOOKED, UNBOOKED, getInvoiceStatus } from "@/lib/invoice";
+import { BOOKED, UNBOOKED, getInvoiceStatus, isOpen } from "@/lib/invoice";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
@@ -34,8 +35,22 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
-import { useDelete } from "@/components/projects/invoices/useDelete";
 import { previewPdf } from "@/services/projects/invoice";
+import { useDelete } from "@/components/projects/invoices/useDelete";
+import { useCopy } from "@/components/projects/invoices/useCopy";
+import { useCreateOffer } from "@/components/projects/invoices/useCreateOffer";
+import { useCreateOrderConfirmation } from "@/components/projects/invoices/useCreateOrderConfirmation";
+import { useCreateCreditNote } from "@/components/projects/invoices/useCreateCreditNote";
+import { useMarkAsPaid } from "@/components/projects/invoices/useMarkAsPaid";
+import { useMarkAsUnpaid } from "@/components/projects/invoices/useMarkAsUnpaid";
+import { useBook } from "@/components/projects/invoices/useBook";
+import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
+import { CreateOrderConfirmationButton } from "@/components/projects/buttons/CreateOrderConfirmationButton";
+import { CreateCreditNoteButton } from "@/components/projects/buttons/CreateCreditNoteButton";
+import { CreateMarkAsPaidButton } from "@/components/projects/invoices/buttons/CreateMarkAsPaidButton";
+import { CreateBookButton } from "@/components/projects/invoices/buttons/CreateBookButton";
+import { ExportAbacusButton } from "@/components/projects/buttons/ExportAbacusButton";
+import AbacusExportModal from "@/components/projects/invoices/modals/AbacusExportModal";
 
 const ActivityLogSheetModal = dynamic(
   () => import("@/components/projects/invoices/modals/ActivityLogSheetModal")
@@ -47,13 +62,15 @@ export default function Invoices({ access_token }: any) {
   const [selectedInvoice, setSelectedInvoice] = useState<string | undefined>();
   const [activityOpen, setActivityOpen] = useState(false);
   const [list, setList] = useState<any>(null);
+  const [exportAbacus, setExportAbacus] = useState<boolean>(false);
+  const [exportAbacusInvoice, setExportAbacusInvoice] = useState<any>(null);
 
   const payload: any = {};
   if (router.query.page) payload["page"] = router.query.page;
   if (router.query.search) payload["search"] = router.query.search;
   const queryString = new URLSearchParams(payload).toString();
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     [`/api/projects/invoices?${queryString}`, access_token],
     fetchApi,
     {
@@ -70,6 +87,72 @@ export default function Invoices({ access_token }: any) {
       setList({ ...list, invoice });
     },
   });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      mutate();
+      router.push(`/projects/invoices/${item}`);
+    },
+  });
+  const { mutateChange: mutatePaid, Dialog: MarkAsPaidDialog } = useMarkAsPaid({
+    onSuccess: (item: string, paidDate: string) => {
+      let invoices = list?.invoice as any[];
+      let invoiceIndex = invoices?.findIndex(
+        (inv: any) => inv._invoice_id === item
+      );
+      if (invoiceIndex >= 0) {
+        invoices[invoiceIndex].invoice_status = "paid";
+        invoices[invoiceIndex].invoice_paid_date = paidDate;
+      }
+      setList({ ...list, invoice: invoices });
+    },
+  });
+  const { mutateChange: mutateUnpaid, Dialog: MarkAsUnpaidDialog } =
+    useMarkAsUnpaid({
+      onSuccess: (item: string) => {
+        let invoices = list?.invoice as any[];
+        let invoiceIndex = invoices?.findIndex(
+          (inv: any) => inv._invoice_id === item
+        );
+        if (invoiceIndex >= 0) invoices[invoiceIndex].invoice_status = "active";
+        setList({ ...list, invoice: invoices });
+      },
+    });
+  const { mutateChange: mutateBook, Dialog: BookDialog } = useBook({
+    onSuccess: (item: string, isBooked: boolean, time: string) => {
+      let invoices = list?.invoice as any[];
+      let invoiceIndex = invoices?.findIndex(
+        (inv: any) => inv._invoice_id === item
+      );
+      if (invoiceIndex >= 0) {
+        invoices[invoiceIndex].invoice_is_booked = isBooked ? 1 : 0;
+        invoices[invoiceIndex].invoice_is_booked_date = time;
+      }
+      setList({ ...list, invoice: invoices });
+    },
+  });
+  const { mutateCreate: mutateCreateOffer, Dialog: OfferDialog } =
+    useCreateOffer({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/offers/${item}`);
+      },
+    });
+  const {
+    mutateCreate: mutateCreateOrderConfirmation,
+    Dialog: OrderConfirmationDialog,
+  } = useCreateOrderConfirmation({
+    onSuccess: (item: string) => {
+      mutate();
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+  const { mutateCreate: mutateCreateCreditNote, Dialog: CreateNoteDialog } =
+    useCreateCreditNote({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/credit-note/${item}`);
+      },
+    });
 
   const onPaginate = (page: string) => {
     router.query.page = page;
@@ -92,7 +175,6 @@ export default function Invoices({ access_token }: any) {
   }, [data]);
 
   const onPreviewPdf = async (invoice: any) => {
-    console.log(invoice);
     const res = await previewPdf(invoice?._invoice_id, access_token);
     const blob = await res.blob();
     const objectURL = URL.createObjectURL(blob);
@@ -114,9 +196,27 @@ export default function Invoices({ access_token }: any) {
     a.click();
   };
 
+  const handleAbacusExport = (invoice: any) => {
+    setExportAbacus(true);
+    setExportAbacusInvoice(invoice);
+  };
+
   return (
     <AdminLayout>
       <DeleteDialog />
+      <CopyDialog />
+      <MarkAsPaidDialog />
+      <MarkAsUnpaidDialog />
+      <BookDialog />
+      <OfferDialog />
+      <OrderConfirmationDialog />
+      <CreateNoteDialog />
+      <AbacusExportModal
+        open={exportAbacus}
+        onOpenChange={setExportAbacus}
+        invoice={exportAbacusInvoice}
+        onAdded={() => {}}
+      />
       <ActivityLogSheetModal
         _invoice_id={selectedInvoice}
         open={activityOpen}
@@ -141,7 +241,7 @@ export default function Invoices({ access_token }: any) {
             </Link>
           </div>
           <table className="w-full">
-            <thead className="sticky z-10 top-[var(--header-height)]">
+            <thead className="sticky z-10 top-0">
               <tr>
                 <TH className="ps-4">invoice No.</TH>
                 <TH>Client</TH>
@@ -276,7 +376,7 @@ export default function Invoices({ access_token }: any) {
                       {row.invoice_is_booked == 1 ? (
                         <span
                           className="italic text-sm text-stone-500"
-                          style={{ fontSize: "13px" }}
+                          style={{ fontSize: "10px" }}
                         >
                           {row.invoice_is_booked_date}
                         </span>
@@ -284,7 +384,13 @@ export default function Invoices({ access_token }: any) {
                     </span>
                   </TD>
                   <TD className="align-top">
-                    <StatusChip status={getInvoiceStatus(row)} />
+                    {row.invoice_status === "paid" ? (
+                      <div className="text-[10px] text-center text-white w-fit px-3 py-[2px] rounded-full bg-blue-500">
+                        Paid ({row.invoice_paid_date})
+                      </div>
+                    ) : (
+                      <StatusChip status={getInvoiceStatus(row)} />
+                    )}
                   </TD>
                   <TD className="align-top text-right pe-4">
                     <MoreOption>
@@ -295,28 +401,63 @@ export default function Invoices({ access_token }: any) {
                         <ViewIcon className="w-[18px] h-[18px] text-purple-500" />
                         <span className="text-sm font-medium">View</span>
                       </Link>
-                      <Link
-                        href={`/projects/invoices/${row._invoice_id}/edit`}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <Pencil className="w-[18px] h-[18px] text-blue-500" />
-                        <span className="text-sm font-medium">Update</span>
-                      </Link>
+                      {isOpen(row) ? (
+                        <>
+                          <Link
+                            href={`/projects/invoices/${row._invoice_id}/edit`}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Pencil className="w-[18px] h-[18px] text-blue-500" />
+                            <span className="text-sm font-medium">Update</span>
+                          </Link>
+                          <div
+                            onClick={() => mutateDelete(row._invoice_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </div>
+                        </>
+                      ) : null}
                       <div
-                        onClick={() => mutateDelete(row._invoice_id)}
+                        onClick={() => mutateCopy(row._invoice_id)}
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                       >
-                        <Trash2 className="w-[18px] h-[18px] text-red-500" />
-                        <span className="text-sm font-medium">Delete</span>
+                        <Copy className="w-[18px] h-[18px] text-teal-500" />
+                        <span className="text-sm font-medium">Copy</span>
                       </div>
                       <Separator className="my-2" />
-                      <div
-                        onClick={() => handleClickHistory(row._invoice_id)}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <History className="w-[18px] h-[18px] text-blue-500" />
-                        <span className="text-sm font-medium">History</span>
-                      </div>
+                      <ExportAbacusButton
+                        onExport={() => handleAbacusExport(row)}
+                      />
+                      <CreateMarkAsPaidButton
+                        isPaid={row.invoice_status}
+                        onPaid={() => mutatePaid(row._invoice_id)}
+                        onUnpaid={() => mutateUnpaid(row._invoice_id)}
+                      />
+                      <CreateBookButton
+                        isBooked={row.invoice_is_booked == 1}
+                        onBook={() => mutateBook(row._invoice_id, true)}
+                        onUnbook={() => mutateBook(row._invoice_id, false)}
+                      />
+                      <Separator className="my-2" />
+                      <CreateOfferButton
+                        _offer_id={row.invoice_has_offer}
+                        onCreate={() => mutateCreateOffer(row._invoice_id)}
+                      />
+                      <CreateOrderConfirmationButton
+                        _order_confirmation_id={
+                          row.invoice_has_order_confirmation
+                        }
+                        onCreate={() =>
+                          mutateCreateOrderConfirmation(row._invoice_id)
+                        }
+                      />
+                      <CreateCreditNoteButton
+                        _credit_note_id={row.invoice_has_credit_note}
+                        credit_note_number={row.invoice_original_number}
+                        onCreate={() => mutateCreateCreditNote(row._invoice_id)}
+                      />
                       <Separator className="my-2" />
                       <ItemMenu
                         className="gap-3"
@@ -332,6 +473,14 @@ export default function Invoices({ access_token }: any) {
                         <FileText className="w-[18px] h-[18px] text-red-500" />
                         <span className="font-medium">Save as Pdf</span>
                       </ItemMenu>
+                      <Separator className="my-2" />
+                      <div
+                        onClick={() => handleClickHistory(row._invoice_id)}
+                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                      >
+                        <History className="w-[18px] h-[18px] text-blue-500" />
+                        <span className="text-sm font-medium">History</span>
+                      </div>
                     </MoreOption>
                   </TD>
                 </tr>

@@ -22,18 +22,22 @@ export const status: any = {
   },
 };
 
-export const getPurchaseStatus = ({
-  purchase_order_status,
-}: {
-  purchase_order_status: string;
-}) => {
-  if (purchase_order_status == "closed") {
+export const getPurchaseStatus = ({ po_status }: { po_status: string }) => {
+  if (po_status == "closed") {
     return "closed";
-  } else if (purchase_order_status == "approval") {
+  } else if (po_status == "approval") {
     return "approval";
-  } else if (purchase_order_status == "approved") {
+  } else if (po_status == "approved") {
     return "approved";
   } else {
     return "open";
   }
+};
+
+export const isOpen = ({ po_status }: { po_status: string }) => {
+  if (po_status == "active") {
+    return true;
+  }
+
+  return false;
 };

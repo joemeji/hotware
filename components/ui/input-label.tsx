@@ -1,8 +1,9 @@
-import * as React from "react"
+import * as React from "react";
 
-import { cn } from "@/lib/utils"
+import { cn } from "@/lib/utils";
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps
+  extends React.InputHTMLAttributes<HTMLInputElement> {
   error?: boolean;
   label?: string;
 }
@@ -29,11 +30,11 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
           ref={ref}
           {...props}
         />
-        <span className="px-3 py-3 bg-stone-100">{label}</span>
+        {label ? <span className="px-3 py-3 bg-stone-100">{label}</span> : null}
       </div>
     );
   }
-)
-Input.displayName = "Input"
+);
+Input.displayName = "Input";
 
-export { Input }
+export { Input };

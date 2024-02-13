@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import unitTypes from "@/utils/unitTypes"
 import dayjs from "dayjs";
 import customParseFormat from 'dayjs/plugin/customParseFormat';
-import { ArrowRight, Pencil } from "lucide-react";
+import { ArrowRight, Info, Languages, Pencil, ShieldCheck, Shuffle, Siren, Trash, Users } from "lucide-react";
 
 dayjs.extend(customParseFormat);
 
@@ -18,6 +18,41 @@ export const actionMenu = [
     name: 'Edit',
     icon: <Pencil className={cn("mr-2 h-[18px] w-[18px] text-blue-400")} strokeWidth={2} />,
     actionType: 'edit',
+  },
+  {
+    name: 'Delete',
+    icon: <Trash className={cn("mr-2 h-[18px] w-[18px] text-red-400")} strokeWidth={2} />,
+    actionType: 'delete',
+  },
+  {
+    name: 'Set Access',
+    icon: <Shuffle className={cn("mr-2 h-[18px] w-[18px] text-stone-400")} strokeWidth={2} />,
+    actionType: 'set-access',
+  },
+  {
+    name: 'Emergency Contacts',
+    icon: <Siren className={cn("mr-2 h-[18px] w-[18px] text-rose-400")} strokeWidth={2} />,
+    actionType: 'emergency-contacts',
+  },
+  {
+    name: 'Family Details',
+    icon: <Users className={cn("mr-2 h-[18px] w-[18px] text-slate-400")} strokeWidth={2} />,
+    actionType: 'family-details',
+  },
+  {
+    name: 'User Languages',
+    icon: <Languages className={cn("mr-2 h-[18px] w-[18px] text-orange-400")} strokeWidth={2} />,
+    actionType: 'language',
+  },
+  {
+    name: 'Additional Info',
+    icon: <Info className={cn("mr-2 h-[18px] w-[18px] text-cyan-400")} strokeWidth={2} />,
+    actionType: 'additional-info',
+  },
+  {
+    name: 'Data Protection',
+    icon: <ShieldCheck className={cn("mr-2 h-[18px] w-[18px] text-black")} strokeWidth={2} />,
+    actionType: 'data-protection',
   },
 ];
 

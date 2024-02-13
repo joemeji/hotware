@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { memo, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 // import { Textarea } from "@/components/ui/textarea";
@@ -22,18 +22,71 @@ import useSWR, { useSWRConfig } from "swr";
 // import VatSelect from "@/components/app/vat-select";
 import { useSession } from "next-auth/react";
 
+const CalculationDefaultValues = {
+  oic_service_burner: 0,
+  oic_oil_burner: 0,
+  oic_engineers: 0,
+  oic_hour_rate: 0,
+  oic_days: 0,
+  oic_day_rate: 0,
+  oic_sea_freight_rate: 0,
+  oic_sea_freight_ways: 0,
+  oic_sea_freight_total: 0,
+  oic_trucking_rate: 0,
+  oic_trucking_ways: 0,
+  oic_trucking_total: 0,
+  oic_air_ticket_rate: 0,
+  oic_air_ticket_total: 0,
+  oic_travel_rate: 0,
+  oic_travel_total: 0,
+  oic_site_visit_rate: 0,
+  oic_site_visit_total: 0,
+  oic_rental_car_rate: 0,
+  oic_rental_car_total: 0,
+  oic_crane_rate: 0,
+  oic_documents_rate: 0,
+  oic_hotel_rate: 0,
+  oic_hotel_rooms: 0,
+  oic_hotel_total: 0,
+  oic_traveling_days: 0,
+  oic_traveling_total: 0,
+  oic_installation_days: 0,
+  oic_installation_total: 0,
+  oic_dismantling_days: 0,
+  oic_dismantling_total: 0,
+  oic_equipment_rent_day_rate: 0,
+  oic_equipment_rent_total: 0,
+  oic_equipment_maintenance_day_rate: 0,
+  oic_equipment_maintenance_total: 0,
+  oic_equipment_packing_day_rate: 0,
+  oic_equipment_packing_total: 0,
+  oic_total: 0,
+  oic_liability_insurance_percentage: 0,
+  oic_liability_insurance_total: 0,
+  oic_hotwork_share_percentage: 0,
+  oic_hotwork_share_total: 0,
+  oic_profit_percentage: 0,
+  oic_profit_total: 0,
+  oic_offer_price: 0,
+  oic_waiting_time_for_two_years: 0,
+  oic_waiting_time_total: 0,
+};
+
 function OfferCalculationModal(props: OfferCalculationModalProps) {
   const { data: session }: any = useSession();
-  const { open, onOpenChange, offer_item_id, onAdded, currency, offer_id } =
-    props;
+  const {
+    open,
+    onOpenChange,
+    offer_item_id,
+    onAdded,
+    currency,
+    offer_id,
+    editable,
+  } = props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate } = useSWRConfig();
 
-  const {
-    data: calculation,
-    isLoading,
-    error,
-  } = useSWR(
+  const { data: calculation } = useSWR(
     [
       offer_item_id
         ? `/api/projects/offers/items/calculation/${offer_item_id}`
@@ -108,55 +161,7 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
     watch,
   } = useForm({
     resolver: yupResolver(yupSchema),
-    defaultValues: {
-      oic_service_burner: 0,
-      oic_oil_burner: 0,
-      oic_engineers: 0,
-      oic_hour_rate: 0,
-      oic_days: 0,
-      oic_day_rate: 0,
-      oic_sea_freight_rate: 0,
-      oic_sea_freight_ways: 0,
-      oic_sea_freight_total: 0,
-      oic_trucking_rate: 0,
-      oic_trucking_ways: 0,
-      oic_trucking_total: 0,
-      oic_air_ticket_rate: 0,
-      oic_air_ticket_total: 0,
-      oic_travel_rate: 0,
-      oic_travel_total: 0,
-      oic_site_visit_rate: 0,
-      oic_site_visit_total: 0,
-      oic_rental_car_rate: 0,
-      oic_rental_car_total: 0,
-      oic_crane_rate: 0,
-      oic_documents_rate: 0,
-      oic_hotel_rate: 0,
-      oic_hotel_rooms: 0,
-      oic_hotel_total: 0,
-      oic_traveling_days: 0,
-      oic_traveling_total: 0,
-      oic_installation_days: 0,
-      oic_installation_total: 0,
-      oic_dismantling_days: 0,
-      oic_dismantling_total: 0,
-      oic_equipment_rent_day_rate: 0,
-      oic_equipment_rent_total: 0,
-      oic_equipment_maintenance_day_rate: 0,
-      oic_equipment_maintenance_total: 0,
-      oic_equipment_packing_day_rate: 0,
-      oic_equipment_packing_total: 0,
-      oic_total: 0,
-      oic_liability_insurance_percentage: 0,
-      oic_liability_insurance_total: 0,
-      oic_hotwork_share_percentage: 0,
-      oic_hotwork_share_total: 0,
-      oic_profit_percentage: 0,
-      oic_profit_total: 0,
-      oic_offer_price: 0,
-      oic_waiting_time_for_two_years: 0,
-      oic_waiting_time_total: 0,
-    },
+    defaultValues: CalculationDefaultValues,
   });
   const data = watch();
 
@@ -254,6 +259,7 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
   );
 
   const onSubmitEditForm = async (formData: any) => {
+    if (!editable) return;
     if (Object.keys(errors).length > 0) return;
     try {
       setIsSubmitting(true);
@@ -282,10 +288,10 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
     }
   };
 
-  const onReset = () => {
+  const onReset = useCallback(() => {
     clearErrors();
-    reset();
-  };
+    reset(CalculationDefaultValues);
+  }, [clearErrors, reset]);
 
   useEffect(() => {
     if (!open) clearErrors();
@@ -296,8 +302,10 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
       calculation.calculation.oic_engineers =
         calculation.calculation.oic_engineer;
       reset(calculation?.calculation);
+    } else {
+      onReset();
     }
-  }, [calculation, reset]);
+  }, [calculation, reset, onReset]);
 
   return (
     <>
@@ -339,9 +347,11 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
               </div>
               <div className="col-span-3"></div>
               <div className="col-span-3">
-                <Button type="button" onClick={onReset}>
-                  Clear all fields
-                </Button>
+                {editable ? (
+                  <Button type="button" onClick={onReset}>
+                    Clear all fields
+                  </Button>
+                ) : null}
               </div>
               <div className="col-span-3">
                 <label>Engineers</label>
@@ -1168,9 +1178,11 @@ function OfferCalculationModal(props: OfferCalculationModalProps) {
             </div>
 
             <DialogFooter className="p-3">
-              <Button type="submit" disabled={isSubmitting}>
-                Save
-              </Button>
+              {editable ? (
+                <Button type="submit" disabled={isSubmitting}>
+                  Save
+                </Button>
+              ) : null}
             </DialogFooter>
           </form>
         </DialogContent>
@@ -1188,4 +1200,5 @@ type OfferCalculationModalProps = {
   offer_item_id: any;
   currency: string;
   onAdded?: (updatedItem?: any) => void;
+  editable: boolean;
 };

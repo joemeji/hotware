@@ -21,9 +21,9 @@ import { GripVertical, Pencil, Trash } from "lucide-react";
 import MoreOption from "@/components/MoreOption";
 import { ItemMenu } from "@/components/items";
 import { useDeleteItem } from "./useDeleteItem";
-import ReceiptTotals from "./ReceiptTotals";
 import TextBlocks from "./TextBlocks";
 import EditableTextareaCell from "./table/EditableTextAreaCell";
+import { isOpen } from "@/lib/purchase";
 
 // modals
 const AddEquipmentModal = dynamic(
@@ -44,6 +44,14 @@ const AddTextBlockModal = dynamic(
 const AdditionalHeaderTextModal = dynamic(
   () => import("@/components/PurchaseOrder/modals/AddAdditionalHeaderTextModal")
 );
+
+interface Vat {
+  // Define the structure of each object in the array
+  id: number;
+  description: string;
+  amount: number;
+  // Add other properties as needed
+}
 
 const iconProps = (colorClassName?: any) => ({
   className: cn("mr-2 h-[18px] w-[18px]", colorClassName),
@@ -74,6 +82,10 @@ const EditableInputCell = ({ getValue, row, column, table }: any) => {
       setEditable(false);
     }
   };
+
+  if (!column?.columnDef?.meta?.editable) {
+    return <div>{value}</div>;
+  }
 
   if (editable) {
     return (
@@ -110,10 +122,17 @@ const EditableVatCell = ({ getValue, row, column, table }: any) => {
     setEditable(false);
   };
 
-  return <VatSelect onChangeValue={onChange} value={value} />;
+  return (
+    <VatSelect
+      onChangeValue={onChange}
+      value={value}
+      disabled={!column?.columnDef?.meta?.editable}
+    />
+  );
 };
 
-function PurchaseItemContent({ po_id, currency }: any) {
+function PurchaseItemContent({ po_id, currency, _data }: any) {
+  const isExclusiveVat = _data ? _data.po_is_exclusive_vat : 0;
   const { data: session }: any = useSession();
   const router = useRouter();
   const [addEquipmentOpenModal, setAddEquipmentOpenModal] = useState(false);
@@ -137,8 +156,10 @@ function PurchaseItemContent({ po_id, currency }: any) {
       setItems(updatedList);
     },
   });
+  const editable = _data && isOpen(_data);
 
-  const Actions = ({ row }: any) => {
+  const Actions = ({ row, column }: any) => {
+    if (!column?.columnDef?.meta?.editable) return;
     return (
       <MoreOption>
         <ItemMenu
@@ -168,22 +189,25 @@ function PurchaseItemContent({ po_id, currency }: any) {
       header: "Article No.",
       cell: EditableInputCell,
       meta: {
-        width: "9%",
+        width: "7%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_name", {
       header: "Description",
       cell: EditableTextareaCell,
       meta: {
-        width: "21%",
+        width: "19%",
         id: "po_item_id",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_unit", {
       header: "Unit",
       cell: EditableInputCell,
       meta: {
-        width: "7%",
+        width: "8%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_delivery_date", {
@@ -191,6 +215,7 @@ function PurchaseItemContent({ po_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "8%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_quantity", {
@@ -198,6 +223,7 @@ function PurchaseItemContent({ po_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "8%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_price", {
@@ -205,6 +231,7 @@ function PurchaseItemContent({ po_id, currency }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_vat", {
@@ -212,20 +239,23 @@ function PurchaseItemContent({ po_id, currency }: any) {
       cell: EditableVatCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_discount", {
       header: "Discount",
       cell: EditableInputCell,
       meta: {
-        width: "9%",
+        width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("po_item_line_total", {
       header: "Total Price",
-      cell: ({ getValue }) => (+getValue()).toLocaleString(),
+      cell: ({ getValue }) => parseFloat(getValue()).toLocaleString(),
       meta: {
         width: "11%",
+        editable,
       },
     }),
     columnHelper.accessor("", {
@@ -233,6 +263,7 @@ function PurchaseItemContent({ po_id, currency }: any) {
       cell: Actions,
       meta: {
         width: "7%",
+        editable,
       },
     }),
   ];
@@ -304,26 +335,187 @@ function PurchaseItemContent({ po_id, currency }: any) {
     }
   );
 
-  const subtotal = useMemo(() => {
+  let subtotal = useMemo(() => {
     return (
       items?.reduce(
-        (prev: number, item: any) => prev + Number(item.po_item_line_total),
+        (prev: number, item: any) => prev + parseFloat(item.po_item_line_total),
         0
       ) || 0
     );
   }, [items]);
 
-  const subtotalWithReceiptTotal = useMemo(() => {
-    if (!receiptTotals || !receiptTotals.length) return subtotal;
+  const subtotalWithReceiptTotal = () => {
+    const BASE_SUBTOTAL = subtotal;
+    let vatTotal: number = 0;
+    let vats: Vat[] = [];
 
-    return receiptTotals?.reduce((prev: number, receiptTotal: any) => {
-      const value =
-        receiptTotal.port_is_surcharge == 1
-          ? Number(receiptTotal.port_value)
-          : Number(receiptTotal.port_value) * -1;
-      return prev + value;
-    }, subtotal);
-  }, [subtotal, receiptTotals]);
+    if (items && items.length > 0) {
+      items.map((row: any, key: any) => {
+        let vat = vats && vats.find((vatTemp) => vatTemp.id == row.po_item_vat);
+        let divisible =
+          100 +
+          (isExclusiveVat == 1 ? 0 : parseFloat(row.po_item_vat_percentage));
+        let percentage = parseFloat(row.po_item_vat_percentage) / divisible;
+        let amount = parseFloat(row.po_item_line_total) * percentage;
+
+        if (vat) {
+          vat.amount = vat.amount + amount;
+        } else if (row.po_item_vat != 0) {
+          vats = [
+            ...vats,
+            {
+              id: row.po_item_vat,
+              description: row.vat_description,
+              amount: amount,
+            },
+          ];
+        }
+      });
+    }
+
+    let chargeRows = receiptTotals?.map((receiptTotal: any) => {
+      let amount =
+        parseInt(receiptTotal.port_type) == 2
+          ? (receiptTotal.port_value / 100) * BASE_SUBTOTAL
+          : receiptTotal.port_value;
+      amount =
+        parseInt(receiptTotal.port_is_surcharge) == 1 ? amount : amount * -1;
+      subtotal += parseFloat(amount);
+      let vat =
+        vats && vats.find((vatTemp) => vatTemp.id == receiptTotal.port_vat);
+      let divisible =
+        100 +
+        (isExclusiveVat == 1
+          ? 0
+          : parseFloat(receiptTotal.port_vat_percentage));
+
+      let percentage = parseFloat(receiptTotal.port_vat_percentage) / divisible;
+      let vatAmount = parseFloat(amount) * percentage;
+
+      if (vat) {
+        vat.amount = vat.amount + vatAmount;
+      } else if (parseInt(receiptTotal.port_vat) != 0) {
+        vats = [
+          ...vats,
+          {
+            id: receiptTotal.port_vat,
+            description: receiptTotal.vat_description,
+            amount: vatAmount,
+          },
+        ];
+      }
+
+      return (
+        <tr
+          key={receiptTotal.someUniqueKey}
+          className="w-full bg-white rounded-sm px-4 py-1"
+        >
+          <td className="w-[2%]"></td>
+          <td className="w-[7%]"></td>
+          <td className="w-[19%] py-3 px-2 font-bold">
+            {receiptTotal.port_text}
+          </td>
+          <td className="w-8%]"></td>
+          <td className="w-8%]"></td>
+          <td className="w-8%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]">
+            {receiptTotal.port_vat == 0 ? "No VAT" : receiptTotal.vat_code}
+          </td>
+          <td className="w-[10%]"></td>
+          <td className="w-[11%] py-3 px-2 font-bold">
+            {amount.toLocaleString()}
+          </td>
+          <td className="w-[7%]"></td>
+        </tr>
+      );
+    });
+
+    if (chargeRows && chargeRows.length > 0) {
+      chargeRows.push(
+        <tr key="subtotalRow" className="w-full bg-white rounded-sm px-4 py-1">
+          <td className="w-[2%]"></td>
+          <td className="w-[7%]"></td>
+          <td className="w-[19%] py-3 px-2 font-bold">SUBTOTAL</td>
+          <td className="w-[8%]"></td>
+          <td className="w-[8%]"></td>
+          <td className="w-[8%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[11%] py-3 px-2 font-bold">
+            {subtotal.toLocaleString()}
+          </td>
+          <td className="w-[7%]"></td>
+        </tr>
+      );
+    }
+
+    if (receiptTotals && receiptTotals.length == 0) {
+      chargeRows.push(
+        <tr key="subtotalRow" className="w-full bg-white rounded-sm px-4 py-1">
+          <td className="w-[2%]"></td>
+          <td className="w-[7%]"></td>
+          <td className="w-[19%] py-3 px-2 font-bold">SUBTOTAL</td>
+          <td className="w-[8%]"></td>
+          <td className="w-[8%]"></td>
+          <td className="w-[8%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[10%]"></td>
+          <td className="w-[11%] py-3 px-2 font-bold">
+            {subtotal.toLocaleString()}
+          </td>
+          <td className="w-[7%]"></td>
+        </tr>
+      );
+    }
+
+    chargeRows = vats.reduce((prev, row) => {
+      var vatAmount = row.amount.toFixed(2);
+      vatTotal += parseFloat(vatAmount);
+
+      if (row.amount !== 0) {
+        prev.push(
+          <tr key={row.id} className="w-full bg-white rounded-sm px-4 py-1">
+            <td className="w-[2%]"></td>
+            <td className="w-[7%]"></td>
+            <td className="w-[19%] py-3 px-2 font-bold">{row.description}</td>
+            <td className="w-[8%]"></td>
+            <td className="w-[8%]"></td>
+            <td className="w-[8%]"></td>
+            <td className="w-[10%]"></td>
+            <td className="w-[10%]"></td>
+            <td className="w-[10%]"></td>
+            <td className="w-[11%] py-3 px-2 font-bold">{vatAmount}</td>
+            <td className="w-[7%]"></td>
+          </tr>
+        );
+      }
+
+      return prev;
+    }, chargeRows || []);
+
+    let total = isExclusiveVat == 1 ? subtotal + vatTotal : subtotal;
+    chargeRows.push(
+      <tr key="totalRow" className="w-full bg-white rounded-sm px-4 py-1">
+        <td className="w-[2%]"></td>
+        <td className="w-[7%]"></td>
+        <td className="w-[19%] py-3 px-2 font-bold">TOTAL</td>
+        <td className="w-[8%]"></td>
+        <td className="w-[8%]"></td>
+        <td className="w-[8%]"></td>
+        <td className="w-[10%]"></td>
+        <td className="w-[10%]"></td>
+        <td className="w-[10%]"></td>
+        <td className="w-[11%] py-3 px-2 font-bold">
+          {total.toLocaleString()}
+        </td>
+        <td className="w-[7%]"></td>
+      </tr>
+    );
+    return chargeRows;
+  };
 
   const onClickAddEquipment = useCallback(() => {
     setAddEquipmentOpenModal(!addEquipmentOpenModal);
@@ -428,18 +620,18 @@ function PurchaseItemContent({ po_id, currency }: any) {
 
       <div className="w-3/4 flex flex-col">
         <div className="relative min-h-[calc(100vh-var(--header-height)-40px)]">
-          <DetailsHeader _po_id={router.query.po_id?.toString()} />
+          <DetailsHeader _po_id={router.query.po_id?.toString()} data={_data} />
           <table className="w-full sticky top-[var(--header-height)] z-10 rounded-sm overflow-hidden">
             <thead>
               <tr>
                 <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[2%]"></th>
-                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[9%]">
+                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[7%]">
                   Article No.
                 </th>
-                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[21%]">
+                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[19%]">
                   Equipment
                 </th>
-                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[7%]">
+                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[8%]">
                   Unit
                 </th>
                 <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[8%]">
@@ -454,7 +646,7 @@ function PurchaseItemContent({ po_id, currency }: any) {
                 <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[10%]">
                   VAT
                 </th>
-                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[9%]">
+                <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[10%]">
                   Discount
                 </th>
                 <th className="py-2 px-2 text-sm text-stone-600 font-medium bg-stone-300 w-[11%]">
@@ -467,7 +659,7 @@ function PurchaseItemContent({ po_id, currency }: any) {
             </thead>
           </table>
           <div className="flex flex-col py-1 gap-[5px]">
-            {!isLoading && Array.isArray(data) && data.length === 0 && (
+            {!isLoading && Array.isArray(items) && items.length === 0 && (
               <div className="flex justify-center">
                 <Image
                   src="/images/No data-rafiki.svg"
@@ -516,9 +708,11 @@ function PurchaseItemContent({ po_id, currency }: any) {
                                 {...provided.draggableProps}
                               >
                                 <td className="py-3 px-2 w-[2%] border-b border-b-stone-100 group-last:border-0 align-top">
-                                  <div {...provided.dragHandleProps}>
-                                    <GripVertical />
-                                  </div>
+                                  {editable ? (
+                                    <div {...provided.dragHandleProps}>
+                                      <GripVertical />
+                                    </div>
+                                  ) : null}
                                 </td>
                                 {row.getVisibleCells().map((cell, index) => {
                                   return (
@@ -543,74 +737,49 @@ function PurchaseItemContent({ po_id, currency }: any) {
                         );
                       })}
                       {provided.placeholder}
-                      {Array.isArray(data) && data.length !== 0 ? (
-                        <tr className="w-full bg-white rounded-sm px-4 py-1">
+                      {Array.isArray(items) &&
+                      items.length !== 0 &&
+                      receiptTotals &&
+                      receiptTotals.length > 0 ? (
+                        <tr
+                          key="subtotalRow"
+                          className="w-full bg-white rounded-sm px-4 py-1"
+                        >
                           <td className="w-[2%]"></td>
-                          <td className="w-[9%]"></td>
-                          <td className="w-[21%] py-3 px-2 font-bold">
+                          <td className="w-[7%]"></td>
+                          <td className="w-[19%] py-3 px-2 font-bold">
                             SUBTOTAL
                           </td>
-                          <td className="w-[7%]"></td>
+                          <td className="w-[8%]"></td>
                           <td className="w-[8%]"></td>
                           <td className="w-[8%]"></td>
                           <td className="w-[10%]"></td>
                           <td className="w-[10%]"></td>
-                          <td className="w-[9%]"></td>
+                          <td className="w-[10%]"></td>
                           <td className="w-[11%] py-3 px-2 font-bold">
                             {subtotal.toLocaleString()}
                           </td>
                           <td className="w-[7%]"></td>
                         </tr>
                       ) : null}
-                      <ReceiptTotals list={receiptTotals} />
-                      {Array.isArray(receiptTotals) &&
-                      receiptTotals.length !== 0 ? (
-                        <>
-                          <tr className="w-full bg-white rounded-sm px-4 py-1">
-                            <td className="w-[2%]"></td>
-                            <td className="w-[9%]"></td>
-                            <td className="w-[21%] py-3 px-2 font-bold">
-                              SUBTOTAL
-                            </td>
-                            <td className="w-[7%]"></td>
-                            <td className="w-[8%]"></td>
-                            <td className="w-[8%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[9%]"></td>
-                            <td className="w-[11%] py-3 px-2 font-bold">
-                              {subtotalWithReceiptTotal.toLocaleString()}
-                            </td>
-                            <td className="w-[7%]"></td>
-                          </tr>
-                          <tr className="w-full bg-white rounded-sm px-4 py-1">
-                            <td className="w-[2%]"></td>
-                            <td className="w-[9%]"></td>
-                            <td className="w-[21%] py-3 px-2 font-bold">
-                              TOTAL
-                            </td>
-                            <td className="w-[7%]"></td>
-                            <td className="w-[8%]"></td>
-                            <td className="w-[8%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[10%]"></td>
-                            <td className="w-[9%]"></td>
-                            <td className="w-[11%] py-3 px-2 font-bold">
-                              {subtotalWithReceiptTotal.toLocaleString()}
-                            </td>
-                            <td className="w-[7%]"></td>
-                          </tr>
-                        </>
-                      ) : null}
+                      {Array.isArray(items) && items.length !== 0
+                        ? subtotalWithReceiptTotal()
+                        : null}
                     </tbody>
-                    <TextBlocks list={textBlocks} po_id={router.query.po_id} />
+                    {Array.isArray(items) && items.length !== 0 ? (
+                      <TextBlocks
+                        list={textBlocks}
+                        po_id={router.query.po_id}
+                        editable={editable}
+                      />
+                    ) : null}
                   </table>
                 )}
               </Droppable>
             </DragDropContext>
           </div>
         </div>
-        {!isLoading && (
+        {_data && isOpen(_data) && !isLoading && (
           <div className="flex justify-center gap-2 items-center mt-auto sticky bottom-0 p-2">
             <AddButtonPopover
               onClickAddCustomEquipment={() => setOpenCustomAddItemModal(true)}

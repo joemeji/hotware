@@ -18,7 +18,7 @@ export default function PurchaseView({ po_id, user }: any) {
     <AdminLayout>
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex gap-5">
-          <PurchaseItemContent po_id={po_id} />
+          <PurchaseItemContent po_id={po_id} _data={data} />
           <PurchaseDetails data={data} />
         </div>
       </div>

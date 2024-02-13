@@ -1,6 +1,7 @@
 import AvatarProfile from "@/components/AvatarProfile";
 import { beginScrollDataPagerForInfiniteswr } from "@/components/pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import { AccessTokenContext } from "@/context/access-token-context";
 import { cn } from "@/lib/utils";
 import { baseUrl, fetchApi } from "@/utils/api.config";
@@ -26,16 +27,16 @@ const Employees = ({ filterHeight, onClickEmployee }: Employees) => {
       ];
     }, fetchApi);
 
+  const _data: any = useMemo(() => (data ? [].concat(...data) : []), [data]);
+  const isLoadingMore =
+    isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
+
   const onscrollend = () => {
-    const currentPage = beginScrollDataPagerForInfiniteswr(_data);
+    const currentPage = beginScrollDataPagerForInfiniteswr(_data, size);
     if (currentPage) {
       setSize(currentPage + 1);
     }
   };
-
-  const _data: any = useMemo(() => (data ? [].concat(...data) : []), [data]);
-  const isLoadingMore =
-    isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
 
   useEffect(() => {
     if (Array.isArray(_data)) {
@@ -63,8 +64,9 @@ const Employees = ({ filterHeight, onClickEmployee }: Employees) => {
       className="bg-white rounded-app"
       viewPortClassName=" h-[400px]"
       viewPortStyle={{
-        height: `calc(100vh - ${filterHeight + "px"
-          } - 50px - var(--header-height))`,
+        height: `calc(100vh - ${
+          filterHeight + "px"
+        } - 50px - var(--header-height))`,
       }}
       onScrollEndViewPort={onscrollend}
     >
@@ -133,7 +135,6 @@ const Employees = ({ filterHeight, onClickEmployee }: Employees) => {
             );
           })}
       </div>
-      {/* {isLoadingMore && <LoadingMore />} */}
     </ScrollArea>
   );
 };

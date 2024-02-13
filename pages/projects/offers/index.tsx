@@ -10,6 +10,8 @@ import {
   FileSearch,
   FileText,
   BanIcon,
+  Copy,
+  FileOutput,
 } from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/projects/offers/StatusChip";
@@ -25,19 +27,28 @@ import {
 } from "@/components/ui/tooltip";
 import { addressFormat } from "@/lib/shipping";
 import { cn } from "@/lib/utils";
-import { getOfferStatus } from "@/lib/offer";
+import { getOfferStatus, isOpen, isLost } from "@/lib/offer";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
+import { toast } from "@/components/ui/use-toast";
 import { useDelete } from "@/components/projects/offers/useDelete";
 import { useCancel } from "@/components/projects/offers/useCancel";
+import { useCopy } from "@/components/projects/offers/useCopy";
+import { useRevision } from "@/components/projects/offers/useRevision";
+import { useCreateOrderConfirmation } from "@/components/projects/offers/useCreateOrderConfirmation";
+import { useCreateDeliveryNote } from "@/components/projects/offers/useCreateDeliveryNote";
+import { useCreateInvoice } from "@/components/projects/offers/useCreateInvoice";
 import { previewPdf } from "@/services/projects/offer";
+import { CreateOrderConfirmationButton } from "@/components/projects/buttons/CreateOrderConfirmationButton";
+import { CreateDeliveryNoteButton } from "@/components/projects/buttons/CreateDeliveryNoteButton";
+import { CreateInvoiceButton } from "@/components/projects/buttons/CreateInvoiceButton";
 
 const ActivityLogSheetModal = dynamic(
   () => import("@/components/projects/offers/modals/ActivityLogSheetModal")
@@ -65,13 +76,23 @@ export default function Offers({ access_token }: any) {
   );
   const { mutateDelete, Dialog: DeleteDialog } = useDelete({
     onDelete: (item: string) => {
+      toast({
+        title: "Offer has been deleted successfully.",
+        variant: "success",
+        duration: 2000,
+      });
       const offers =
         list?.offers?.filter((offer: any) => offer._offer_id != item) || [];
       setList({ ...list, offers });
     },
   });
   const { mutateCancel, Dialog: CancelDialog } = useCancel({
-    onDelete: (item: string) => {
+    onCancel: (item: string) => {
+      toast({
+        title: "Offer has been cancelled successfully.",
+        variant: "success",
+        duration: 2000,
+      });
       const offers = list?.offers;
       let offer = offers?.find((offer: any) => offer._offer_id === item);
 
@@ -82,6 +103,41 @@ export default function Offers({ access_token }: any) {
       setList({ ...list, offers });
     },
   });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      mutate();
+      router.push(`/projects/offers/${item}`);
+    },
+  });
+  const { mutateRevision, Dialog: RevisionDialog } = useRevision({
+    onRevision: (item: string) => {
+      mutate();
+      router.push(`/projects/offers/${item}`);
+    },
+  });
+  const {
+    mutateCreate: mutateCreateOrderConfirmation,
+    Dialog: OrderConfirmationDialog,
+  } = useCreateOrderConfirmation({
+    onSuccess: (item: string) => {
+      mutate();
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+  const { mutateCreate: mutateCreateDeliveryNote, Dialog: DeliveryNoteDialog } =
+    useCreateDeliveryNote({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/delivery-note/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateInvoice, Dialog: InvoiceDialog } =
+    useCreateInvoice({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/invoices/${item}`);
+      },
+    });
 
   const onPaginate = (page: string) => {
     router.query.page = page;
@@ -129,6 +185,11 @@ export default function Offers({ access_token }: any) {
     <AdminLayout>
       <DeleteDialog />
       <CancelDialog />
+      <CopyDialog />
+      <RevisionDialog />
+      <OrderConfirmationDialog />
+      <DeliveryNoteDialog />
+      <InvoiceDialog />
       <ActivityLogSheetModal
         _offer_id={selectedOffer}
         open={activityOpen}
@@ -274,27 +335,71 @@ export default function Offers({ access_token }: any) {
                         <ArrowRight className="w-[18px] h-[18px] text-violet-500" />
                         <span className="text-sm font-medium">View</span>
                       </Link>
-                      <Link
-                        href={`/projects/offers/${row._offer_id}/edit`}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <Pencil className="w-[18px] h-[18px] text-blue-500" />
-                        <span className="text-sm font-medium">Update</span>
-                      </Link>
+                      {isOpen(row) ? (
+                        <>
+                          <Link
+                            href={`/projects/offers/${row._offer_id}/edit`}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Pencil className="w-[18px] h-[18px] text-blue-500" />
+                            <span className="text-sm font-medium">Update</span>
+                          </Link>
+                          <div
+                            onClick={() => mutateCancel(row._offer_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <BanIcon className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Lost</span>
+                          </div>
+                          <div
+                            onClick={() => mutateDelete(row._offer_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </div>
+                          <div
+                            onClick={() => mutateRevision(row._offer_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <FileOutput className="w-[18px] h-[18px] text-cyan-500" />
+                            <span className="text-sm font-medium">
+                              Revision
+                            </span>
+                          </div>
+                        </>
+                      ) : null}
                       <div
-                        onClick={() => mutateCancel(row._offer_id)}
+                        onClick={() => mutateCopy(row._offer_id)}
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                       >
-                        <BanIcon className="w-[18px] h-[18px] text-red-500" />
-                        <span className="text-sm font-medium">Lost</span>
+                        <Copy className="w-[18px] h-[18px] text-teal-500" />
+                        <span className="text-sm font-medium">Copy</span>
                       </div>
-                      <div
-                        onClick={() => mutateDelete(row._offer_id)}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <Trash2 className="w-[18px] h-[18px] text-red-500" />
-                        <span className="text-sm font-medium">Delete</span>
-                      </div>
+                      {isLost(row) ? null : (
+                        <>
+                          <Separator className="my-2" />
+                          <CreateOrderConfirmationButton
+                            _order_confirmation_id={
+                              row.offer_has_order_confirmation
+                            }
+                            onCreate={() =>
+                              mutateCreateOrderConfirmation(row._offer_id)
+                            }
+                          />
+                          <CreateDeliveryNoteButton
+                            _delivery_note_id={row.offer_has_delivery_note}
+                            onCreate={() =>
+                              mutateCreateDeliveryNote(row._offer_id)
+                            }
+                          />
+                          <CreateInvoiceButton
+                            _invoice_id={row.offer_has_invoice}
+                            invoice_number={row.offer_original_number}
+                            onCreate={() => mutateCreateInvoice(row._offer_id)}
+                          />
+                        </>
+                      )}
                       <Separator className="my-2" />
                       <div
                         onClick={() => handleClickHistory(row._offer_id)}
@@ -303,21 +408,25 @@ export default function Offers({ access_token }: any) {
                         <History className="w-[18px] h-[18px] text-blue-500" />
                         <span className="text-sm font-medium">History</span>
                       </div>
-                      <Separator className="my-2" />
-                      <ItemMenu
-                        className="gap-3"
-                        onClick={() => onPreviewPdf(row)}
-                      >
-                        <FileSearch className="w-[18px] h-[18px] text-purple-500" />
-                        <span className="font-medium">Preview</span>
-                      </ItemMenu>
-                      <ItemMenu
-                        className="gap-3"
-                        onClick={() => onDownloadPdf(row)}
-                      >
-                        <FileText className="w-[18px] h-[18px] text-red-500" />
-                        <span className="font-medium">Save as Pdf</span>
-                      </ItemMenu>
+                      {isLost(row) ? null : (
+                        <>
+                          <Separator className="my-2" />
+                          <ItemMenu
+                            className="gap-3"
+                            onClick={() => onPreviewPdf(row)}
+                          >
+                            <FileSearch className="w-[18px] h-[18px] text-purple-500" />
+                            <span className="font-medium">Preview</span>
+                          </ItemMenu>
+                          <ItemMenu
+                            className="gap-3"
+                            onClick={() => onDownloadPdf(row)}
+                          >
+                            <FileText className="w-[18px] h-[18px] text-red-500" />
+                            <span className="font-medium">Save as Pdf</span>
+                          </ItemMenu>
+                        </>
+                      )}
                     </MoreOption>
                   </TD>
                 </tr>

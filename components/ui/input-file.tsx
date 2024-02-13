@@ -16,16 +16,10 @@ type InputFile = {
   accept?: string | undefined;
   multiple?: boolean;
   required?: boolean;
+  disabled?: boolean
 };
 
-const InputFile = ({
-  onChange,
-  id,
-  name,
-  accept,
-  multiple,
-  required,
-}: InputFile) => {
+const InputFile = ({ onChange, id, name, accept, multiple, required, disabled }: InputFile) => {
   const [files, setFiles] = useState<any>(null);
   const [inputFile, setInputFile] = useState<any>(null);
 
@@ -68,6 +62,7 @@ const InputFile = ({
         name={name}
         ref={(el) => setInputFile(el)}
         required={required}
+        disabled={disabled}
       />
 
       {files && files.length > 0 && (

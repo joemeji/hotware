@@ -6,14 +6,21 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { authHeaders, baseUrl, fetchApi } from "@/utils/api.config";
+import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import MoreOption from "@/components/MoreOption";
 import { ItemMenu } from "@/components/items";
-import { GripVertical, Trash, Move } from "lucide-react";
+import { Trash, Move, Paperclip } from "lucide-react";
 import EditableTextareaCell from "./table/EditableTextAreaCell";
 import { cn } from "@/lib/utils";
 import { useDeleteTextBlock } from "./useDeleteTextBlock";
+import dynamic from "next/dynamic";
+const AddTextBlockAttachmentModal = dynamic(
+  () =>
+    import(
+      "@/components/projects/delivery-note/modals/AddTextBlockAttachmentModal"
+    )
+);
 
 const iconProps = (colorClassName?: any) => ({
   className: cn("mr-2 h-[18px] w-[18px]", colorClassName),
@@ -23,9 +30,11 @@ const iconProps = (colorClassName?: any) => ({
 export default function TextBlocks({
   delivery_note_id,
   list,
+  editable,
 }: {
   delivery_note_id: any;
   list: any[];
+  editable: boolean;
 }) {
   const { data: session }: any = useSession();
   const [items, setItems] = useState<any[]>([]);
@@ -40,9 +49,22 @@ export default function TextBlocks({
     },
   });
 
+  const [openAddTextBlockAttachmentModal, setOpenAddTextBlockAttachmentModal] =
+    useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
   const Actions = ({ row }: any) => {
     return (
       <MoreOption>
+        <ItemMenu
+          onClick={() => {
+            setSelectedItem(row.original.dntb_id);
+            setOpenAddTextBlockAttachmentModal(true);
+          }}
+        >
+          <Paperclip {...iconProps()} />
+          <span className="font-medium">TextBlock Attachments</span>
+        </ItemMenu>
         <ItemMenu
           onClick={() => {
             mutateDelete(row.original.dntb_id);
@@ -62,6 +84,7 @@ export default function TextBlocks({
       meta: {
         width: "9%",
         colspan: 1,
+        editable,
       },
     }),
     columnHelper.accessor("dntb_text", {
@@ -71,6 +94,7 @@ export default function TextBlocks({
         width: "49%",
         colspan: 3,
         id: "dntb_id",
+        editable,
       },
     }),
     columnHelper.accessor("dn_item_line_total", {
@@ -78,6 +102,7 @@ export default function TextBlocks({
       meta: {
         width: "31%",
         colspan: 3,
+        editable,
       },
     }),
     columnHelper.accessor("dntb_extra_text", {
@@ -86,6 +111,7 @@ export default function TextBlocks({
       meta: {
         width: "49%",
         id: "dntb_id",
+        editable,
       },
     }),
   ];
@@ -177,9 +203,11 @@ export default function TextBlocks({
                           {...provided.draggableProps}
                         >
                           <td className="py-3 px-2 w-[2%] border-b border-b-stone-100 group-last:border-0 align-center">
-                            <div {...provided.dragHandleProps}>
-                              <Move />
-                            </div>
+                            {editable ? (
+                              <div {...provided.dragHandleProps}>
+                                <Move />
+                              </div>
+                            ) : null}
                           </td>
                           <td className="w-[9%]"></td>
                           <td
@@ -200,7 +228,7 @@ export default function TextBlocks({
                             width="7%"
                             className="py-3 px-2 border-b border-b-stone-100 group-last:border-0 align-top"
                           >
-                            <Actions row={row} />
+                            {editable ? <Actions row={row} /> : null}
                           </td>
                         </tr>
                         <tr
@@ -236,6 +264,11 @@ export default function TextBlocks({
         </Droppable>
       </DragDropContext>
       <DeleteDialog />
+      <AddTextBlockAttachmentModal
+        onOpenChange={setOpenAddTextBlockAttachmentModal}
+        open={openAddTextBlockAttachmentModal}
+        dntb_id={selectedItem}
+      />
     </>
   );
 }

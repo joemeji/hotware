@@ -1,40 +1,37 @@
 import AvatarProfile from "@/components/AvatarProfile";
-import { PurchaseOrderDetailsContext } from "@/context/purchase-order-details-context";
 import { baseUrl } from "@/utils/api.config";
 import dayjs from "dayjs";
-import React, { memo, useContext } from "react";
+import React, { memo } from "react";
 import DetailsActions from "./DetailsActions";
 
 type DetailsHeaderParams = {
   _po_id: string | undefined;
+  data: any;
 };
 
-const DetailsHeader = ({ _po_id }: DetailsHeaderParams) => {
-  const purchaseOrderData: any = useContext(PurchaseOrderDetailsContext);
+const DetailsHeader = ({ _po_id, data }: DetailsHeaderParams) => {
+  const firstname = data?.updatedBy_firstname || null;
+  const lastname = data?.updatedBy_lastname || null;
+  const avatarColor = data?.updatedBy_avatar_color || null;
+  const userPhoto = data?.updatedBy_user_photo || null;
+  const updatedData = data?.updated_date
+    ? dayjs(data.updated_date).format("MMMM DD, YYYY HH:DD a")
+    : "-";
 
-  const firstname = purchaseOrderData
-    ? purchaseOrderData.updatedBy_firstname
-    : null;
-  const lastname = purchaseOrderData
-    ? purchaseOrderData.updatedBy_lastname
-    : null;
-  const avatarColor = purchaseOrderData
-    ? purchaseOrderData.updatedBy_avatar_color
-    : null;
-  const userPhoto = purchaseOrderData
-    ? purchaseOrderData.updatedBy_user_photo
-    : null;
-
-  const updatedData = purchaseOrderData
-    ? purchaseOrderData.updated_date
-      ? dayjs(purchaseOrderData.updated_date).format("MMMM DD, YYYY HH:DD a")
-      : "-"
-    : null;
-
+  console.log(data);
   return (
     <div className="flex justify-between py-2 px-3 bg-background rounded-sm mb-2 items-center">
       <div className="flex flex-col gap-1">
-        <p className="text-lg font-medium">Manage Contents</p>
+        <p className="text-lg font-medium">
+          Manage Contents{" "}
+          {data?.po_number && (
+            <span>
+              {"{ "}
+              <span style={{ color: "red" }}>{data.po_number}</span>
+              {" }"}
+            </span>
+          )}
+        </p>
         <div className="flex gap-1 items-center">
           <span className="text-stone-500">Updated by:</span>
           <AvatarProfile
@@ -53,7 +50,7 @@ const DetailsHeader = ({ _po_id }: DetailsHeaderParams) => {
         </div>
       </div>
 
-      <DetailsActions _po_id={_po_id} />
+      <DetailsActions _po_id={_po_id} data={data} />
     </div>
   );
 };

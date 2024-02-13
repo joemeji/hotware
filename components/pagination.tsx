@@ -68,11 +68,8 @@ export function parsePager(html: string, _currentPage: number = 0) {
       if (!elem) return;
 
       const url = new URL(elem.href);
-      const params = url.searchParams;
-
-      const currentSearchParams = new URLSearchParams(location.search);
-
-      const currentPage = currentSearchParams.get("page") || 1;
+      const params = new URLSearchParams(url.search.replace("?", ""));
+      const currentPage = params.get("page") || 1;
 
       const active =
         _currentPage > 0
@@ -98,11 +95,11 @@ export function parsePager(html: string, _currentPage: number = 0) {
   return links;
 }
 
-export function beginScrollDataPagerForInfiniteswr(data: any) {
+export function beginScrollDataPagerForInfiniteswr(data: any, currPage = 1) {
   if (data && Array.isArray(data)) {
     const lastDataItem: any = data[data.length - 1];
     if (!lastDataItem) return null;
-    const pages = parsePager(lastDataItem.pager);
+    const pages = parsePager(lastDataItem.pager, currPage);
     const page: any = pages.find((item: any) => item.active);
     if (!page) return null;
     const lastPage = pages[pages.length - 1];

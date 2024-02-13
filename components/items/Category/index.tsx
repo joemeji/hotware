@@ -11,9 +11,9 @@ const Categories = ({ main_categories }: any) => {
   const categoryId = indexParams ? indexParams[0] : undefined;
 
   return (
-    <div className={cn('w-[400px]')}>
-      <ScrollArea 
-        viewPortClassName="bg-white h-[calc(100vh-var(--header-height)-40px)] rounded-app" 
+    <div className={cn("w-[400px]")}>
+      <ScrollArea
+        viewPortClassName="bg-white h-[calc(100vh-var(--header-height)-40px)] rounded-app"
         className="py-0"
       >
         <span
@@ -24,32 +24,32 @@ const Categories = ({ main_categories }: any) => {
         >
           Filter by Categories
         </span>
-        {main_categories && main_categories.map((item: any, key: number) => (
-          <React.Fragment key={key}>
-            <div className="p-3 back">
-              <span className="text-stone-500 flex mb-2 ms-1">
-                {item.item_main_category_name}
-              </span>
-              <ul className="flex flex-col rounded-md gap-1">
-                {item.categories && item.categories.map((catItem: any, key2: number) => (
-                  <CategoryList 
-                    key={key2}
-                    categoryId={categoryId}
-                    _item_category_id={catItem._item_category_id}
-                    item_category_name={catItem.item_category_name}
-                    sub_categories={catItem.sub_categories}
-                  />
-                ))}
-              </ul>
-            </div>
-            {main_categories.length > key + 1 && (
-              <Separator />
-            )}
-          </React.Fragment>
-        ))}
+        {main_categories &&
+          main_categories.map((item: any, key: number) => (
+            <React.Fragment key={key}>
+              <div className="p-3 back">
+                <span className="text-stone-500 flex mb-2 ms-1">
+                  {item.item_main_category_name}
+                </span>
+                <ul className="flex flex-col rounded-md gap-1">
+                  {item.categories &&
+                    item.categories.map((catItem: any, key2: number) => (
+                      <CategoryList
+                        key={key2}
+                        categoryId={categoryId}
+                        _item_category_id={catItem._item_category_id}
+                        item_category_name={catItem.item_category_name}
+                        sub_categories={catItem.sub_categories}
+                      />
+                    ))}
+                </ul>
+              </div>
+              {main_categories.length > key + 1 && <Separator />}
+            </React.Fragment>
+          ))}
       </ScrollArea>
     </div>
   );
-}
+};
 
 export default memo(Categories);

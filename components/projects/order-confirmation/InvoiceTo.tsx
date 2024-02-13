@@ -27,6 +27,7 @@ const InvoiceTo = ({
                   orderDetails && orderDetails._order_confirmation_id
                 }
                 value={value}
+                defaultValue={value}
                 onChangeValue={onChangeValue}
                 error={error}
               />

@@ -18,7 +18,7 @@ export default function CreditView({ credit_note_id, user }: any) {
     <AdminLayout>
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex gap-5">
-          <CreditItemContent credit_note_id={credit_note_id} />
+          <CreditItemContent credit_note_id={credit_note_id} _data={data} />
           <CreditDetails data={data} />
         </div>
       </div>

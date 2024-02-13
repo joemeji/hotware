@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { memo } from "react";
 import { StatusChip } from "@/components/projects/order-confirmation/StatusChip";
-import { getOrderStatus } from "@/lib/order";
+import { getOrderStatus, isOpen } from "@/lib/order";
 
 function OrderDetails({ data }: OrderDetailsProps) {
   return (
@@ -30,7 +30,7 @@ function OrderDetails({ data }: OrderDetailsProps) {
           )}
         </ScrollArea>
 
-        {data && (
+        {data && isOpen(data) && (
           <Link
             href={`/projects/order-confirmation/${data._order_confirmation_id}/edit`}
           >

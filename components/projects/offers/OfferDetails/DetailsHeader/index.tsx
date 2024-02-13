@@ -14,6 +14,9 @@ const DetailsHeader = ({ _offer_id, data }: DetailsHeaderParams) => {
   const lastname = data?.updatedBy_lastname || null;
   const avatarColor = data?.updatedBy_avatar_color || null;
   const userPhoto = data?.updatedBy_user_photo || null;
+  const number = data?.offer_number ?? "";
+  const version = data?.offer_version > 0 ? `Rev ${data.offer_version}` : "";
+  const offerNumber = number ? `${number} ${version}` : "";
 
   const updatedData = data?.updated_date
     ? dayjs(data.updated_date).format("MMMM DD, YYYY HH:DD a")
@@ -23,7 +26,9 @@ const DetailsHeader = ({ _offer_id, data }: DetailsHeaderParams) => {
     <div className="flex justify-between py-2 px-3 bg-background rounded-sm mb-2 items-center">
       <div className="flex flex-col gap-1">
         <p className="text-lg font-medium">
-          Manage Contents {data?.offer_number ? `{ ${data.offer_number} }` : ""}
+          Manage Contents {"{ "}
+          <span className="text-red-500">{offerNumber}</span>
+          {" }"}
         </p>
         <div className="flex gap-1 items-center">
           <span className="text-stone-500">Updated by:</span>
@@ -43,7 +48,7 @@ const DetailsHeader = ({ _offer_id, data }: DetailsHeaderParams) => {
         </div>
       </div>
 
-      <DetailsActions _offer_id={_offer_id} />
+      <DetailsActions _offer_id={_offer_id} data={data} />
     </div>
   );
 };

@@ -22,6 +22,7 @@ import { useRouter } from "next/router";
 import { TD, TH } from "@/components/items";
 import { SelectedEmployeeContext } from "@/pages/documents/employees";
 import { CheckedFilesContext } from "../../List";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const yupObject: any = {
   folder_name: yup.string().required('This field is required.'),
@@ -119,7 +120,7 @@ function MoveDocument(props: MoveDocumentProps) {
       >
         <DialogContent
           forceMount
-          className="max-w-[700px] p-0 overflow-auto gap-0"
+          className="max-w-[700px] p-0 overflow-hidden gap-0"
         >
           <form action="" onSubmit={onSave}>
             <DialogHeader className="py-2 px-3 flex justify-between flex-row items-center sticky top-0 bg-background z-10">
@@ -142,24 +143,27 @@ function MoveDocument(props: MoveDocumentProps) {
               }}
             />
 
-            <div className="p-3 flex flex-col gap-2">
-              <div>
-
-              </div>
-              <table className="w-full">
-                <thead className="">
-                  <tr>
-                    <TH className="bg-stone-300">Folder Name</TH>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data && data.list.map((folder: any, key: number) => (
-                    <tr className="hover:bg-stone-100 hover:cursor-pointer" onClick={() => onClickFolder(folder.folder_id, folder.parent_id, folder.folder_name)} key={key}>
-                      <TD className="flex items-center border"><Folder height={15} color="orange" />{folder.folder_name}</TD>
+            <div className="p-3 flex flex-col gap-2 h-[55vh]">
+              <ScrollArea
+                className="flex flex-col"
+                viewPortClassName="h-[calc(100vh-var(--header-height)-40px)]"
+              >
+                <table className="w-full">
+                  <thead className="sticky z-10 top-0">
+                    <tr>
+                      <TH className="bg-stone-300">Folder Name</TH>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {data && data.list.map((folder: any, key: number) => (
+                      <tr className="hover:bg-stone-100 hover:cursor-pointer" onClick={() => onClickFolder(folder.folder_id, folder.parent_id, folder.folder_name)} key={key}>
+                        <TD className="flex items-center border"><Folder height={15} color="orange" />{folder.folder_name}</TD>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </ScrollArea>
+
             </div>
           </form>
         </DialogContent>

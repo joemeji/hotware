@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { memo } from "react";
 import { StatusChip } from "@/components/projects/invoices/StatusChip";
-import { getInvoiceStatus } from "@/lib/invoice";
+import { getInvoiceStatus, isOpen } from "@/lib/invoice";
 
 function InvoiceDetails({ data }: InvoiceDetailsProps) {
   return (
@@ -30,7 +30,7 @@ function InvoiceDetails({ data }: InvoiceDetailsProps) {
           )}
         </ScrollArea>
 
-        {data && (
+        {data && isOpen(data) && (
           <Link href={`/projects/invoices/${data._invoice_id}/edit`}>
             <Button
               className={cn(

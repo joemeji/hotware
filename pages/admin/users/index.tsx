@@ -2,7 +2,7 @@ import AdminLayout from "@/components/admin-layout";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
-import { baseUrl } from "@/utils/api.config";
+import { baseUrl, fetcher } from "@/utils/api.config";
 import { avatarFallback } from "@/utils/avatar";
 import { Mail, MoreHorizontal, Phone } from "lucide-react";
 import { GetServerSidePropsContext } from "next";
@@ -13,25 +13,68 @@ import { useEffect, useState } from "react";
 import { TD, TH, UserListHeaderForm, actionMenu, lengthOfService } from "@/components/admin-pages/users";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ItemMenu } from "@/components/items";
+import { DeleteUser } from "@/components/admin-pages/users/modals/DeleteUserModal";
+import EmergencyContactModal from "@/components/admin-pages/users/modals/EmergencyContactModal";
+import FamilyDetailsModal from "@/components/admin-pages/users/modals/FamilyDetailsModal";
+import useSWR from "swr";
+import UserLanguageModal from "@/components/admin-pages/users/modals/UserLanguageModal";
+import AdditionalInfoModal from "@/components/admin-pages/users/modals/AdditionalInfoModal";
+import DataProtectionModal from "@/components/admin-pages/users/modals/DataProtectionModal";
 
 type UsersProps = {
   user: any,
   serverStatus?: number
 }
 
+const swrOptions = {
+  revalidateOnFocus: false,
+  revalidateIfStale: false,
+};
+
 export default function Users(props: UsersProps) {
   const { user, serverStatus } = props;
   const router = useRouter();
   const [userPager, setUserPager] = useState<any>(null);
+  const [deleteUser, setDeleteUser] = useState(false);
+  const [userDetails, setUserDetails] = useState<any>(null);
+  const [emergencyContact, setEmergencyContacts] = useState(false);
+  const [familyDetail, setFamilyDetail] = useState(false);
+  const [userLanguageModal, setUserLanguageModal] = useState(false);
+  const [additionalInfoModal, setAdditionalInfoModal] = useState(false);
+  const [dataProtectionModal, setDataProtectionModal] = useState(false);
 
   const onPaginate = (page: any) => {
     router.query.page = page;
     router.push(router);
   };
+  console.log({ index: user })
 
-  const onClickAction = (actionType: string) => {
+  const onClickAction = (actionType: string, user_id: any, _user: any) => {
+
     if (actionType === 'view') {
-      router.push('/admin/users/123');
+      router.push('/admin/users/' + user_id);
+    } else if (actionType === 'edit') {
+      router.push('/admin/users/' + user_id + '/edit');
+    } else if (actionType === 'add') {
+      router.push('/admin/users/add');
+    } else if (actionType === 'delete') {
+      setDeleteUser(true);
+      setUserDetails(_user);
+    } else if (actionType === 'emergency-contacts') {
+      setEmergencyContacts(true);
+      setUserDetails(_user);
+    } else if (actionType === 'family-details') {
+      setFamilyDetail(true);
+      setUserDetails(_user);
+    } else if (actionType === 'language') {
+      setUserLanguageModal(true);
+      setUserDetails(_user);
+    } else if (actionType === 'additional-info') {
+      setAdditionalInfoModal(true);
+      setUserDetails(_user);
+    } else if (actionType === 'data-protection') {
+      setDataProtectionModal(true);
+      setUserDetails(_user);
     }
   };
 
@@ -60,10 +103,55 @@ export default function Users(props: UsersProps) {
 
   return (
     <AdminLayout>
+      {dataProtectionModal && (
+        <DataProtectionModal
+          open={dataProtectionModal}
+          onOpenChange={(open: any) => setDataProtectionModal(open)}
+          user={userDetails && userDetails}
+        />
+      )}
+      {additionalInfoModal && (
+        <AdditionalInfoModal
+          open={additionalInfoModal}
+          onOpenChange={(open: any) => setAdditionalInfoModal(open)}
+          user={userDetails && userDetails}
+        />
+      )}
+      {userLanguageModal && (
+        <UserLanguageModal
+          open={userLanguageModal}
+          onOpenChange={(open: any) => setUserLanguageModal(open)}
+          user={userDetails && userDetails}
+        />
+      )}
+      {familyDetail && (
+        <FamilyDetailsModal
+          open={familyDetail}
+          onOpenChange={(open: any) => setFamilyDetail(open)}
+          user={userDetails && userDetails}
+        />
+      )}
+
+      {deleteUser && (
+        <DeleteUser
+          open={deleteUser}
+          onOpenChange={(open: any) => setDeleteUser(open)}
+          user={userDetails && userDetails}
+        />
+      )}
+
+      {emergencyContact && (
+        <EmergencyContactModal
+          open={emergencyContact}
+          onOpenChange={(open: any) => setEmergencyContacts(open)}
+          user={userDetails && userDetails}
+        />
+      )}
+
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-medium">Users</h1>
-          <Button>Add User</Button>
+          <Button onClick={() => onClickAction('add', null, null)}>Add User</Button>
         </div>
 
         <div className="rounded-xl bg-white pt-5 pb-2 mt-4 shadow-sm flex flex-col min-h-[600px]">
@@ -137,7 +225,7 @@ export default function Users(props: UsersProps) {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="border border-stone-50">
                         {[...actionMenu].map((action, key) => (
-                          <ItemMenu key={key} onClick={() => onClickAction(action.actionType)}>
+                          <ItemMenu key={key} onClick={() => onClickAction(action.actionType, user.user_id, user)}>
                             {action.icon}
                             <span className="text-stone-600 text-sm">{action.name}</span>
                           </ItemMenu>

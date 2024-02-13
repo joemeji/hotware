@@ -8,16 +8,30 @@ import {
   History,
   Trash2,
   FileText,
+  Copy,
 } from "lucide-react";
 import React, { memo, useState } from "react";
 import { useSWRConfig } from "swr";
 import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
-import { useDelete } from "@/components/projects/invoices/useDelete";
 import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import { previewPdf } from "@/services/projects/invoice";
 import { useSession } from "next-auth/react";
+import { useDelete } from "@/components/projects/invoices/useDelete";
+import { useCopy } from "@/components/projects/invoices/useCopy";
+import { useCreateOffer } from "@/components/projects/invoices/useCreateOffer";
+import { useCreateOrderConfirmation } from "@/components/projects/invoices/useCreateOrderConfirmation";
+import { useCreateCreditNote } from "@/components/projects/invoices/useCreateCreditNote";
+import { useMarkAsPaid } from "@/components/projects/invoices/useMarkAsPaid";
+import { useMarkAsUnpaid } from "@/components/projects/invoices/useMarkAsUnpaid";
+import { useBook } from "@/components/projects/invoices/useBook";
+import { CreateMarkAsPaidButton } from "../../buttons/CreateMarkAsPaidButton";
+import { CreateBookButton } from "../../buttons/CreateBookButton";
+import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
+import { CreateOrderConfirmationButton } from "@/components/projects/buttons/CreateOrderConfirmationButton";
+import { CreateCreditNoteButton } from "@/components/projects/buttons/CreateCreditNoteButton";
+import { isOpen } from "@/lib/invoice";
 
 const ChangeStatusModal = dynamic(
   () => import("../../modals/ChangeStatusModal")
@@ -28,9 +42,11 @@ const ActivityLogSheetModal = dynamic(
 
 type DetailsActionsParams = {
   _invoice_id: string | undefined;
+  data: any;
 };
 
-function DetailsActions({ _invoice_id }: DetailsActionsParams) {
+function DetailsActions({ _invoice_id, data }: DetailsActionsParams) {
+  const { mutate } = useSWRConfig();
   const router = useRouter();
   const { data: session }: any = useSession();
   const [statusModalOpen, setStatusModalOpen] = useState(false);
@@ -42,11 +58,70 @@ function DetailsActions({ _invoice_id }: DetailsActionsParams) {
         variant: "success",
         duration: 2000,
       });
+      mutate(
+        [`/api/projects/invoices?`, session?.user?.access_token],
+        undefined
+      );
       setTimeout(() => {
         router.push("/projects/invoices");
       }, 300);
     },
   });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      router.push(`/projects/invoices/${item}`);
+    },
+  });
+  const { mutateChange: mutatePaid, Dialog: MarkAsPaidDialog } = useMarkAsPaid({
+    onSuccess: (item: string, paidDate: string) => {
+      data.invoice_status = "paid";
+      data.invoice_paid_date = paidDate;
+      mutate([
+        `/api/projects/invoices/details/${_invoice_id}`,
+        session?.user?.access_token,
+      ]);
+    },
+  });
+  const { mutateChange: mutateUnpaid, Dialog: MarkAsUnpaidDialog } =
+    useMarkAsUnpaid({
+      onSuccess: (item: string) => {
+        data.invoice_status = "active";
+        mutate([
+          `/api/projects/invoices/details/${_invoice_id}`,
+          session?.user?.access_token,
+        ]);
+      },
+    });
+  const { mutateChange: mutateBook, Dialog: BookDialog } = useBook({
+    onSuccess: (item: string, isBooked: boolean, time: string) => {
+      data.invoice_is_booked = isBooked ? 1 : 0;
+      data.invoice_is_booked_date = time;
+      mutate([
+        `/api/projects/invoices/details/${_invoice_id}`,
+        session?.user?.access_token,
+      ]);
+    },
+  });
+  const { mutateCreate: mutateCreateOffer, Dialog: OfferDialog } =
+    useCreateOffer({
+      onSuccess: (item: string) => {
+        router.push(`/projects/offers/${item}`);
+      },
+    });
+  const {
+    mutateCreate: mutateCreateOrderConfirmation,
+    Dialog: OrderConfirmationDialog,
+  } = useCreateOrderConfirmation({
+    onSuccess: (item: string) => {
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+  const { mutateCreate: mutateCreateCreditNote, Dialog: CreateNoteDialog } =
+    useCreateCreditNote({
+      onSuccess: (item: string) => {
+        router.push(`/projects/credit-note/${item}`);
+      },
+    });
 
   const onPreviewPdf = async (_invoice_id: any) => {
     const res = await previewPdf(_invoice_id, session?.user?.access_token);
@@ -73,6 +148,13 @@ function DetailsActions({ _invoice_id }: DetailsActionsParams) {
   return (
     <React.Fragment>
       <DeleteDialog />
+      <CopyDialog />
+      <MarkAsPaidDialog />
+      <MarkAsUnpaidDialog />
+      <BookDialog />
+      <OfferDialog />
+      <OrderConfirmationDialog />
+      <CreateNoteDialog />
 
       <ChangeStatusModal
         onOpenChange={(open: any) => setStatusModalOpen(open)}
@@ -97,15 +179,44 @@ function DetailsActions({ _invoice_id }: DetailsActionsParams) {
             </DetailAction>
           }
         >
-          <DetailActionDropdownItem
-            onClick={() => setActivityOpen(true)}
-            label="History"
-            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
+          {data && isOpen(data) ? (
+            <DetailActionDropdownItem
+              label="Delete"
+              onClick={() => mutateDelete(_invoice_id)}
+              icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
+            />
+          ) : null}
+          <ItemMenu
+            onClick={() => mutateCopy(_invoice_id)}
+            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+          >
+            <Copy className="w-[18px] h-[18px] text-teal-500" />
+            <span className="text-sm font-medium">Copy</span>
+          </ItemMenu>
+          <Separator className="my-2" />
+          <CreateMarkAsPaidButton
+            isPaid={data?.invoice_status}
+            onPaid={() => mutatePaid(_invoice_id)}
+            onUnpaid={() => mutateUnpaid(_invoice_id)}
           />
-          <DetailActionDropdownItem
-            label="Delete"
-            onClick={() => mutateDelete(_invoice_id)}
-            icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
+          <CreateBookButton
+            isBooked={data?.invoice_is_booked == 1}
+            onBook={() => mutateBook(_invoice_id, true)}
+            onUnbook={() => mutateBook(_invoice_id, false)}
+          />
+          <Separator className="my-2" />
+          <CreateOfferButton
+            _offer_id={data?.invoice_has_offer}
+            onCreate={() => mutateCreateOffer(_invoice_id)}
+          />
+          <CreateOrderConfirmationButton
+            _order_confirmation_id={data?.invoice_has_order_confirmation}
+            onCreate={() => mutateCreateOrderConfirmation(_invoice_id)}
+          />
+          <CreateCreditNoteButton
+            _credit_note_id={data?.invoice_has_credit_note}
+            credit_note_number={data?.invoice_original_number}
+            onCreate={() => mutateCreateCreditNote(_invoice_id)}
           />
           <Separator className="my-2" />
           <ItemMenu
@@ -115,6 +226,12 @@ function DetailsActions({ _invoice_id }: DetailsActionsParams) {
             <FileText className="w-[18px] h-[18px] text-red-500" />
             <span className="font-medium">Save as Pdf</span>
           </ItemMenu>
+          <Separator className="my-2" />
+          <DetailActionDropdownItem
+            onClick={() => setActivityOpen(true)}
+            label="History"
+            icon={<History className="w-[18px] h-[18px] text-blue-500" />}
+          />
         </MoreOption>
       </div>
     </React.Fragment>

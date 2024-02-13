@@ -18,7 +18,7 @@ export default function OfferView({ invoice_id, user }: any) {
     <AdminLayout>
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex gap-5">
-          <InvoiceItemContent invoice_id={invoice_id} />
+          <InvoiceItemContent invoice_id={invoice_id} _data={data} />
           <InvoiceDetails data={data} />
         </div>
       </div>

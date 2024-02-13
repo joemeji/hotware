@@ -20,6 +20,7 @@ const DeliverTo = (props: DeliverToProps) => {
               <CmsSelect
                 shipping_id={creditDetails && creditDetails._credit_note_id}
                 value={value}
+                defaultValue={value}
                 onChangeValue={onChangeValue}
                 error={error}
               />

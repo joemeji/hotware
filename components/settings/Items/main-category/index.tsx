@@ -18,7 +18,7 @@ import { AccessTokenContext } from "@/context/access-token-context";
 
 export const SettingsItemsMainCategory = () => {
   const { data }: any = useSession();
-  const roleId = parseInt(data?.user?.role_id) ?? null;
+  const roleId = 1//parseInt(data?.user?.role_id) ?? null;
 
   const [searchText, setSearchText] = useState('');
   const [loading, setLoading] = useState(false);

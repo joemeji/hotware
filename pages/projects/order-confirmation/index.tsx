@@ -2,8 +2,16 @@ import AvatarProfile from "@/components/AvatarProfile";
 import MoreOption from "@/components/MoreOption";
 import { ItemMenu } from "@/components/items";
 import AdminLayout from "@/components/admin-layout";
-import { ArrowRight, Pencil, History, Trash2, FileSearch,
-  FileText, } from "lucide-react";
+import {
+  ArrowRight,
+  Pencil,
+  History,
+  Trash2,
+  FileSearch,
+  FileText,
+  FileOutput,
+  Copy,
+} from "lucide-react";
 import Pagination from "@/components/pagination";
 import { StatusChip } from "@/components/projects/order-confirmation/StatusChip";
 import { Button } from "@/components/ui/button";
@@ -18,7 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 import { addressFormat } from "@/lib/shipping";
 import { cn } from "@/lib/utils";
-import { getOrderStatus } from "@/lib/order";
+import { getOrderStatus, isCancelled, isOpen } from "@/lib/order";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
@@ -28,8 +36,19 @@ import { useRouter } from "next/router";
 import { useMemo, useState, useEffect } from "react";
 import useSWR from "swr";
 import dynamic from "next/dynamic";
-import { useDelete } from "@/components/projects/order-confirmation/useDelete";
 import { previewPdf } from "@/services/projects/order";
+import { ProgressRing } from "@/components/ProgressRing";
+import { useDelete } from "@/components/projects/order-confirmation/useDelete";
+import { useCopy } from "@/components/projects/order-confirmation/useCopy";
+import { useChangeStatus } from "@/components/projects/order-confirmation/useChangeStatus";
+import { useCreateOffer } from "@/components/projects/order-confirmation/useCreateOffer";
+import { useCreateDeliveryNote } from "@/components/projects/order-confirmation/useCreateDeliveryNote";
+import { useCreateInvoice } from "@/components/projects/order-confirmation/useCreateInvoice";
+import { useCreateProject } from "@/components/projects/order-confirmation/useCreateProject";
+import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
+import { CreateDeliveryNoteButton } from "@/components/projects/buttons/CreateDeliveryNoteButton";
+import { CreateInvoiceButton } from "@/components/projects/buttons/CreateInvoiceButton";
+import { CreateProjectButton } from "@/components/projects/buttons/CreateProjectButton";
 
 const ActivityLogSheetModal = dynamic(
   () =>
@@ -52,7 +71,7 @@ export default function OrderConfirmation({ access_token }: any) {
   if (router.query.search) payload["search"] = router.query.search;
   const queryString = new URLSearchParams(payload).toString();
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, mutate } = useSWR(
     [`/api/projects/orders?${queryString}`, access_token],
     fetchApi,
     {
@@ -71,6 +90,44 @@ export default function OrderConfirmation({ access_token }: any) {
       setList({ ...list, order_confirmation });
     },
   });
+  const { mutateCopy, Dialog: CopyDialog } = useCopy({
+    onCopy: (item: string) => {
+      mutate();
+      router.push(`/projects/order-confirmation/${item}`);
+    },
+  });
+  const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
+    onChange: (item: string) => {
+      mutate();
+    },
+  });
+  const { mutateCreate: mutateCreateOffer, Dialog: OfferDialog } =
+    useCreateOffer({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/offers/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateDeliveryNote, Dialog: DeliveryNoteDialog } =
+    useCreateDeliveryNote({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/delivery-note/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateInvoice, Dialog: InvoiceDialog } =
+    useCreateInvoice({
+      onSuccess: (item: string) => {
+        mutate();
+        router.push(`/projects/invoices/${item}`);
+      },
+    });
+  const { mutateCreate: mutateCreateProject, Dialog: ProjectDialog } =
+    useCreateProject({
+      onSuccess: (item: string) => {
+        router.push(`/projects/add/${item}`);
+      },
+    });
 
   const onPaginate = (page: string) => {
     router.query.page = page;
@@ -132,6 +189,13 @@ export default function OrderConfirmation({ access_token }: any) {
   return (
     <AdminLayout>
       <DeleteDialog />
+      <CopyDialog />
+      <ChangeStatusDialog />
+      <OfferDialog />
+      <DeliveryNoteDialog />
+      <InvoiceDialog />
+      <ProjectDialog />
+
       <ActivityLogSheetModal
         _order_confirmation_id={selectedOrderConfirmation}
         open={activityOpen}
@@ -281,41 +345,12 @@ export default function OrderConfirmation({ access_token }: any) {
                   </TD>
                   <TD className="align-top">
                     {list && list.order_confirmation ? (
-                      <div className="relative w-20 w-10">
-                        <svg className="w-full h-full" viewBox="0 0 100 100">
-                          <circle
-                            className="text-gray-200 stroke-current"
-                            strokeWidth="10"
-                            cx="50"
-                            cy="50"
-                            r="40"
-                            fill="transparent"
-                          ></circle>
-                          <circle
-                            className="text-green-500  progress-ring__circle stroke-current"
-                            strokeWidth="10"
-                            strokeLinecap="round"
-                            cx="50"
-                            cy="50"
-                            r="40"
-                            fill="transparent"
-                            strokeDasharray="400"
-                            strokeDashoffset={
-                              (400 * (100 - (row.percentage_completion || 0))) /
-                              100
-                            }
-                          ></circle>
-                          <text
-                            x="50"
-                            y="50"
-                            fontFamily="Verdana"
-                            fontSize="20"
-                            textAnchor="middle"
-                            alignmentBaseline="middle"
-                          >
-                            {list.order_confirmation[0]?.percentage_completion}%
-                          </text>
-                        </svg>
+                      <div className="relative flex items-center justify-center">
+                        <ProgressRing
+                          radius={30}
+                          stroke={4}
+                          progress={Number(row.percentage_completion)}
+                        />
                       </div>
                     ) : null}
                   </TD>
@@ -328,20 +363,80 @@ export default function OrderConfirmation({ access_token }: any) {
                         <ArrowRight className="w-[18px] h-[18px] text-violet-500" />
                         <span className="text-sm font-medium">View</span>
                       </Link>
-                      <Link
-                        href={`/projects/order-confirmation/${row._order_confirmation_id}/edit`}
-                        className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                      >
-                        <Pencil className="w-[18px] h-[18px] text-blue-500" />
-                        <span className="text-sm font-medium">Update</span>
-                      </Link>
+                      {isOpen(row) ? (
+                        <>
+                          <Link
+                            href={`/projects/order-confirmation/${row._order_confirmation_id}/edit`}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Pencil className="w-[18px] h-[18px] text-blue-500" />
+                            <span className="text-sm font-medium">Update</span>
+                          </Link>
+                          <div
+                            onClick={() =>
+                              mutateChange(row._order_confirmation_id)
+                            }
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                            <span className="text-sm font-medium">
+                              Change Status
+                            </span>
+                          </div>
+                          <div
+                            onClick={() =>
+                              mutateDelete(row._order_confirmation_id)
+                            }
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </div>
+                        </>
+                      ) : null}
                       <div
-                        onClick={() => mutateDelete(row._order_confirmation_id)}
+                        onClick={() => mutateCopy(row._order_confirmation_id)}
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                       >
-                        <Trash2 className="w-[18px] h-[18px] text-red-500" />
-                        <span className="text-sm font-medium">Delete</span>
+                        <Copy className="w-[18px] h-[18px] text-teal-500" />
+                        <span className="text-sm font-medium">Copy</span>
                       </div>
+                      {isCancelled(row) ? null : (
+                        <>
+                          <Separator className="my-2" />
+                          <CreateOfferButton
+                            _offer_id={row.order_confirmation_has_offer}
+                            onCreate={() =>
+                              mutateCreateOffer(row._order_confirmation_id)
+                            }
+                          />
+                          <CreateDeliveryNoteButton
+                            _delivery_note_id={
+                              row.order_confirmation_has_delivery_note
+                            }
+                            onCreate={() =>
+                              mutateCreateDeliveryNote(
+                                row._order_confirmation_id
+                              )
+                            }
+                          />
+                          <CreateInvoiceButton
+                            _invoice_id={row.order_confirmation_has_invoice}
+                            invoice_number={
+                              row.order_confirmation_original_number
+                            }
+                            onCreate={() =>
+                              mutateCreateInvoice(row._order_confirmation_id)
+                            }
+                          />
+                          <CreateProjectButton
+                            _project_id={row.order_confirmation_has_project}
+                            onCreate={() =>
+                              mutateCreateProject(row.order_confirmation_id)
+                            }
+                          />
+                        </>
+                      )}
                       <Separator className="my-2" />
                       <div
                         onClick={() =>

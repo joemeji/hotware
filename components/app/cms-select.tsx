@@ -50,10 +50,10 @@ const CmsSelect = (props: CmsSelectProps) => {
     isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
 
   const onscrollend = () => {
-    const currentPage = beginScrollDataPagerForInfiniteswr(_data);
+    const currentPage = beginScrollDataPagerForInfiniteswr(_data, size);
 
     if (currentPage) {
-      setSize(size + 1);
+      setSize(currentPage + 1);
     }
   };
 

@@ -1,15 +1,23 @@
 import { forwardRef } from "react";
 import { Editor } from "@tinymce/tinymce-react";
 
-export const RichTextEditor = forwardRef(function RichTextEditor(props: any, ref: any) {
+interface RichTextEditor {
+  height?: number;
+  value?: any;
+}
+
+export const RichTextEditor = forwardRef(function RichTextEditor(
+  props: RichTextEditor,
+  ref: any
+) {
   return (
     <Editor
       apiKey="04sk289ludyrfi5kd1q177jn3s1gawi4oh2ekv65iajnsacb"
       onInit={(evt: any, editor: any) => (ref.current = editor)}
-      initialValue={props?.value || ''}
+      initialValue={props?.value || ""}
       init={{
         ui_mode: "split",
-        height: 500,
+        height: props?.height || 500,
         menubar: false,
         plugins: [
           "advlist",
