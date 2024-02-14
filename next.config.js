@@ -59,7 +59,7 @@ const nextConfig = {
       },
       {
         protocol: "https",
-        hostname: "hotware.vercel.app",
+        hostname: "api.hotwork.ag",
         port: "",
         pathname: "/equipments/**",
       },
