@@ -57,6 +57,12 @@ const nextConfig = {
         port: "",
         pathname: "/apps/Hotware/app/**",
       },
+      {
+        protocol: "https",
+        hostname: "hotware.vercel.app",
+        port: "",
+        pathname: "/equipments/**",
+      },
     ],
   },
   staticPageGenerationTimeout: 1000,
