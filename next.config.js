@@ -58,12 +58,6 @@ const nextConfig = {
         port: "",
         pathname: "/apps/Hotware/app/**",
       },
-      {
-        protocol: "https",
-        hostname: "api.hotwork.ag",
-        port: "",
-        pathname: "/equipments/**",
-      },
     ],
   },
   staticPageGenerationTimeout: 1000,
