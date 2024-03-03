@@ -12,6 +12,7 @@ import Pagination from "@/components/pagination";
 import { toast } from "@/components/ui/use-toast";
 import { CountryModal } from "../../modals/CountryModal";
 import { DeleteCountryConfirmModal } from "../../modals/DeleteCountryConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsCountryLists = () => {
   const router = useRouter();
@@ -109,7 +110,7 @@ const SettingsCountryLists = () => {
                 countries.map((country: any, i: number) => {
                   return (
                     <tr key={i}>
-                      <TD>{country.country_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD>{country.country_name}</TD>
                       <TD className="text-center">
                         {country?.country_details_maximum_working_hrs_per_day ??

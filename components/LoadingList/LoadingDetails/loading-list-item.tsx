@@ -713,7 +713,9 @@ export const LoadingListItem = (props: LoadingListItemProps) => {
                               );
                             })}
                           <td className="py-3 px-2 text-center max-w-[100px]">
-                            {item.original.loading_item_total_weight}
+                            {Number(
+                              item.original.loading_item_total_weight
+                            ).toFixed(2)}
                           </td>
                           <td className="py-3 px-2 text-center max-w-[120px]">
                             {item.original.loading_item_is_set == 1 ? (

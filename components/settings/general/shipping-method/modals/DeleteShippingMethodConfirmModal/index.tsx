@@ -4,10 +4,10 @@ import { toast } from "@/components/ui/use-toast";
 import { AlertCircle } from "lucide-react";
 import { mutate } from "swr";
 
-export const DeleteShippingMethodConfirmModal = (props: ICountryModal) => {
+export const DeleteShippingMethodConfirmModal = (props: IShippingMethodModal) => {
   const { open, onOpenChange, data, listUrl } = props;
 
-  const deleteCurrency = async() => {
+  const deleteShippingMethod = async() => {
 
     try {
       const res = await fetch(
@@ -52,7 +52,7 @@ export const DeleteShippingMethodConfirmModal = (props: ICountryModal) => {
           </p>
           <div className='flex gap-2'>
             <Button variant='default' onClick={() => onOpenChange && onOpenChange(false)}>Cancel</Button>
-            <Button variant='red' onClick={deleteCurrency}>Yes</Button>
+            <Button variant='red' onClick={deleteShippingMethod}>Yes</Button>
           </div>
         </div>
       </div>
@@ -60,7 +60,7 @@ export const DeleteShippingMethodConfirmModal = (props: ICountryModal) => {
   );
 };
 
-type ICountryModal = {
+type IShippingMethodModal = {
   open?: boolean;
   data?: any;
   listUrl: string;

@@ -5,24 +5,28 @@ import { authHeaders } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
 import { getOrderConfirmation } from "@/services/projects/order";
+import { AccessTokenContext } from "@/context/access-token-context";
 
 export default function EditOrder({
   _order_confirmation_id,
   order_confirmation,
+  access_token,
 }: any) {
   return (
     <AdminLayout>
-      <EditOrderDetails
-        id={_order_confirmation_id}
-        order_confirmation={order_confirmation}
-      />
+      <AccessTokenContext.Provider value={access_token}>
+        <EditOrderDetails
+          id={_order_confirmation_id}
+          order_confirmation={order_confirmation}
+        />
+      </AccessTokenContext.Provider>
     </AdminLayout>
   );
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getServerSession(context.req, context.res, authOptions);
-
+  let token = null;
   if (!session?.user?.access_token) {
     return {
       redirect: {
@@ -30,6 +34,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         permanent: false,
       },
     };
+  } else {
+    token = session?.user?.access_token;
   }
 
   if (!context?.params?.order_confirmation_id) {
@@ -61,6 +67,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     props: {
       _order_confirmation_id: context.params.order_confirmation_id,
       order_confirmation,
+      access_token: token,
     },
   };
 }

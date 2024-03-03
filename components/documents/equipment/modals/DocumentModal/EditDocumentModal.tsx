@@ -23,13 +23,14 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import ReminderDay from "@/components/documents/employees/modals/NewDocumentModal/ReminderDay";
+import { cn } from "@/lib/utils";
 
 const yupSchema = yup.object({
   document_name: yup.string().required("Document name is required."),
   document_description: yup.string(),
   document_language_id: yup.string(),
   document_category_id: yup.string(),
-  userfile: yup.mixed().required("Document File is required."),
+  userfile: yup.mixed(),
   document_with_expiry: yup.boolean(),
   document_expiry_date: yup.string(),
 });
@@ -42,9 +43,8 @@ function EditDocument(props: EditDocumentProps) {
   const [footerHeight, setFooterHeight] = useState(0);
   const [reminderExt, setReminderExt] = useState({});
   const [inputDaysValues, setInputDaysValues] = useState<any>({});
-  const parent_id = router.query.parent_id;
-  const user_id = router.query.user_id;
-  console.log({ document: document });
+  const [loading, setLoading] = useState(false);
+
   const {
     control,
     register,
@@ -63,7 +63,7 @@ function EditDocument(props: EditDocumentProps) {
       document_expiry_date: document.expiry_date,
     },
   });
-  console.log({ document: document });
+
   const [withSerial, setWithSerial] = useState(
     getValues("document_with_expiry")
   );
@@ -84,54 +84,60 @@ function EditDocument(props: EditDocumentProps) {
   };
 
   const onSubmit = async (data: any) => {
-    const _data = { ...data };
-    const formData = new FormData();
+    try {
+      setLoading(true);
+      const _data = { ...data };
+      const formData = new FormData();
 
-    if (_data.document_with_expiry) {
-      for (let [key, value] of Object.entries(reminderExt)) {
-        _data[key] = value;
+      if (_data.document_with_expiry) {
+        for (let [key, value] of Object.entries(reminderExt)) {
+          _data[key] = value;
+        }
+        for (let [key, value] of Object.entries(inputDaysValues)) {
+          _data[key] = value;
+        }
+      } else {
+        delete _data.document_expiry_date;
       }
-      for (let [key, value] of Object.entries(inputDaysValues)) {
-        _data[key] = value;
+
+      for (let [key, value] of Object.entries(_data)) {
+        formData.append(key, value as string);
       }
-    } else {
-      delete _data.document_expiry_date;
-    }
+      // TODO onSubmit
 
-    for (let [key, value] of Object.entries(_data)) {
-      formData.append(key, value as string);
-    }
-    // TODO onSubmit
+      const res = await fetch(
+        `${baseUrl}/api/document/equipment/update_equipment_document/${document.id}`,
+        {
+          method: "POST",
+          body: formData,
+          headers: authHeaders(session.user.access_token, true),
+        }
+      );
 
-    const res = await fetch(
-      `${baseUrl}/api/document/equipment/update_equipment_document/${document.id}`,
-      {
-        method: "POST",
-        body: formData,
-        headers: authHeaders(session.user.access_token, true),
+      const json = await res.json();
+      if (json && json.success) {
+        toast({
+          title: "Document successfully updated.",
+          variant: "success",
+          duration: 4000,
+        });
+        setTimeout(() => {
+          onOpenChange && onOpenChange(false);
+          onSuccess && onSuccess(true);
+        }, 300);
+      } else {
+        toast({
+          title: "Error upon updating Document.",
+          variant: "destructive",
+          duration: 4000,
+        });
       }
-    );
-
-    const json = await res.json();
-    if (json && json.success) {
-      toast({
-        title: "Document successfully updated.",
-        variant: "success",
-        duration: 4000,
-      });
-      setTimeout(() => {
-        onOpenChange && onOpenChange(false);
-        onSuccess && onSuccess(true);
-      }, 300);
-    } else {
-      toast({
-        title: "Error upon updating Document.",
-        variant: "destructive",
-        duration: 4000,
-      });
-    }
-    if (onOpenChange) {
-      onOpenChange(false);
+      if (onOpenChange) {
+        onOpenChange(false);
+      }
+      setLoading(false);
+    } catch (error) {
+      console.log({ error: error });
     }
   };
 
@@ -254,7 +260,7 @@ function EditDocument(props: EditDocumentProps) {
 
                 <div className="flex flex-col gap-1">
                   <label>Upload Document</label>
-                  <InputFile required onChange={onFileChange} />
+                  <InputFile onChange={onFileChange} />
                 </div>
 
                 <div className="flex gap-3 w-full  items-end">
@@ -368,7 +374,9 @@ function EditDocument(props: EditDocumentProps) {
                   <Button variant={"ghost"} type="button">
                     Cancel
                   </Button>
-                  <Button type="submit">Submit</Button>
+                  <Button className={cn(loading && "loading")} type="submit">
+                    Submit
+                  </Button>
                 </div>
               </DialogFooter>
             </ScrollArea>

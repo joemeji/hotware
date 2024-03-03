@@ -28,6 +28,7 @@ import ShippingMethodSelect from "@/components/app/shipping-method-select";
 import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { offerSchema } from "../schema";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
@@ -69,6 +70,9 @@ function EditOfferDetails({ id, offer }: any) {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/projects/offers/" + id);
+
+          // send task emails
+          SendTaskEmail("UPDATE_OFFER", session?.user?.access_token);
         }, 300);
       }
     } catch (err: any) {

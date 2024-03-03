@@ -201,7 +201,6 @@ const Categories = (props: categoryProps) => {
                     setPreviousCategory("category");
                   }
                   setActiveItem(null);
-                  console.log({ previes: previousCategory });
                 }}
               />
             )}
@@ -397,7 +396,7 @@ const CategoryNavs = ({
           >
             {mainCategory.item_main_category_name}
           </span>
-          {Object.keys(category).length > 0 && (
+          {category && Object.keys(category).length > 0 && (
             <ChevronRight className="w-[15px]" />
           )}
         </div>

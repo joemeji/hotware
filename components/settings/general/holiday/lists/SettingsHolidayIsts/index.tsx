@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { DeleteHolidayConfirmModal } from "../../modals/DeleteHolidayConfirmModal";
 import { HolidayModal } from "../../modals/HolidayModal";
-import { Tooltip, TooltipProvider } from "@/components/ui/tooltip";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsHolidayLists = () => {
   const router = useRouter();
@@ -109,7 +109,7 @@ const SettingsHolidayLists = () => {
                 holidays.map((holiday: any, i: number) => {
                   return (
                     <tr key={i}>
-                      <TD className='text-center'>{holiday.holiday_id}</TD>
+                      <TD className='text-center'>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD>{holiday.holiday_name}</TD>
                       <TD>{holiday?.holiday_date ?? "--"}</TD>
                       <TD className='text-center'>

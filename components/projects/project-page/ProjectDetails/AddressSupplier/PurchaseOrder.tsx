@@ -7,6 +7,7 @@ import { AccessTokenContext } from "@/context/access-token-context";
 import { ProjectDetailsContext } from "@/pages/projects/[project_id]";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import dayjs from "dayjs";
+import Image from "next/image";
 import Link from "next/link";
 import { useContext } from "react";
 import useSWRInfinite from "swr/infinite";
@@ -42,7 +43,7 @@ const PurchaseOrder = ({ headerSize }: { headerSize?: any }) => {
 
   return (
     <ScrollArea
-      className="bg-background w-1/2 rounded-xl"
+      className="bg-background w-1/2 rounded-xl shadow"
       viewPortStyle={{
         height: `calc(100vh - (var(--header-height) + ${
           headerSize?.height + 40
@@ -73,6 +74,20 @@ const PurchaseOrder = ({ headerSize }: { headerSize?: any }) => {
             );
           })}
       </div>
+
+      {_data &&
+        Array.isArray(_data) &&
+        _data[0] &&
+        _data[0].list.length === 0 && (
+          <div className="flex justify-center">
+            <Image
+              src="/images/No data-rafiki.svg"
+              width={400}
+              height={400}
+              alt="No Data to Shown"
+            />
+          </div>
+        )}
 
       {(project.isLoading || isLoadingMore) && (
         <div className="pb-3">

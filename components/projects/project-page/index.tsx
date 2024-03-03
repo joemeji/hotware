@@ -1,33 +1,41 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import List from "./List";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Input } from "@/components/ui/input";
-import { Filter, Plus, Search } from "lucide-react";
+import { Filter, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
+import { useRouter as useNavRouter } from "next/navigation";
+import SearchInput from "@/components/app/search-input";
+import { useRouter } from "next/router";
 
 const ProjectPage = () => {
+  const navRouter = useNavRouter();
   const router = useRouter();
+  const [search, setSearch] = useState(router.query.search || "");
+
+  const onSearch = (value: any) => {
+    router.push({
+      pathname: router.pathname,
+      query: {
+        search: value,
+      },
+    });
+    setSearch(value);
+  };
 
   return (
     <div className="w-full h-full">
       <ScrollArea
-        className="flex flex-col"
-        viewPortClassName="min-h-[400px] rounded-app bg-white"
+        className="flex flex-col shadow rounded-xl"
+        viewPortClassName="bg-white"
       >
         <div className="flex justify-between p-4 items-center">
           <p className="text-xl flex font-medium">Manage Projects</p>
           <div className="flex items-center gap-2">
-            <form>
-              <div className="bg-stone-100 flex items-center w-[300px] rounded-xl overflow-hidden px-2 h-9 focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-visible:ring-offset-2">
-                <Search className="text-stone-400 w-5 h-5" />
-                <input
-                  placeholder="Search"
-                  className="border-0 rounded-none outline-none text-sm w-full px-2 bg-stone-100 h-full max-w-[300px]"
-                  name="search"
-                />
-              </div>
-            </form>
+            <SearchInput
+              onChange={(e) => onSearch(e.target.value)}
+              value={search}
+              delay={1000}
+            />
 
             <Button className="px-3 rounded-xl py-1.5" variant={"secondary"}>
               <Filter className="w-[18px]" />
@@ -36,14 +44,14 @@ const ProjectPage = () => {
             <Button
               className="px-3 rounded-xl flex items-center gap-2 pe-4 py-1.5"
               onClick={() => {
-                router.push("/projects/create");
+                navRouter.push("/projects/create");
               }}
             >
               <Plus className="w-[18px]" /> Add Project
             </Button>
           </div>
         </div>
-        <List />
+        <List search={search} />
       </ScrollArea>
     </div>
   );

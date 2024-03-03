@@ -39,7 +39,7 @@ function Pagination({
           }}
           href={pagePath() + item.query}
           className={cn(
-            "px-3.5 py-1.5 rounded-app font-medium text-stone-500 bg-stone-100",
+            "px-3.5 py-1.5 rounded-xl font-medium text-stone-500 bg-stone-100",
             item.active &&
               "bg-stone-950 text-stone-200 hover:bg-stone-800 hover:text-stone-200"
           )}

@@ -9,12 +9,12 @@ import { fetcher } from "@/utils/api.config";
 import { cmsIndustrySchmea } from "../../schema";
 import { useEffect } from "react";
 
-interface IIndustryForm {
+interface IndustryForm {
   id?: string;
   listUrl: string;
   onOpenChange?: (open: boolean) => void;
 }
-export const IndustryForm = (props: IIndustryForm) => {
+export const IndustryForm = (props: IndustryForm) => {
   const { id, listUrl, onOpenChange } = props;
 
   const { data, isLoading } = useSWR(
@@ -48,7 +48,7 @@ export const IndustryForm = (props: IIndustryForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Added",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });

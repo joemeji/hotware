@@ -1,5 +1,4 @@
 import Combobox from "@/components/ui/combobox";
-import ComboboxMultiple from "@/components/ui/combobox-multiple";
 import { fetcher } from "@/utils/api.config";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -29,7 +28,7 @@ export const TaskCategorySelect = (props: ITaskCategorySelect) => {
         value: "project_task",
       },
       {
-        text: "roject Template Task (This will be added when a project is created",
+        text: "Project Template Task (This will be added when a project is created)",
         value: "template_task",
       },
     ];

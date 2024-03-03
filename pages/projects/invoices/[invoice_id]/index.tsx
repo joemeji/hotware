@@ -8,7 +8,7 @@ import React from "react";
 import InvoiceDetails from "@/components/projects/invoices/InvoiceDetails";
 import InvoiceItemContent from "@/components/projects/invoices/InvoiceItemContent";
 
-export default function OfferView({ invoice_id, user }: any) {
+export default function InvoiceView({ invoice_id, user }: any) {
   const { data, isLoading, error } = useSWR(
     [`/api/projects/invoices/details/${invoice_id}`, user.access_token],
     fetchApi

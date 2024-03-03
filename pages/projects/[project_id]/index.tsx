@@ -1,5 +1,3 @@
-import AdminLayout from "@/components/admin-layout";
-import Layout from "@/components/projects/project-page/ProjectDetails/Layout";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
@@ -7,12 +5,8 @@ import { createContext } from "react";
 
 export const ProjectDetailsContext = createContext<any>(null);
 
-export default function ProjectDetails({ access_token }: any) {
-  return (
-    <AdminLayout>
-      <Layout></Layout>
-    </AdminLayout>
-  );
+export default function ProjectDetails() {
+  return <></>;
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
@@ -31,8 +25,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   }
 
   return {
-    props: {
-      access_token: token,
+    redirect: {
+      destination: `/projects/${context.params?.project_id}/overview`,
+      permanent: false,
     },
   };
 }

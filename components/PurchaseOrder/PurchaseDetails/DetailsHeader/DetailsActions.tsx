@@ -56,16 +56,19 @@ function DetailsActions({ _po_id, data }: DetailsActionsParams) {
       }, 300);
     },
   });
+
   const { mutateCopy, Dialog: CopyDialog } = useCopy({
     onCopy: (item: string) => {
       router.push(`/purchase-order/${item}`);
     },
   });
+
   const { mutateRevision, Dialog: RevisionDialog } = useRevision({
     onRevision: (item: string) => {
       router.push(`/purchase-order/${item}`);
     },
   });
+  
   const { mutateChange, Dialog: ChangeStatusDialog } = useChangeStatus({
     onChange: (item: string) => {
       mutate(
@@ -129,25 +132,26 @@ function DetailsActions({ _po_id, data }: DetailsActionsParams) {
         >
           {data && isOpen(data) ? (
             <>
+              <DetailActionDropdownItem
+                label="Delete"
+                onClick={() => mutateDelete(_po_id)}
+                icon={<Trash2 className="w-[18px] h-[18px] text-rose-500" />}
+              />
               <div
                 onClick={() => mutateRevision(_po_id)}
                 className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
               >
                 <FileOutput className="w-[18px] h-[18px] text-cyan-500" />
-                <span className="text-sm font-medium">Revision</span>
+                <span className="text-sm font-medium">New Revision</span>
               </div>
               <div
                 onClick={() => mutateChange(_po_id)}
                 className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
               >
-                <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                <FileOutput className="w-[18px] h-[18px] text-blue-500" />
                 <span className="text-sm font-medium">Change Status</span>
               </div>
-              <DetailActionDropdownItem
-                label="Delete"
-                onClick={() => mutateDelete(_po_id)}
-                icon={<Trash2 className="w-[18px] h-[18px] text-purple-500" />}
-              />
+              
             </>
           ) : null}
           <div
@@ -155,7 +159,7 @@ function DetailsActions({ _po_id, data }: DetailsActionsParams) {
             className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
           >
             <Copy className="w-[18px] h-[18px] text-teal-500" />
-            <span className="text-sm font-medium">Copy</span>
+            <span className="text-sm font-medium">New Copy</span>
           </div>
           <Separator className="my-2" />
           <ItemMenu className="gap-3" onClick={() => onDownloadPdf(_po_id)}>

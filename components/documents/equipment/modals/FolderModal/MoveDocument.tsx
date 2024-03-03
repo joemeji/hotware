@@ -25,8 +25,8 @@ import { CheckedFilesContext } from "../../List";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const yupObject: any = {
-  folder_name: yup.string().required('This field is required.'),
-  folder_description: yup.string().required('This field is required.'),
+  folder_name: yup.string().required("This field is required."),
+  folder_description: yup.string().required("This field is required."),
 };
 
 function MoveDocument(props: MoveDocumentProps) {
@@ -54,9 +54,9 @@ function MoveDocument(props: MoveDocumentProps) {
     setValue,
     formState: { errors },
     clearErrors,
-    control
+    control,
   } = useForm({
-    resolver: yupResolver(yupSchema)
+    resolver: yupResolver(yupSchema),
   });
 
   let paramsObj: any = { parent_id: String(parentID), user_id: userID };
@@ -64,17 +64,21 @@ function MoveDocument(props: MoveDocumentProps) {
 
   async function onSave(e: any) {
     e.preventDefault();
-    let folder_id = directories.length != 0 ? directories[directories.length - 1].folder_id : 0;
-    const res = await fetch(`${baseUrl}/api/document/move_selected_documents/${folder_id}`, {
-      method: 'POST',
-      body: JSON.stringify(checkedFiles),
-      headers: authHeaders(session.user.access_token)
-    });
+    let folder_id =
+      directories.length != 0 ? directories[directories.length - 1].id : 0;
+    const res = await fetch(
+      `${baseUrl}/api/document/move_selected_documents/${folder_id}`,
+      {
+        method: "POST",
+        body: JSON.stringify(checkedFiles),
+        headers: authHeaders(session.user.access_token),
+      }
+    );
 
     const json = await res.json();
     if (json && json.success) {
       toast({
-        title: "Folder successfully created.",
+        title: "Document successfully moved.",
         variant: "success",
         duration: 4000,
       });
@@ -96,10 +100,11 @@ function MoveDocument(props: MoveDocumentProps) {
 
   function onClickFolder(folder_id: any, parent_id: any, folder_name: any) {
     const newFolder = [
-      ...directories, {
-        folder_id: folder_id,
-        folder_name: folder_name
-      }
+      ...directories,
+      {
+        id: folder_id,
+        name: folder_name,
+      },
     ];
     setDirectories(newFolder);
 
@@ -108,7 +113,9 @@ function MoveDocument(props: MoveDocumentProps) {
   }
 
   const handleFolderSelect = (selectedFolderId: any) => {
-    const updatedFolders = directories.filter((directory: any) => directory.folder_id <= selectedFolderId);
+    const updatedFolders = directories.filter(
+      (directory: any) => directory.folder_id <= selectedFolderId
+    );
     setDirectories(updatedFolders);
   };
 
@@ -155,15 +162,32 @@ function MoveDocument(props: MoveDocumentProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {data && data.list.map((folder: any, key: number) => (
-                      <tr className="hover:bg-stone-100 hover:cursor-pointer" onClick={() => onClickFolder(folder.folder_id, folder.parent_id, folder.folder_name)} key={key}>
-                        <TD className="flex items-center border"><Folder height={15} color="orange" />{folder.folder_name}</TD>
-                      </tr>
-                    ))}
+                    {data &&
+                      data.list.map((folder: any, key: number) => (
+                        <tr
+                          className="hover:bg-stone-100 hover:cursor-pointer"
+                          onClick={() =>
+                            onClickFolder(
+                              folder.folder_id,
+                              folder.parent_id,
+                              folder.folder_name
+                            )
+                          }
+                          key={key}
+                        >
+                          <TD className="flex items-center border">
+                            <Folder height={15} color="orange" />
+                            {folder.folder_name} (
+                            <span className="text-stone-500">
+                              {folder.owner}
+                            </span>
+                            )
+                          </TD>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </ScrollArea>
-
             </div>
           </form>
         </DialogContent>
@@ -180,8 +204,26 @@ type MoveDocumentProps = {
   onSuccess?: () => void;
 };
 
-const FolderNavs = (props: { directories: any, onClickItem: (folder: any) => void }) => {
+const FolderNavs = (props: {
+  directories: any;
+  onClickItem: (folder: any) => void;
+}) => {
   const { directories, onClickItem } = props;
+  const router = useRouter();
+  let folders;
+  let dirs: any = [];
+  const query: any = router.query;
+
+  if (router.query?.dirs) {
+    dirs = JSON.parse(query?.dirs);
+  }
+
+  if (dirs.length > 0) {
+    folders = [...directories, dirs];
+    folders = folders[0];
+  } else {
+    folders = directories;
+  }
 
   return (
     <div className="flex gap-1 items-center p-3">
@@ -193,21 +235,23 @@ const FolderNavs = (props: { directories: any, onClickItem: (folder: any) => voi
         >
           Basepath
         </span>
-        {Array.isArray(directories) && directories.length !== 0 && (
+        {Array.isArray(folders) && folders.length !== 0 && (
           <ChevronRight className="w-[15px]" />
         )}
       </div>
-      {Array.isArray(directories) &&
-        directories.map((item: any, key: number) => (
+      {Array.isArray(folders) &&
+        folders.map((item: any, key: number) => (
           <div className="flex gap-1" key={key}>
             <span
               className="hover:underline cursor-pointer"
               tabIndex={0}
-              onClick={() => onClickItem(item.folder_id)}
+              onClick={() => onClickItem(item.id)}
             >
-              {item.folder_name}
+              {item.name}
             </span>
-            {key !== directories.length - 1 && <ChevronRight className="w-[15px]" />}
+            {key !== folders.length - 1 && (
+              <ChevronRight className="w-[15px]" />
+            )}
           </div>
         ))}
     </div>

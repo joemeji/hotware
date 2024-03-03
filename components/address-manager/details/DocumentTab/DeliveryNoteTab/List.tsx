@@ -19,13 +19,16 @@ import { previewPdf } from "@/services/projects/delivery";
 import { AccessTokenContext } from "@/context/access-token-context";
 import { useSession } from "next-auth/react";
 
-const List = () => {
+const List = ({ search }: { search?: any }) => {
   const cms: any = useContext(CmsDetailsContext);
   const { data: session }: any = useSession();
   const [page, setPage] = useState(1);
   const access_token = useContext(AccessTokenContext);
 
-  const queryString = new URLSearchParams({ page: String(page) }).toString();
+  const queryString = new URLSearchParams({
+    page: String(page),
+    search: search,
+  }).toString();
 
   let { data, isLoading, error } = useSWR(
     `/api/cms/${cms?._cms_id}/delivery_note?${queryString}`,
@@ -61,12 +64,12 @@ const List = () => {
     const res = await previewPdf(delivery?._delivery_note_id, access_token);
     const blob = await res.blob();
     const objectURL = URL.createObjectURL(blob);
-    let filename = res.headers.get('Title');
+    let filename = res.headers.get("Title");
     const a = document.createElement("a");
     a.href = objectURL;
-    a.download = filename as string + ".pdf";
+    a.download = (filename as string) + ".pdf";
     a.click();
-  }
+  };
 
   return (
     <>
@@ -153,7 +156,8 @@ const List = () => {
                     </ItemMenu>
                     <ItemMenu
                       className="gap-3"
-                      onClick={() => onPreviewPdf(row)}>
+                      onClick={() => onPreviewPdf(row)}
+                    >
                       <FileSearch className="w-[18px] h-[18px] text-purple-500" />
                       <span className="font-medium">Preview</span>
                     </ItemMenu>
@@ -163,7 +167,8 @@ const List = () => {
                     </ItemMenu> */}
                     <ItemMenu
                       className="gap-3"
-                      onClick={() => onDownloadPdf(row)}>
+                      onClick={() => onDownloadPdf(row)}
+                    >
                       <FileText className="w-[18px] h-[18px] text-red-500" />
                       <span className="font-medium">Save as Pdf</span>
                     </ItemMenu>

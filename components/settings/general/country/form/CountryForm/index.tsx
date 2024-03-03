@@ -49,7 +49,7 @@ export const CountryForm = (props: ICountryForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: id ? "Successfully Updated." : "Successfully Added.",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });

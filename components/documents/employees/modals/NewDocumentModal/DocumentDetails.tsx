@@ -28,20 +28,20 @@ import { format } from "date-fns";
 function DocumentDetail(props: DocumentDetailProps) {
   const router = useRouter();
   const { open, onOpenChange, document } = props;
-  let modifiedDate = '';
+  let modifiedDate = "";
   const padZero = (value: any) => {
     return value < 10 ? `0${value}` : value;
   };
 
   if (document.modified_date) {
     const date = new Date(document.modified_date);
-    modifiedDate = `${date.getFullYear()}-${padZero(date.getMonth() + 1)}-${padZero(date.getDate())}`;
+    modifiedDate = `${date.getFullYear()}-${padZero(
+      date.getMonth() + 1
+    )}-${padZero(date.getDate())}`;
   } else {
-    modifiedDate = '';
+    modifiedDate = "";
   }
 
-
-  console.log({ docuemnt: document })
   return (
     <>
       <Dialog
@@ -53,9 +53,7 @@ function DocumentDetail(props: DocumentDetailProps) {
           className="max-w-[500px] p-2 overflow-auto gap-0"
         >
           <DialogHeader>
-            <div
-              className="py-2 px-3 flex justify-between flex-row items-start sticky top-0 bg-background z-10"
-            >
+            <div className="py-2 px-3 flex justify-between flex-row items-start sticky top-0 bg-background z-10">
               <DialogTitle>
                 <div className="flex flex-col gap-1">
                   <span>Document Details</span>
@@ -95,7 +93,14 @@ function DocumentDetail(props: DocumentDetailProps) {
                 </div>
                 <div className="p-2 flex gap-4 shadow-2xl">
                   <p className="font-medium">Modified Date:</p>
-                  <p>{document.modified_date ? format(formatDate(document.modified_date).getTime(), 'yyyy/MM/dd') : ''}</p>
+                  <p>
+                    {document.modified_date
+                      ? format(
+                          formatDate(document.modified_date).getTime(),
+                          "yyyy/MM/dd"
+                        )
+                      : ""}
+                  </p>
                 </div>
               </div>
             </div>
@@ -116,7 +121,7 @@ export const formatDate = (dateString: any) => {
 
   const dateObject = new Date(year, month, day, hours, minutes, seconds);
   return dateObject;
-}
+};
 
 export default memo(DocumentDetail);
 

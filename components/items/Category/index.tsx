@@ -2,24 +2,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/router";
-import React, { memo } from "react";
+import React, { memo, useContext } from "react";
 import CategoryList from "./CategoryList";
+import { MainCategoryContext } from "@/pages/items";
 
-const Categories = ({ main_categories }: any) => {
+const Categories = () => {
   const router = useRouter();
-  let indexParams = router.query?.index;
-  const categoryId = indexParams ? indexParams[0] : undefined;
+  const categoryId = router.query?.category_id;
+  const { main_categories } = useContext(MainCategoryContext);
 
   return (
     <div className={cn("w-[400px]")}>
       <ScrollArea
-        viewPortClassName="bg-white h-[calc(100vh-var(--header-height)-40px)] rounded-app"
+        viewPortClassName="bg-white h-[calc(100vh-var(--header-height)-40px)] rounded-xl shadow"
         className="py-0"
       >
         <span
           className={cn(
             "text-lg h-[60px] flex items-center px-3 sticky top-0",
-            "backdrop-blur-sm bg-white/40 z-[1]"
+            "backdrop-blur-sm bg-white/40 z-[1] font-medium"
           )}
         >
           Filter by Categories

@@ -36,6 +36,9 @@ const Context = ({
 const EmployeesPage = ({ access_token }: any) => {
   const [filterHeight, setFilterHeight] = useState(0);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [selectedCompany, setSelectedCompany] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<any>(null);
+  const [selectedRole, setSelectedRole] = useState<any>(null);
 
   return (
     <AdminLayout>
@@ -53,11 +56,17 @@ const EmployeesPage = ({ access_token }: any) => {
                   let height = rect ? rect.height : 0;
                   setFilterHeight(height);
                 }}
+                selectedCompany={(e: any) => setSelectedCompany(e)}
+                selectedCategory={(e: any) => setSelectedCategory(e)}
+                selectedRole={(e: any) => setSelectedRole(e)}
               />
 
               <Employees
                 filterHeight={filterHeight}
                 onClickEmployee={(user) => setSelectedEmployee(user)}
+                selectedCategory={selectedCategory}
+                selectedCompany={selectedCompany}
+                selectedRole={selectedRole}
               />
             </div>
             <List />

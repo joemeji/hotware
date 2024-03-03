@@ -1,5 +1,5 @@
 import Combobox from "@/components/ui/combobox";
-import ComboboxMultiple from "@/components/ui/combobox-multiple";
+import ComboboxMultiple2 from "@/components/ui/combobox-multiple";
 import { fetcher } from "@/utils/api.config";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -47,13 +47,12 @@ export const UserRoleSelect = (props: ILetterDocumentTypeSelect) => {
   return (
     <div className="flex flex-col gap-2">
       {multiple && data && (
-        <ComboboxMultiple
+        <ComboboxMultiple2
           isLoading={isLoading}
           value={value}
           onChangeValue={onChangeValue}
           contents={contentData()}
           className="h-10"
-          defaultValue={roles}
         />
       )}
 

@@ -16,13 +16,13 @@ import { mutate } from "swr";
 import { toast } from "@/components/ui/use-toast";
 import CmsTypeSelect from "../../CmsTypeSelect";
 import { Checkbox } from "@/components/ui/checkbox";
-import CountrySelect from "../../country-select";
 import { useSession } from "next-auth/react";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
+import CountrySelect from "@/components/app/country-select";
 
 dayjs.extend(timezone);
 
@@ -43,7 +43,7 @@ const yupObject: any = {
 
 function AddNewContactModal(props: AddNewContactModal) {
   const { data: session }: any = useSession();
-  const { open, onOpenChange } = props;
+  const { open, onOpenChange, onSuccess } = props;
   const [isAllCategory, setIsAllCategory] = useState(false);
   const router = useRouter();
   const page = router.query?.page || 1;
@@ -86,6 +86,7 @@ function AddNewContactModal(props: AddNewContactModal) {
           duration: 4000,
         });
         setTimeout(() => {
+          onSuccess && onSuccess(true);
           onOpenChange && onOpenChange(false);
         }, 300);
       } else {
@@ -108,7 +109,7 @@ function AddNewContactModal(props: AddNewContactModal) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[900px] p-0 overflow-auto gap-0 ">
         <DialogHeader className="py-2 px-3 flex justify-between flex-row items-center sticky top-0 bg-white z-10">
-          <DialogTitle>Add New Loading List</DialogTitle>
+          <DialogTitle>Add New Contact</DialogTitle>
           <DialogPrimitive.Close className="w-fit p-1.5 rounded-full bg-stone-100 hover:bg-stone-200">
             <X />
           </DialogPrimitive.Close>
@@ -261,4 +262,5 @@ export default memo(AddNewContactModal);
 type AddNewContactModal = {
   open?: boolean;
   onOpenChange?: (open?: boolean) => void;
+  onSuccess?: (success: boolean) => void;
 };

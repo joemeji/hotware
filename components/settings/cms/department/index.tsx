@@ -3,7 +3,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/compon
 import { ItemMenu } from "@/components/LoadingList";
 import { MoreHorizontal, Pen, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import SettingsDepartemntLIsts from "./lists/SettingsDepartemntLIsts";
+import SettingsDepartemntLIsts from "./lists/SettingsDepartmentLists";
 
 export const SettingsDepartment = () => {
 

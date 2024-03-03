@@ -135,10 +135,10 @@ const QrCodeScanner = (props: QrCodeScannerProps) => {
         <PopoverContent className="border-stone-100 py-2 px-0 w-auto">
           {/* <div id="reader_id_for_upload" /> */}
           <div className="flex flex-col">
-            <AddPopOverMenu
+            {/* <AddPopOverMenu
               title="Scan QR Code"
               onClick={() => setOpenScanner(true)}
-            />
+            /> */}
             <AddPopOverMenu title="Upload QR Code" onClick={onclickUpload} />
           </div>
         </PopoverContent>

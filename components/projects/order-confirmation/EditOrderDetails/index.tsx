@@ -21,6 +21,7 @@ import DeliverTo, { AddressForm, EmployeeForm } from "../DeliverTo";
 import InvoiceTo, {
   InvoiceAddressForm,
   InvoiceEmployeeForm,
+  InvoiceVatForm,
 } from "../InvoiceTo";
 import CopyTo, { CopyAddressForm, CopyEmployeeForm } from "../CopyTo";
 import ErrorFormMessage from "@/components/app/error-form-message";
@@ -29,6 +30,7 @@ import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { orderSchema } from "../schema";
 import InputFile from "@/components/ui/input-file";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
@@ -90,6 +92,12 @@ function EditOrderDetails({ id, order_confirmation }: any) {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/projects/order-confirmation/" + id);
+
+          // send task emails
+          SendTaskEmail(
+            "UPDATE_ORDER_CONFIRMATION",
+            session?.user?.access_token
+          );
         }, 300);
       }
     } catch (err: any) {
@@ -218,11 +226,26 @@ function EditOrderDetails({ id, order_confirmation }: any) {
                           )}
                         />
                       }
+                      renderVat={
+                        <Controller
+                          name="order_confirmation_supplier_vat_id"
+                          control={control}
+                          render={({ field }) => (
+                            <InvoiceVatForm
+                              invoice_to_id={getValues(
+                                "order_confirmation_supplier_id"
+                              )}
+                              value={field.value}
+                              onChangeValue={(value) => field.onChange(value)}
+                            />
+                          )}
+                        />
+                      }
                     />
                   )}
                 />
               </div>
-              <div className="flex flex-1 flex-col gap-1">
+              {/* <div className="flex flex-1 flex-col gap-1">
                 <label>VAT</label>
                 <Controller
                   name="order_confirmation_supplier_vat_id"
@@ -236,7 +259,7 @@ function EditOrderDetails({ id, order_confirmation }: any) {
                     />
                   )}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

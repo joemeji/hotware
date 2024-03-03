@@ -42,8 +42,6 @@ export const HolidayForm = (props : IHolidayForm) => {
   const countries = data?.country_ids?.toString()?.split(',')
 
   const submit = async (data: any) => {
-    console.log('data', data)
-
     try {
       const payload = {
         ...data
@@ -60,7 +58,7 @@ export const HolidayForm = (props : IHolidayForm) => {
       if (json && json.success) {
 
         toast({
-          title: id ? "Successfully Updated." : 'Successfully Added.',
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: 'success',
           duration: 4000
         });

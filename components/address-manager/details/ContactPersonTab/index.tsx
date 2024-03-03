@@ -34,13 +34,21 @@ const ContactPersonTab = () => {
   const cms: any = useContext(CmsDetailsContext);
   const access_token: any = useContext(AccessTokenContext);
   const [page, setPage] = useState(1);
+  const [search, setSearch] = useState<any>(null);
+  const [department, setDepartment] = useState<any>(0);
+  const [position, setPosition] = useState<any>(0);
   const [openContactFormModal, setOpenContactFormModal] = useState(false);
   const [editContact, setEditContact] = useState(null);
   const [openDeleteAlert, setOpenDeleteAlert] = useState<any>(false);
   const [loadingDeleteBtn, setLoadingDeleteBtn] = useState(false);
   const [selectedContact, setSelectedContact] = useState<any>(null);
 
-  const queryString = new URLSearchParams({ page: String(page) }).toString();
+  const queryString = new URLSearchParams({
+    page: String(page),
+    search: search,
+    department: department,
+    position: position,
+  }).toString();
 
   let { data, isLoading, error, mutate } = useSWR(
     `/api/cms/${cms?._cms_id}/employee?${queryString}`,
@@ -154,7 +162,11 @@ const ContactPersonTab = () => {
 
           <Separator className="my-2" />
 
-          <Filter />
+          <Filter
+            onSearch={(evt: any) => setSearch(evt)}
+            onDepartment={(evt: any) => setDepartment(evt)}
+            onPosition={(evt: any) => setPosition(evt)}
+          />
         </div>
 
         <>

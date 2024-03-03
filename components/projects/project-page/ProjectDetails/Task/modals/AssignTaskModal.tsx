@@ -17,6 +17,7 @@ import BlockedEmployeeSelect from "@/components/app/blocked-employee-select";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 import { ProjectDetailsContext } from "@/pages/projects/[project_id]";
 import { AccessTokenContext } from "@/context/access-token-context";
+import SearchInput from "@/components/app/search-input";
 
 dayjs.extend(timezone);
 
@@ -26,6 +27,7 @@ function AssignTaskModal(props: AssignTaskModal) {
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const projectDetails = useContext(ProjectDetailsContext);
   const access_token = useContext(AccessTokenContext);
+  const [search, setSearch] = useState("");
 
   const onSubmitEditForm = async () => {
     const formData = new FormData();
@@ -76,22 +78,21 @@ function AssignTaskModal(props: AssignTaskModal) {
               <X />
             </DialogPrimitive.Close>
           </div>
-          <form>
-            <div className="bg-stone-100 flex items-center w-full rounded-xl overflow-hidden px-2 h-9 focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-visible:ring-offset-2">
-              <Search className="text-stone-400 w-5 h-5" />
-              <input
-                placeholder="Search"
-                className="border-0 rounded-none outline-none text-sm w-full px-2 bg-stone-100 h-full max-w-full"
-                name="search"
-              />
-            </div>
-          </form>
+          <div className="w-full">
+            <SearchInput
+              onChange={(e) => setSearch(e.target.value)}
+              value={search}
+              delay={500}
+              width={null}
+            />
+          </div>
         </DialogHeader>
 
         <BlockedEmployeeSelect
           height={500}
           onSelect={(user) => setSelectedUser(user)}
           selected={selectedUser}
+          search={search}
         />
 
         <DialogFooter className="p-3 sticky bottom-0 backdrop-blur-sm bg-background/70">

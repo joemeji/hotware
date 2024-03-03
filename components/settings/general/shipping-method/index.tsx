@@ -5,7 +5,7 @@ import { MoreHorizontal, Pen, Trash } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import SettingsShippingMethodLists from "./lists/SettingsShippingMethodLists";
 
-export const SettingsVat = () => {
+export const SettingsShippingMethod = () => {
 
   return (
     <div className=''>

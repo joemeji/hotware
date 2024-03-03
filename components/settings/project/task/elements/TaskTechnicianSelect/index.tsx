@@ -1,5 +1,4 @@
-import Combobox from "@/components/ui/combobox";
-import ComboboxMultiple from "@/components/ui/combobox-multiple";
+import ComboboxMultiple2 from "@/components/ui/combobox-multiple";
 import { fetcher } from "@/utils/api.config";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
@@ -26,7 +25,7 @@ export const TaskTechnicianSelect = (props: ITaskTechnicianSelect) => {
         return {
           text: (
             <div key={key}>
-              <span className='font-medium'>
+              <span className="font-medium">
                 {user?.user_firstname + " " + user?.user_lastname}
               </span>
             </div>
@@ -38,14 +37,16 @@ export const TaskTechnicianSelect = (props: ITaskTechnicianSelect) => {
     );
   };
 
+  console.log("technician value");
+
   return (
-    <div className='flex flex-col gap-2'>
-      <ComboboxMultiple
+    <div className="flex flex-col gap-2">
+      <ComboboxMultiple2
         isLoading={isLoading}
         value={value}
         onChangeValue={onChangeValue}
         contents={contentData()}
-        className='h-10'
+        className="h-10"
       />
     </div>
   );

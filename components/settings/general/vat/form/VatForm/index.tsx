@@ -9,27 +9,24 @@ import { fetcher } from "@/utils/api.config";
 import { vatSchema } from "../../schema";
 import { useEffect } from "react";
 
-interface IAddCategoryForm {
+interface IAddVatForm {
   id?: string;
   listUrl: string;
   onOpenChange?: (open: boolean) => void;
 }
-export const VatForm = (props: IAddCategoryForm) => {
+export const VatForm = (props: IAddVatForm) => {
   const { id, listUrl, onOpenChange } = props;
 
   const { data, isLoading } = useSWR(
     id ? `/api/vat/info?id=${id}` : null,
     fetcher,
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
-    }
   );
 
   const {
     formState: { errors },
     register,
     handleSubmit,
+    reset,
     setValue,
   } = useForm({
     resolver: yupResolver(vatSchema),
@@ -54,7 +51,7 @@ export const VatForm = (props: IAddCategoryForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Added",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });
@@ -79,12 +76,18 @@ export const VatForm = (props: IAddCategoryForm) => {
   };
 
   useEffect(() => {
-    setValue("vat_code", data?.vat_code);
-    setValue("vat_percentage", data?.vat_percentage);
-    setValue("vat_description", data?.vat_description);
-    setValue("vat_country", data?.vat_country);
-    setValue("vat_account", data?.vat_account);
-  }, [data, setValue]);
+    if (!id) {
+      reset();
+    } else {
+      setValue("vat_code", data?.vat_code);
+      setValue("vat_percentage", data?.vat_percentage);
+      setValue("vat_description", data?.vat_description);
+      setValue("vat_country", data?.vat_country);
+      setValue("vat_account", data?.vat_account);
+    }
+  }, [data, setValue, id, reset]);
+
+  console.log({data: data});
 
   return (
     <form onSubmit={handleSubmit(submit)} className='mt-7 flex flex-col gap-6'>

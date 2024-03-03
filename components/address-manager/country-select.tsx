@@ -5,17 +5,24 @@ import { formErrorClassNames } from "@/utils/app";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import ErrorFormMessage from "../app/error-form-message";
+import { useRouter } from "next/router";
 
 preload(`/api/cms/all/exhibition`, fetcher);
 
 const CountrySelect = (props: CountrySelectProps) => {
+  const router = useRouter();
   const { value, onChangeValue, placeholder, error: formError } = props;
   const [isOpenPopover, setIsOpenPopover] = useState(false);
-
-  const { data, isLoading, error } = useSWR(`${baseUrl}/country/all`, fetcher, {
-    revalidateOnFocus: false,
-    revalidateIfStale: false,
-  });
+  const [search, setSearch] = useState("");
+  router.query.search = search;
+  const { data, isLoading, error } = useSWR(
+    `/api/country/all?search=${search}`,
+    fetcher,
+    {
+      revalidateOnFocus: false,
+      revalidateIfStale: false,
+    }
+  );
 
   const contentData = () => {
     if (Array.isArray(data) && data.length > 0) {
@@ -41,8 +48,9 @@ const CountrySelect = (props: CountrySelectProps) => {
         value={value}
         onChangeValue={onChangeValue}
         isLoading={isLoading}
-        className={cn("py-2 px-2", formError && formErrorClassNames)}
+        className={cn(formError && formErrorClassNames)}
         onOpenChange={(open) => setIsOpenPopover(open)}
+        onSearch={(value: any) => setSearch(value)}
       />
       {formError && <ErrorFormMessage message={formError.message} />}
     </div>

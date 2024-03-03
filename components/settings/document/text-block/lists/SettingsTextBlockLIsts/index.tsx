@@ -11,10 +11,11 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { AddTextBlockModal } from "../../modals/AddTextBlockModal";
 import { DeleteTextModalConfirmModal } from "../../modals/DeleteTextModalConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsTextBlockLists = () => {
   const router = useRouter();
-
+  
   const [searchText, setSearchText] = useState("");
   const [page, setPage] = useState(1);
 
@@ -76,6 +77,7 @@ const SettingsTextBlockLists = () => {
               variant='red'
               onClick={() => {
                 setOpenAddModal(true);
+                setSelectedData(null);
               }}
             >
               <Plus {...iconProps} />
@@ -104,7 +106,7 @@ const SettingsTextBlockLists = () => {
                 textBlocks.map((textBlock: any, i: number) => {
                   return (
                     <tr key={i} className=''>
-                      <TD className='text-center'>{textBlock.text_block_id}</TD>
+                      <TD className='text-center'>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD>{textBlock.text_block_title}</TD>
                       <TD>{textBlock.text_block_text}</TD>
                       <TD>

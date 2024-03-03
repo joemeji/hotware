@@ -533,7 +533,6 @@ function PurchaseItemContent({ po_id, currency, _data }: any) {
     );
 
     const result = await response.json();
-    console.log({ result });
   };
 
   const handleDrop = (droppedItem: any) => {

@@ -21,8 +21,8 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 
 const yupObject: any = {
-  folder_name: yup.string().required('This field is required.'),
-  folder_description: yup.string().required('This field is required.'),
+  folder_name: yup.string().required("This field is required."),
+  folder_description: yup.string().required("This field is required."),
 };
 
 function EditFolderModal(props: EditFolderModalProps) {
@@ -39,36 +39,38 @@ function EditFolderModal(props: EditFolderModalProps) {
     setValue,
     formState: { errors },
     clearErrors,
-    control
+    control,
   } = useForm({
     resolver: yupResolver(yupSchema),
     defaultValues: {
       folder_name: dir.name,
-      folder_description: dir.folder_description
-    }
+      folder_description: dir.folder_description,
+    },
   });
 
   let paramsObj: any = { parent_id: String(parentID), user_id: userID };
   let searchParams = new URLSearchParams(paramsObj);
 
   async function onSave(data: any) {
-
-    const res = await fetch(`${baseUrl}/api/document/company/update_folder/${dir.id}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: authHeaders(session.user.access_token)
-    });
+    const res = await fetch(
+      `${baseUrl}/api/document/company/update_folder/${dir.id}`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: authHeaders(session.user.access_token),
+      }
+    );
 
     const json = await res.json();
     if (json && json.success) {
       toast({
-        title: "Folder successfully created.",
+        title: "Folder successfully updated.",
         variant: "success",
         duration: 4000,
       });
       setTimeout(() => {
         onOpenChange && onOpenChange(false);
-        onSuccess && onSuccess(true)
+        onSuccess && onSuccess(true);
       }, 300);
     } else {
       toast({
@@ -129,7 +131,9 @@ function EditFolderModal(props: EditFolderModalProps) {
               </div>
             </div>
             <DialogFooter className="p-3">
-              <Button variant={"ghost"} type="button"
+              <Button
+                variant={"ghost"}
+                type="button"
                 onClick={() => onOpenChange && onOpenChange(false)}
               >
                 Cancel

@@ -3,12 +3,14 @@ import React, { memo, useContext, useState } from "react";
 import CmsAddressSelect from "./CmsAddressSelect";
 import CmsEmployeeSelect from "@/components/app/cms-employee-select";
 import CmsSelect from "@/components/app/cms-select";
+import CmsVatSelect from "@/components/app/cms-vat-select";
 
 const InvoiceTo = ({
   value,
   onChangeValue,
   renderAddress,
   renderEmployee,
+  renderVat,
   error,
 }: InvoiceToProps) => {
   const orderDetails: any = useContext(OrderConfirmationDetailsContext);
@@ -41,6 +43,10 @@ const InvoiceTo = ({
         <div>
           <p className="mb-1">Contact Person</p>
           {renderEmployee}
+        </div>
+        <div>
+          <p className="mb-1">Vat</p>
+          {renderVat}
         </div>
       </div>
     </React.Fragment>
@@ -77,6 +83,20 @@ export function InvoiceEmployeeForm({
   );
 }
 
+export function InvoiceVatForm({
+  invoice_to_id,
+  onChangeValue,
+  value,
+}: ChildFormProps) {
+  return (
+    <CmsVatSelect
+      cms_id={invoice_to_id}
+      onChangeValue={onChangeValue}
+      value={value}
+    />
+  );
+}
+
 export default memo(InvoiceTo);
 
 type ChildFormProps = {
@@ -91,5 +111,6 @@ type InvoiceToProps = {
   value?: any;
   renderAddress?: React.ReactNode;
   renderEmployee?: React.ReactNode;
+  renderVat?: React.ReactNode;
   error?: any;
 };

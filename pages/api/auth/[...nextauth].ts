@@ -1,27 +1,31 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { baseUrl } from '@/utils/api.config';
+import { baseUrl } from "@/utils/api.config";
 
 export const authOptions = {
   providers: [
     CredentialsProvider({
-      name: 'Credentials',
+      name: "Credentials",
       credentials: {
-        email: { label: "Email Address", type: "email", placeholder: "name@example.com" },
-        password: { label: "Password", type: "password" }
+        email: {
+          label: "Email Address",
+          type: "email",
+          placeholder: "name@example.com",
+        },
+        password: { label: "Password", type: "password" },
       },
       async authorize(credentials, req) {
         const res = await fetch(baseUrl + "/auth/jwt", {
-          method: 'POST',
+          method: "POST",
           body: JSON.stringify(credentials),
-          headers: { "Content-Type": "application/json" }
-        })
+          headers: { "Content-Type": "application/json" },
+        });
         const user = await res.json();
         if (user) {
           return user;
         }
         return null;
-      }
+      },
     }),
   ],
   callbacks: {
@@ -30,7 +34,7 @@ export const authOptions = {
         return {
           ...token,
           access_token: user.access_token,
-          details: user.user
+          details: user.user,
         };
       }
 
@@ -44,13 +48,12 @@ export const authOptions = {
     },
   },
   pages: {
-    signIn: '/auth/signin',
-    signOut: '/auth/signout',
-    error: '/auth/error',
-    verifyRequest: '/auth/verify-request',
-    newUser: '/auth/new-user'
+    signIn: "/auth/signin",
+    signOut: "/auth/signout",
+    error: "/auth/error",
+    verifyRequest: "/auth/verify-request",
+    newUser: "/auth/new-user",
   },
   secret: process.env.JWT_SECRET,
 };
 export default NextAuth(authOptions);
-

@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { VatModal } from "../../modals/VatModal";
 import { DeleteVatConfirmModal } from "../../modals/DeleteVatConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsVatLists = () => {
   const router = useRouter();
@@ -41,20 +42,20 @@ const SettingsVatLists = () => {
 
   const handleEdit = (data : any) => {
     setSelectedVat(data)
-    setOpenCurrencyModal(true)
+    setOpenVatModal(true)
   };
 
-  const [openCurrencyModal, setOpenCurrencyModal] = useState(false);
+  const [openVatModal, setOpenVatModal] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [selectedVat, setSelectedVat] = useState<any>()
 
   return (
     <div className='grid bg-white'>
       <VatModal
-        open={openCurrencyModal}
+        open={openVatModal}
         data={selectedVat}
         listUrl={listUrl}
-        onOpenChange={(open: any) => setOpenCurrencyModal(open)}
+        onOpenChange={(open: any) => setOpenVatModal(open)}
       />
       <DeleteVatConfirmModal
         open={openDeleteConfirm}
@@ -75,7 +76,8 @@ const SettingsVatLists = () => {
             <Button
               variant='red'
               onClick={() => {
-                setOpenCurrencyModal(true);
+                setOpenVatModal(true);
+                setSelectedVat(null);
               }}
             >
               <Plus {...iconProps} />
@@ -104,7 +106,7 @@ const SettingsVatLists = () => {
                 vat.map((vat: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{vat.vat_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD>{vat.vat_code}</TD>
                       <TD className='text-left'>{vat.vat_description}</TD>
                       <TD>{vat.vat_account}</TD>
@@ -115,7 +117,7 @@ const SettingsVatLists = () => {
                           onDelete={() => handleDelete(vat)}
                           onEdit={() => handleEdit(vat)}
                           data={{
-                            id: vat.currency_id,
+                            id: vat.vat_id,
                           }}
                         />
                       </TD>

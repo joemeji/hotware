@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import useSWR from "swr";
 
 export const DocumentTypeSelect = (props: IDocumentTypeSelect) => {
-  const { onChangeValue, value } = props;
+  const { onChangeValue, value, onChangeDocType } = props;
 
   const swrOptions = {
     revalidateOnFocus: false,
@@ -25,7 +25,7 @@ export const DocumentTypeSelect = (props: IDocumentTypeSelect) => {
         return {
           text: (
             <div key={key}>
-              <span className='font-medium'>{type.document_type_name}</span>
+              <span className="font-medium">{type.document_type_name}</span>
             </div>
           ),
           value: type.document_type_id,
@@ -33,13 +33,22 @@ export const DocumentTypeSelect = (props: IDocumentTypeSelect) => {
       })
     );
   };
+
+  const _onChangeValue = (value?: any) => {
+    onChangeValue && onChangeValue(value);
+    const docType =
+      Array.isArray(data) &&
+      data.find((item: any) => item.document_type_id == value);
+    onChangeDocType && onChangeDocType(docType);
+  };
+
   return (
-    <div className='flex flex-col gap-2'>
+    <div className="flex flex-col gap-2">
       <Combobox
         value={value}
-        onChangeValue={onChangeValue}
+        onChangeValue={_onChangeValue}
         contents={contentData()}
-        className='h-10'
+        className="h-10"
       />
     </div>
   );
@@ -47,5 +56,6 @@ export const DocumentTypeSelect = (props: IDocumentTypeSelect) => {
 
 type IDocumentTypeSelect = {
   onChangeValue?: (value?: any) => void;
+  onChangeDocType?: (docType?: any) => void;
   value?: any;
 };

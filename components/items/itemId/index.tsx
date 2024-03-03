@@ -1,49 +1,46 @@
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
-import { authHeaders, baseUrl, fetchApi } from "@/utils/api.config";
-import { useSession } from "next-auth/react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import useSWR from "swr";
-import { useEffect, useState } from 'react';
-import { FieldErrors, useForm } from "react-hook-form";
-import { Button } from "@/components/ui/button";
-import SerialNumbers from "../SerialNumbers";
+import { useContext, useEffect, useState } from "react";
+import { EquipmentContext } from "./Layout";
 
 export interface TabType {
-  _item_id: string | any,
-  onUpdated?: (data: any) => void
+  _item_id: string | any;
+  onUpdated?: (data: any) => void;
 }
 
 export const tabLinks = [
   {
-    name: 'Details',
-    path: 'details',
+    name: "Details",
+    path: "details",
   },
   {
-    name: 'Units',
-    path: 'units',
+    name: "Units",
+    path: "units",
   },
   {
-    name: 'Codifications',
-    path: 'codifications',
+    name: "Codifications",
+    path: "codifications",
   },
   {
-    name: 'Prices',
-    path: 'prices',
+    name: "Prices",
+    path: "prices",
   },
   {
-    name: 'Documents',
-    path: 'documents',
+    name: "Documents",
+    path: "documents",
   },
   {
-    name: 'Serial Numbers',
-    path: 'serial-numbers',
+    name: "Serial Numbers",
+    path: "serial-numbers",
   },
-]; 
+];
 
-export function ItemTab(props: { children?: React.ReactNode, className?: string, href?: any }) {
+export function ItemTab(props: {
+  children?: React.ReactNode;
+  className?: string;
+  href?: any;
+}) {
   return (
     <Link
       href={props.href}
@@ -51,35 +48,33 @@ export function ItemTab(props: { children?: React.ReactNode, className?: string,
         "bg-stone-100 hover:bg-stone-600 hover:text-stone-200 py-1.5 px-4 rounded-xl text-stone-600 text-sm font-medium",
         props.className
       )}
-    >{props.children}</Link>
-  )
+    >
+      {props.children}
+    </Link>
+  );
 }
 
 export function ItemTabs() {
   const router = useRouter();
-  const itemIdParams = router.query.itemId;
-  let _item_id: any = null;
-  let _item_id_2: any = null;
+  const item_id = router.query.item_id;
+  const equipment: any = useContext(EquipmentContext);
 
-  if (itemIdParams) {
-    _item_id = itemIdParams[0];
-    if (itemIdParams[1]) {
-      _item_id_2 = itemIdParams[1]
+  const _tabLinks = () => {
+    let __links: any = [...tabLinks];
+    if (equipment && equipment.with_serial == 0) {
+      __links = __links.filter((link: any) => link.path !== "serial-numbers");
     }
-  }
-
-  if (!_item_id && !_item_id_2) {
-    return <></>;
-  }
+    return __links;
+  };
 
   return (
     <>
-      {tabLinks.map((link: any, key: number) => (
-        <ItemTab 
+      {_tabLinks().map((link: any, key: number) => (
+        <ItemTab
           key={key}
-          href={'/items/equipment/' + _item_id + '/' + link.path}
+          href={"/items/" + item_id + "/" + link.path}
           className={cn(
-            _item_id_2 === link.path  && "bg-stone-600 text-stone-200"
+            router.asPath.includes(link.path) && "bg-stone-600 text-stone-200"
           )}
         >
           {link.name}

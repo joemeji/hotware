@@ -1,18 +1,15 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/datepicker";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { avatarFallback } from "@/utils/avatar";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { AtSign, Dot, Flame } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { memo, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import * as yup from "yup";
 import dayjs from "dayjs";
-import timezone from 'dayjs/plugin/timezone';
+import timezone from "dayjs/plugin/timezone";
 import { Textarea } from "@/components/ui/textarea";
 import ErrorFormMessage from "@/components/app/error-form-message";
 import InputFile from "@/components/ui/input-file";
@@ -20,8 +17,8 @@ import { authHeaders, baseUrl } from "@/utils/api.config";
 import { toast } from "@/components/ui/use-toast";
 import { GenderSelect } from "./form-elements/GenderSelect";
 import { CompanySelect } from "./form-elements/CompanySelect";
-import { RoleSelect } from "./form-elements/RoleSelect";
-import { ServiceSelect } from "./form-elements/ServicesSelect";
+import UserRoleSelect from "@/components/app/user-role-select";
+import UserServiceSelect from "@/components/app/user-service-select";
 
 dayjs.extend(timezone);
 
@@ -29,9 +26,7 @@ export const userSchema = yup.object({
   // Details
   user_firstname: yup.string().required("Firstname is required."),
   user_middlename: yup.string().required("Middlename is required."),
-  user_lastname: yup
-    .string()
-    .required("Lastname is required."),
+  user_lastname: yup.string().required("Lastname is required."),
   user_nickname: yup.string(),
   user_gender: yup.string(),
   user_birthdate: yup.date().nullable(),
@@ -73,7 +68,7 @@ function AddUser() {
     setValue,
     formState: { errors },
     clearErrors,
-    control
+    control,
   } = useForm({
     resolver: yupResolver(userSchema),
   });
@@ -83,14 +78,14 @@ function AddUser() {
     data.timezone = dayjs.tz.guess();
 
     const formData = new FormData();
-    formData.append("signature", signature[0])
-    formData.append("picture", picture[0])
-    formData.append("data", JSON.stringify(data))
+    formData.append("signature", signature[0]);
+    formData.append("picture", picture[0]);
+    formData.append("data", JSON.stringify(data));
 
     const res = await fetch(`${baseUrl}/api/users/add`, {
-      method: 'POST',
+      method: "POST",
       body: formData,
-      headers: authHeaders(session.user.access_token, true)
+      headers: authHeaders(session.user.access_token, true),
     });
 
     const json = await res.json();
@@ -98,12 +93,12 @@ function AddUser() {
     if (json.success) {
       toast({
         title: "User Successfuly Updated.",
-        variant: 'success',
-        duration: 2000
+        variant: "success",
+        duration: 2000,
       });
       setTimeout(() => {
         setLoadingSubmit(false);
-        router.push('/admin/users');
+        router.push("/admin/users");
       }, 300);
     }
   };
@@ -111,12 +106,11 @@ function AddUser() {
   return (
     <form onSubmit={handleSubmit(onSubmitForm)}>
       <div className="flex flex-col p-5 gap-3 w-full mx-auto max-w-[1600px]">
-
         <div className="flex justify-between bg-background p-3 rounded-app items-center shadow-sm">
           <h1 className="text-lg font-medium">Add User</h1>
           <div className="flex items-center gap-1">
             <Button
-              variant={'secondary'}
+              variant={"secondary"}
               type="button"
               disabled={loadingSubmit}
               onClick={() => {
@@ -125,7 +119,13 @@ function AddUser() {
             >
               Back
             </Button>
-            <Button type="submit" disabled={loadingSubmit} className={cn(loadingSubmit && 'loading')}>Submit</Button>
+            <Button
+              type="submit"
+              disabled={loadingSubmit}
+              className={cn(loadingSubmit && "loading")}
+            >
+              Submit
+            </Button>
           </div>
         </div>
 
@@ -138,7 +138,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="First Name"
-                  {...register('user_firstname')}
+                  {...register("user_firstname")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -146,7 +146,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Middle Name"
-                  {...register('user_middlename')}
+                  {...register("user_middlename")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -154,7 +154,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Last Name"
-                  {...register('user_lastname')}
+                  {...register("user_lastname")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -162,7 +162,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Used Name"
-                  {...register('user_nickname')}
+                  {...register("user_nickname")}
                 />
               </div>
             </div>
@@ -189,7 +189,7 @@ function AddUser() {
                     <DatePicker
                       triggerClassName="bg-stone-100 w-full py-2 px-3 rounded-md items-center"
                       date={field.value ? new Date(field.value) : undefined}
-                      onChangeDate={date => field.onChange(date)}
+                      onChangeDate={(date) => field.onChange(date)}
                       format="dd-MM-yyyy"
                       error={errors && errors.user_birthdate}
                     />
@@ -201,7 +201,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Blood Type"
-                  {...register('user_blood_type')}
+                  {...register("user_blood_type")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -209,7 +209,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Religion"
-                  {...register('user_religion')}
+                  {...register("user_religion")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -217,7 +217,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Nationality"
-                  {...register('user_nationality')}
+                  {...register("user_nationality")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -225,7 +225,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Zip Code"
-                  {...register('user_zip_code')}
+                  {...register("user_zip_code")}
                 />
               </div>
             </div>
@@ -235,25 +235,27 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Birthplace"
-                  {...register('user_birthplace')}
+                  {...register("user_birthplace")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
                 <label>Current Address</label>
                 <Textarea
                   className="bg-stone-100 border-0"
-                  {...register('user_current_address')}
-                  error={(errors && errors.user_current_address) ? true : false}
+                  {...register("user_current_address")}
+                  error={errors && errors.user_current_address ? true : false}
                 />
                 {errors.user_current_address && (
-                  <ErrorFormMessage message={errors.user_current_address?.message} />
+                  <ErrorFormMessage
+                    message={errors.user_current_address?.message}
+                  />
                 )}
               </div>
               <div className="flex flex-col gap-2 mt-5">
                 <label>Permanent Address</label>
                 <Textarea
                   className="bg-stone-100 border-0"
-                  {...register('user_permanent_address')}
+                  {...register("user_permanent_address")}
                 />
               </div>
             </div>
@@ -266,7 +268,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Job Title"
-                  {...register('user_job_title')}
+                  {...register("user_job_title")}
                 />
               </div>
             </div>
@@ -276,7 +278,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="sample@gmail.com"
-                  {...register('user_email_address')}
+                  {...register("user_email_address")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -284,7 +286,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Contact Number"
-                  {...register('user_contact_number')}
+                  {...register("user_contact_number")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -292,7 +294,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="SSS Number"
-                  {...register('user_sss_number')}
+                  {...register("user_sss_number")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -300,7 +302,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Function"
-                  {...register('user_function')}
+                  {...register("user_function")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -322,7 +324,7 @@ function AddUser() {
                   name="role_id"
                   control={control}
                   render={({ field }) => (
-                    <RoleSelect
+                    <UserRoleSelect
                       value={field.value}
                       onChangeValue={(value: any) => field.onChange(value)}
                     />
@@ -330,7 +332,10 @@ function AddUser() {
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
-                <label>Date of Entry <span className="text-stone-400">(Work Start Date)</span></label>
+                <label>
+                  Date of Entry{" "}
+                  <span className="text-stone-400">(Work Start Date)</span>
+                </label>
                 <Controller
                   name="user_start_date"
                   control={control}
@@ -338,7 +343,7 @@ function AddUser() {
                     <DatePicker
                       triggerClassName="bg-stone-100 w-full py-2 px-3 rounded-md items-center"
                       date={field.value ? new Date(field.value) : undefined}
-                      onChangeDate={date => field.onChange(date)}
+                      onChangeDate={(date) => field.onChange(date)}
                       format="dd-MM-yyyy"
                       error={errors && errors.user_start_date}
                     />
@@ -351,7 +356,7 @@ function AddUser() {
                   name="user_service_id"
                   control={control}
                   render={({ field }) => (
-                    <ServiceSelect
+                    <UserServiceSelect
                       value={field.value}
                       onChangeValue={(value: any) => field.onChange(value)}
                     />
@@ -365,7 +370,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Shirt Size"
-                  {...register('user_shirt_size')}
+                  {...register("user_shirt_size")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -373,7 +378,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Jacket Size"
-                  {...register('user_jacket_size')}
+                  {...register("user_jacket_size")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -381,7 +386,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Trouse Size"
-                  {...register('user_trouser_size')}
+                  {...register("user_trouser_size")}
                 />
               </div>
               <div className="flex flex-col gap-2 mt-5">
@@ -389,7 +394,7 @@ function AddUser() {
                 <Input
                   className="bg-stone-100 border-0"
                   placeholder="Shoe Size"
-                  {...register('user_shoes_size')}
+                  {...register("user_shoes_size")}
                 />
               </div>
             </div>

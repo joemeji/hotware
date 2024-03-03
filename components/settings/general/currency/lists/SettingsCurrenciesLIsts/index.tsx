@@ -12,6 +12,7 @@ import Pagination from "@/components/pagination";
 import { CurrencyModal } from "../../modals/CurrencyModal";
 import { toast } from "@/components/ui/use-toast";
 import { DeleteCurrencyConfirmModal } from "../../modals/DeleteCurrencyConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsCurrenciesLists = () => {
   const router = useRouter();
@@ -110,7 +111,7 @@ const SettingsCurrenciesLists = () => {
                 currencies.map((currency: any, i: number) => {
                   return (
                     <tr key={i}>
-                      <TD>{currency.currency_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD>{currency.currency}</TD>
                       <TD>{currency.currency_name}</TD>
                       <TD>{currency.currency_sign}</TD>

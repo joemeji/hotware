@@ -2,7 +2,7 @@ import GenericModal from "@/components/admin-pages/company-letters/modals/Generi
 import { ProjectSecondRoleForm } from "../../form/ProjectSecondRoleForm";
 
 export const AddProjectSecondRoleModal = (
-  props: IAddProjectSecondRoleModal
+  props: AddProjectSecondRoleModal
 ) => {
   const { open, onOpenChange, data, listUrl } = props;
 
@@ -23,7 +23,7 @@ export const AddProjectSecondRoleModal = (
   );
 };
 
-type IAddProjectSecondRoleModal = {
+type AddProjectSecondRoleModal = {
   open?: boolean;
   data?: any;
   listUrl: string;

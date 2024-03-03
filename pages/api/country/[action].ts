@@ -1,8 +1,7 @@
-
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]';
-import { authHeaders, baseUrl } from '@/utils/api.config';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]";
+import { authHeaders, baseUrl } from "@/utils/api.config";
 
 export default async function handler(
   req: NextApiRequest,
@@ -14,11 +13,11 @@ export default async function handler(
   const access_token = user ? user.access_token : null;
 
   if (action === "all") {
-    const resp = await fetch(baseUrl + "/api/country/all", {
+    const resp = await fetch(baseUrl + `/api/country/all?search=${search}`, {
       headers: { ...authHeaders(access_token) },
     });
-
-    res.status(201).json(await resp.json());
+    const json = await resp.json();
+    res.json(json);
   }
 
   if (action == "paginate") {

@@ -1,21 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Controller, useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Input as InputLabel } from "@/components/ui/input-label";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
 import useSWR, { mutate } from "swr";
 import { fetcher } from "@/utils/api.config";
-import { taskSchema, taskTriggerSchema } from "../../schema";
 import { useEffect } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { TaskCategorySelect } from "../../elements/TaskCategorySelect";
-import { TaskPriorityLevelSelect } from "../../elements/TaskPriorityLevelSelect";
-import { DatePicker } from "@/components/ui/datepicker";
-import { format } from "date-fns";
 import { TriggerSelect } from "../../elements/TriggerSelect";
-import { SignatoryNameSelect } from "@/components/admin-pages/company-letters/form-elements/SignatoryNameSelect";
-import { TaskTechnicianSelect } from "../../elements/TaskTechnicianSelect";
+import { taskTriggerSchema } from "../../schema";
+import { TechnicianSelect } from "@/components/app/technician-select";
 
 interface ITaskTriggerForm {
   data: any;
@@ -37,9 +30,14 @@ export const TaskTriggerForm = (props: ITaskTriggerForm) => {
     handleSubmit,
     reset,
     setValue,
+    getValues,
     control,
   } = useForm({
     resolver: yupResolver(taskTriggerSchema),
+    defaultValues: {
+      user_id: [],
+      trigger_id: [],
+    },
   });
 
   const submit = async (data: any) => {
@@ -59,7 +57,7 @@ export const TaskTriggerForm = (props: ITaskTriggerForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Updated",
+          title: "Successfully updated!",
           variant: "success",
           duration: 4000,
         });
@@ -81,16 +79,20 @@ export const TaskTriggerForm = (props: ITaskTriggerForm) => {
     } catch {}
   };
 
+  const trigger_id =
+    data && data.length > 0 && data.map((d: any) => d?.trigger_id);
+
   useEffect(() => {
     if (!id) {
       reset();
     } else {
       const user_id =
-        data && data.length > 0 && data.map((d: any) => d?.user_id);
+        (data && data.length > 0 && data.map((d: any) => d?.user_id)) ?? [];
       setValue("user_id", user_id);
 
       const trigger_id =
-        data && data.length > 0 && data.map((d: any) => d?.trigger_id);
+        (data && data.length > 0 && data.map((d: any) => d?.trigger_id)) ?? [];
+
       setValue("trigger_id", trigger_id);
     }
   }, [data, setValue, id, reset]);
@@ -104,7 +106,7 @@ export const TaskTriggerForm = (props: ITaskTriggerForm) => {
           name='user_id'
           control={control}
           render={({ field }) => (
-            <TaskTechnicianSelect
+            <TechnicianSelect
               onChangeValue={(value: any) => {
                 field.onChange(value);
               }}

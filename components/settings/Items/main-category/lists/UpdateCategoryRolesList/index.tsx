@@ -71,7 +71,7 @@ export const UpdateCategoryRolesList = ({ categoryId }: any) => {
               categoriesRoles.map((cRoles: any, i: number) => {
                 return (
                   <tr key={i} className="text-center">
-                    <TD>{cRoles.item_main_category_role_id}</TD>
+                    <TD>{++i}</TD>
                     <TD>{cRoles.item_main_category_name}</TD>
                     <TD>{cRoles.role_name}</TD>
                     <TD>

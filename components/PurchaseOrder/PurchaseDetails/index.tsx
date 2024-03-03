@@ -4,13 +4,18 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
 import { baseUrl } from "@/utils/api.config";
 import dayjs from "dayjs";
-import { Pencil } from "lucide-react";
+import { Check, Pencil, X } from "lucide-react";
 import Link from "next/link";
-import { memo } from "react";
+import { memo, useState } from "react";
 import { StatusChip } from "@/components/PurchaseOrder/StatusChip";
 import { getPurchaseStatus, isOpen } from "@/lib/purchase";
+import { toast } from "@/components/ui/use-toast";
+import { mutate } from "swr";
+import { useApproval } from "./useApproval";
+import { useDecline } from "./useDecline";
+import SendApprovalEmail from "@/components/projects/send-email/SendApprovalEmail";
 
-function PurchaseDetails({ data }: PurchaseDetailsProps) {
+function PurchaseDetails({ data, sessData }: PurchaseDetailsProps) {
   return (
     <>
       <div className="w-1/4 h-[calc(100vh-var(--header-height)-40px)] top-[calc(var(--header-height)+20px)] rounded-sm overflow-hidden sticky">
@@ -25,7 +30,7 @@ function PurchaseDetails({ data }: PurchaseDetailsProps) {
               <p className="text-xl font-bold mb-4 sticky top-0 bg-white z-10">
                 {data && data.po_description}
               </p>
-              <Details data={data} />
+              <Details data={data} sessData={sessData}/>
             </>
           )}
         </ScrollArea>
@@ -47,11 +52,62 @@ function PurchaseDetails({ data }: PurchaseDetailsProps) {
   );
 }
 
+
 export default memo(PurchaseDetails);
 
-function Details({ data }: { data: any }) {
+function Details({ data, sessData }: { data: any, sessData:any }) {
+  const { mutateApprove, Dialog: ApproveDialog } = useApproval({
+    onApprove: () => {
+      toast({
+        title: "Purchase order has been approved successfully.",
+        variant: "success",
+        duration: 2000,
+      });
+
+      mutate([`/api/purchases/details/${data._po_id}`, sessData?.data.user?.access_token]);
+      // send email after approving
+      SendApprovalEmail(data._po_id, 'sendApprovalStatusEmail', sessData?.data.user?.access_token); 
+    },
+  });
+
+  const { mutateDecline, Dialog: DeclineDialog } = useDecline({
+    onDecline: () => {
+      toast({
+        title: "Purchase order has been declined successfully.",
+        variant: "success",
+        duration: 2000,
+      });
+
+      mutate([`/api/purchases/details/${data._po_id}`, sessData?.data.user?.access_token]);
+      // send email after declining
+      SendApprovalEmail(data._po_id, 'sendApprovalStatusEmail', sessData?.data.user?.access_token);
+    },
+  });
+
   return (
     <>
+      <ApproveDialog />
+      <DeclineDialog />
+
+      {(data._user_id == sessData.data.user.id && data.po_status == 'approval') && (
+        <div className="flex gap-1 mb-8 mt-8">
+          <Button
+            onClick={() => mutateApprove(data._po_id)}
+            className={cn("flex items-center bg-green-600 w-full drop-shadow-xl")}
+          >
+            <Check className=" text-white" />
+            <span className="text-white font-medium">APPROVE</span>
+          </Button>
+          <Button
+            onClick={() => mutateDecline(data._po_id)}
+            className={cn("flex items-center bg-red-600 w-full drop-shadow-x")}
+          >
+            <X className="text-white" />
+            <span className="text-white font-medium">DECLINE</span>
+          </Button>
+        </div>
+      )}
+
       <Detail className="gap-2">
         <p className="text-sm text-right flex gap-1">
           Created at
@@ -193,4 +249,5 @@ function Detail({
 
 type PurchaseDetailsProps = {
   data?: any;
+  sessData?: any;
 };

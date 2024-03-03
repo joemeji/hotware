@@ -25,6 +25,7 @@ import { AccessTokenContext } from "@/context/access-token-context";
 import { toast } from "@/components/ui/use-toast";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
+import SearchInput from "@/components/app/search-input";
 
 export const listUrl = (_cms_id: any) => `/api/cms/${_cms_id}/vat`;
 
@@ -36,8 +37,12 @@ const VatDetailsTab = () => {
   const [openDeleteAlert, setOpenDeleteAlert] = useState<any>(false);
   const [loadingDeleteBtn, setLoadingDeleteBtn] = useState(false);
   const access_token = useContext(AccessTokenContext);
+  const [search, setSearch] = useState<any>(null);
 
-  const queryString = new URLSearchParams({ page: String(page) }).toString();
+  const queryString = new URLSearchParams({
+    page: String(page),
+    search: search,
+  }).toString();
 
   let { data, isLoading, error, mutate } = useSWR(
     `${listUrl(cms?._cms_id)}?${queryString}`,
@@ -138,9 +143,10 @@ const VatDetailsTab = () => {
           <div className="flex justify-between items-center">
             <span className="text-base font-medium">Value Added Tax (VAT)</span>
             <div className="flex items-center gap-2">
-              <Input
-                className="bg-stone-100 border-none w-[300px]"
-                placeholder="Search"
+              <SearchInput
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+                delay={500}
               />
               <Button
                 className="p-2 rounded-full"

@@ -7,7 +7,7 @@ import { mutate } from "swr";
 export const DeleteDepartmentConfirmModal = (props: IDepartmentModal) => {
   const { open, onOpenChange, data, listUrl } = props;
 
-  const deleteCurrency = async() => {
+  const deleteDepartment = async() => {
 
     try {
       const res = await fetch(
@@ -15,7 +15,7 @@ export const DeleteDepartmentConfirmModal = (props: IDepartmentModal) => {
         {
           method: "POST",
           body: JSON.stringify({
-            id: data.cms_departments_id
+            id: data.cms_department_id
           })
         },
       );
@@ -24,7 +24,7 @@ export const DeleteDepartmentConfirmModal = (props: IDepartmentModal) => {
       if (json && json.success) {
         mutate(listUrl)
         toast({
-          title: "Successfully Deleted",
+          title: "Successfully deleted!",
           variant: "success",
           duration: 4000,
         });
@@ -52,7 +52,7 @@ export const DeleteDepartmentConfirmModal = (props: IDepartmentModal) => {
           </p>
           <div className='flex gap-2'>
             <Button variant='default' onClick={() => onOpenChange && onOpenChange(false)}>Cancel</Button>
-            <Button variant='red' onClick={deleteCurrency}>Yes</Button>
+            <Button variant='red' onClick={deleteDepartment}>Yes</Button>
           </div>
         </div>
       </div>

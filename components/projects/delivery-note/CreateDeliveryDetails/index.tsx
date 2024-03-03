@@ -27,6 +27,7 @@ import ShippingMethodSelect from "@/components/app/shipping-method-select";
 import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { deliverySchema } from "../schema";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
@@ -68,6 +69,9 @@ function CreateDeliveryDetails() {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/projects/delivery-note/" + json._delivery_note_id);
+
+          // send task emails
+          SendTaskEmail("CREATE_DELIVERY_NOTE", session?.user?.access_token);
         }, 300);
       }
     } catch (err: any) {

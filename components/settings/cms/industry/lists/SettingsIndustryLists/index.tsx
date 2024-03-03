@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { ShippingMethodModal } from "../../modals/IndustryModal";
 import { DeleteIndustryConrimModal } from "../../modals/DeleteIndustryConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsIndustryLists = () => {
   const router = useRouter();
@@ -76,6 +77,7 @@ const SettingsIndustryLists = () => {
               variant='red'
               onClick={() => {
                 setOpenAddModal(true);
+                setSelectedData(null)
               }}
             >
               <Plus {...iconProps} />
@@ -104,7 +106,7 @@ const SettingsIndustryLists = () => {
                 industry.map((shippingMethod: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{shippingMethod.cms_industry_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>
                         {shippingMethod.cms_industry_name}
                       </TD>

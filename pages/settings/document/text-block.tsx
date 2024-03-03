@@ -1,5 +1,4 @@
 import AdminLayout from "@/components/admin-layout";
-import { SettingsLanguage } from "@/components/settings/document/language";
 import { SettingsTextBlock } from "@/components/settings/document/text-block";
 import { AccessTokenContext } from "@/context/access-token-context";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";

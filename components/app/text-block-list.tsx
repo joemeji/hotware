@@ -8,7 +8,7 @@ const TextBlockList = (props: TextBlockListProps) => {
 
   const { data, isLoading } = useSWR(
     session?.user?.access_token
-      ? ["/api/text_blocks", session?.user?.access_token]
+      ? [session?.user?.access_token && "/api/text_blocks", session?.user?.access_token]
       : null,
     fetchApi,
     { revalidateOnFocus: false }

@@ -22,7 +22,7 @@ export const DeleteRiskManagementModalConfirmModal = (
       if (json && json.success) {
         mutate(listUrl);
         toast({
-          title: "Successfully Deleted",
+          title: "Successfully deleted!",
           variant: "success",
           duration: 4000,
         });

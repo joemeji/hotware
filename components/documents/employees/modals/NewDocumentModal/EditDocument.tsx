@@ -23,13 +23,14 @@ import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
+import { cn } from "@/lib/utils";
 
 const yupSchema = yup.object({
   document_name: yup.string().required("Document name is required."),
   document_description: yup.string(),
   document_language_id: yup.string(),
   document_category_id: yup.string(),
-  userfile: yup.mixed().required("Document File is required."),
+  userfile: yup.mixed(),
   document_with_expiry: yup.boolean(),
   document_expiry_date: yup.string(),
   document_notify_employee: yup.boolean(),
@@ -43,9 +44,8 @@ function EditDocument(props: EditDocumentProps) {
   const [footerHeight, setFooterHeight] = useState(0);
   const [reminderExt, setReminderExt] = useState({});
   const [inputDaysValues, setInputDaysValues] = useState<any>({});
-  const parent_id = router.query.parent_id;
-  const user_id = router.query.user_id;
-  console.log({ document: document });
+  const [loading, setLoading] = useState(false);
+
   const {
     control,
     register,
@@ -66,7 +66,7 @@ function EditDocument(props: EditDocumentProps) {
         document.document_notify_employee == 0 ? false : true,
     },
   });
-  console.log({ document: document });
+
   const [withSerial, setWithSerial] = useState(
     getValues("document_with_expiry")
   );
@@ -87,6 +87,7 @@ function EditDocument(props: EditDocumentProps) {
   };
 
   const onSubmit = async (data: any) => {
+    setLoading(true);
     const _data = { ...data };
     const formData = new FormData();
 
@@ -140,6 +141,7 @@ function EditDocument(props: EditDocumentProps) {
     if (onOpenChange) {
       onOpenChange(false);
     }
+    setLoading(false);
   };
 
   const onFileChange = (files: any) => {
@@ -261,7 +263,7 @@ function EditDocument(props: EditDocumentProps) {
 
                 <div className="flex flex-col gap-1">
                   <label>Upload Document</label>
-                  <InputFile required onChange={onFileChange} />
+                  <InputFile onChange={onFileChange} />
                 </div>
 
                 <div className="flex gap-3 w-full  items-end">
@@ -401,7 +403,9 @@ function EditDocument(props: EditDocumentProps) {
                   <Button variant={"ghost"} type="button">
                     Cancel
                   </Button>
-                  <Button type="submit">Submit</Button>
+                  <Button className={cn(loading && "loading")} type="submit">
+                    Submit
+                  </Button>
                 </div>
               </DialogFooter>
             </ScrollArea>

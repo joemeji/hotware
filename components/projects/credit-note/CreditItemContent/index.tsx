@@ -17,13 +17,13 @@ import {
   createColumnHelper,
 } from "@tanstack/react-table";
 import { cn } from "@/lib/utils";
-import { GripVertical, Pencil, Trash, CalculatorIcon } from "lucide-react";
+import { GripVertical, Pencil, Trash } from "lucide-react";
 import MoreOption from "@/components/MoreOption";
 import { ItemMenu } from "@/components/items";
 import { useDeleteItem } from "./useDeleteItem";
-import ReceiptTotals from "./ReceiptTotals";
 import TextBlocks from "./TextBlocks";
 import EditableTextareaCell from "./table/EditableTextAreaCell";
+import { isExported } from "@/lib/credit";
 
 // modals
 const AddEquipmentModal = dynamic(
@@ -85,6 +85,10 @@ const EditableInputCell = ({ getValue, row, column, table }: any) => {
     }
   };
 
+  if (!column?.columnDef?.meta?.editable) {
+    return <div>{value}</div>;
+  }
+
   if (editable) {
     return (
       <input
@@ -120,7 +124,7 @@ const EditableVatCell = ({ getValue, row, column, table }: any) => {
     setEditable(false);
   };
 
-  return <VatSelect onChangeValue={onChange} value={value} />;
+  return (<VatSelect onChangeValue={onChange} value={value} disabled={!column?.columnDef?.meta?.editable} />);
 };
 
 function CreditItemContent({ credit_note_id, currency, _data }: any) {
@@ -149,7 +153,10 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
     },
   });
 
-  const Actions = ({ row }: any) => {
+  const editable = _data && !isExported(_data);
+
+  const Actions = ({ row, column }: any) => {
+    if (!column?.columnDef?.meta?.editable) return;
     return (
       <MoreOption>
         <ItemMenu
@@ -180,6 +187,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "9%",
+        editable,
       },
     }),
     columnHelper.accessor("cn_item_name", {
@@ -188,6 +196,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       meta: {
         width: "31%",
         id: "cn_item_id",
+        editable,
       },
     }),
     columnHelper.accessor("cn_item_quantity", {
@@ -195,6 +204,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "8%",
+        editable,
       },
     }),
     columnHelper.accessor("cn_item_price", {
@@ -202,6 +212,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("cn_item_vat", {
@@ -209,6 +220,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       cell: EditableVatCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("cn_item_discount", {
@@ -216,11 +228,12 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       cell: EditableInputCell,
       meta: {
         width: "10%",
+        editable,
       },
     }),
     columnHelper.accessor("cn_item_line_total", {
       header: "Total Price",
-      cell: ({ getValue }) => (+getValue()).toLocaleString(),
+      cell: ({ getValue }) => (parseFloat(getValue())).toLocaleString(),
       meta: {
         width: "11%",
       },
@@ -230,6 +243,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
       cell: Actions,
       meta: {
         width: "7%",
+        editable,
       },
     }),
   ];
@@ -498,7 +512,6 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
     );
 
     const result = await response.json();
-    console.log({ result });
   };
 
   const handleDrop = (droppedItem: any) => {
@@ -670,9 +683,11 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
                                 {...provided.draggableProps}
                               >
                                 <td className="py-3 px-2 w-[2%] border-b border-b-stone-100 group-last:border-0 align-top">
-                                  <div {...provided.dragHandleProps}>
-                                    <GripVertical />
-                                  </div>
+                                  {editable ? (
+                                    <div {...provided.dragHandleProps}>
+                                      <GripVertical />
+                                    </div>
+                                  ) : null}
                                 </td>
                                 {row.getVisibleCells().map((cell, index) => {
                                   return (
@@ -727,6 +742,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
                       <TextBlocks
                         list={textBlocks}
                         credit_note_id={router.query.credit_note_id}
+                        editable={editable}
                       />
                     ) : null}
                   </table>
@@ -735,7 +751,7 @@ function CreditItemContent({ credit_note_id, currency, _data }: any) {
             </DragDropContext>
           </div>
         </div>
-        {!isLoading && (
+        {editable && !isLoading && (
           <div className="flex justify-center gap-2 items-center mt-auto sticky bottom-0 p-2">
             <AddButtonPopover
               onClickAddCustomEquipment={() => setOpenCustomAddItemModal(true)}

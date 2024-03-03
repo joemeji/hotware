@@ -5,6 +5,7 @@ import {
   Type,
   BarChart3,
   ShoppingCart,
+  FileStack,
 } from "lucide-react";
 
 export const iconProps = {
@@ -37,6 +38,11 @@ export const documentSettingsMenu = [
         name: "Exclusive VAT",
         icon: <ShoppingCart {...iconProps} />,
         href: "/settings/document/exclusive-vat",
+      },
+      {
+        name: "Categories",
+        icon: <FileStack {...iconProps} />,
+        href: "/settings/document/categories",
       },
     ],
   },

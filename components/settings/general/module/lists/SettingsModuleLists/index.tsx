@@ -7,6 +7,7 @@ import { Loader2, Plus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsModuleLists = () => {
   const router = useRouter();
@@ -64,10 +65,10 @@ const SettingsModuleLists = () => {
                 modules.length > 0 &&
                 modules.map((module: any, i: number) => {
                   return (
-                    <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{module.module_id}</TD>
-                      <TD>{module.module_name}</TD>
-                      <TD>{module.module_description}</TD>
+                    <tr key={i} className='&_td:border-r'>
+                      <TD className="text-center">{(page - 1) * PER_PAGE + i + 1}</TD>
+                      <TD className="text-left">{module.module_name.toUpperCase()}</TD>
+                      <TD className="text-left">{module.module_description.toUpperCase()}</TD>
                     </tr>
                   );
                 })}

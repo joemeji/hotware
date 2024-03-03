@@ -41,8 +41,6 @@ export const DeleteVatConfirmModal = (props: ICountryModal) => {
     } catch {}
   }
 
-  console.log('data', data)
-
   return (
     <GenericModal open={open} onOpenChange={onOpenChange} hideClose>
       <div className='pb-5 px-5'>

@@ -14,6 +14,7 @@ import { authHeaders, baseUrl } from "@/utils/api.config";
 import PoStatusSelect from "@/components/app/po-status-select";
 import dayjs from "dayjs";
 import timezone from "dayjs/plugin/timezone";
+import SendApprovalEmail from "../projects/send-email/SendApprovalEmail";
 
 dayjs.extend(timezone);
 
@@ -71,6 +72,11 @@ export const useChangeStatus = ({ defaultValue, onChange }: any) => {
     const result = await response.json();
     if (result.success) {
       onChange(result.po_id);
+
+      if (result.send_mail_for_approval) {
+        // send task emails
+        SendApprovalEmail(result._po_id, 'sendApprovalEmail', session?.user?.access_token); 
+      }
     }
 
     setLoading(false);

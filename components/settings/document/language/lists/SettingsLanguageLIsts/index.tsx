@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { AddLanguageModal } from "../../modals/AddLanguageModal";
 import { DeleteLanguageConfirmModal } from "../../modals/DeleteLanguageConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingslanguageLists = () => {
   const router = useRouter();
@@ -76,6 +77,7 @@ const SettingslanguageLists = () => {
               variant='red'
               onClick={() => {
                 setOpenAddModal(true);
+                setSelectedData(null);
               }}
             >
               <Plus {...iconProps} />
@@ -104,7 +106,7 @@ const SettingslanguageLists = () => {
                 languages.map((language: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{language.document_language_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>
                         {language.document_language_name}
                       </TD>

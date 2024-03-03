@@ -54,7 +54,7 @@ export const AddDocumentCategoryForm = (props: IAddDocumentLevelForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Added",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });
@@ -85,7 +85,6 @@ export const AddDocumentCategoryForm = (props: IAddDocumentLevelForm) => {
   }, [data, setValue, id, reset]);
 
   const [typeId, setTypeId] = useState("");
-  console.log("data", errors);
 
   return (
     <form onSubmit={handleSubmit(submit)} className='mt-7 flex flex-col gap-6'>

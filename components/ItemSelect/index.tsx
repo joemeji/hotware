@@ -173,9 +173,8 @@ function ItemSelect(props: ItemSelectProps) {
       {headChildren}
       <div className={bodyClassName}>
         {!renderSelectedItems &&
-          _data &&
           Array.isArray(_data) &&
-          _data[0] &&
+          Array.isArray(_data[0]?.items) &&
           _data[0].items.length === 0 && <NoDataFound />}
         <div className="flex flex-col gap-1">
           {!renderSelectedItems ? (

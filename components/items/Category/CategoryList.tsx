@@ -4,7 +4,12 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { memo, useCallback, useEffect, useState } from "react";
 
-const CategoryList = ({ categoryId, _item_category_id, item_category_name, sub_categories: _sub_categories }: any) => {
+const CategoryList = ({
+  categoryId,
+  _item_category_id,
+  item_category_name,
+  sub_categories: _sub_categories,
+}: any) => {
   const router = useRouter();
   const sub_category_id = router.query.sub_category_id;
   const [sub_categories, set_sub_categories] = useState<any>([]);
@@ -26,14 +31,24 @@ const CategoryList = ({ categoryId, _item_category_id, item_category_name, sub_c
   }, [sub_categories]);
 
   useEffect(() => {
-    const sub_category = Array.isArray(sub_categories) ? sub_categories.find((sub: any) => sub.item_sub_category_id === sub_category_id) : null;
+    const sub_category = Array.isArray(sub_categories)
+      ? sub_categories.find(
+          (sub: any) => sub.item_sub_category_id === sub_category_id
+        )
+      : null;
     onShowSubCategories();
     if (categoryId === _item_category_id || sub_category) {
       setOpenSub(true);
     } else {
-      setOpenSub(false)
+      setOpenSub(false);
     }
-  }, [sub_categories, categoryId, _item_category_id, onShowSubCategories, sub_category_id]);
+  }, [
+    sub_categories,
+    categoryId,
+    _item_category_id,
+    onShowSubCategories,
+    sub_category_id,
+  ]);
 
   useEffect(() => {
     if (_sub_categories) {
@@ -49,26 +64,29 @@ const CategoryList = ({ categoryId, _item_category_id, item_category_name, sub_c
 
   return (
     <li className="flex relative flex-col">
-      <button className="hover:bg-stone-300 absolute left-0 top-1.5 rounded-full p-0.5" 
+      <button
+        className="hover:bg-stone-300 absolute left-0 top-1.5 rounded-full p-0.5"
         onClick={() => {
           onShowSubCategories();
-          setOpenSub(!openSub)
+          setOpenSub(!openSub);
         }}
       >
-        <ChevronRight width={25} height={25} 
+        <ChevronRight
+          width={25}
+          height={25}
           className={cn(
-            "text-stone-600 rotate-0 transition-transform duration-300",
+            "rotate-0 transition-transform duration-300",
             openSub && "rotate-90"
           )}
         />
       </button>
-      <Link 
-        href={'/items/' + _item_category_id}
+      <Link
+        href={"/items?category_id=" + _item_category_id}
         className={cn(
-          'ps-8 w-full px-3 py-2.5 font-medium flex justify-between',
-          'items-center hover:bg-stone-200 text-stone-600 rounded-xl',
+          "ps-8 w-full px-3 py-2.5 font-medium flex justify-between",
+          "items-center hover:bg-stone-200 rounded-xl",
           openSub && "rounded-br-none rounded-bl-none",
-          (openSub || categoryId === _item_category_id) && 'bg-stone-100'
+          (openSub || categoryId === _item_category_id) && "bg-stone-100"
         )}
       >
         {item_category_name}
@@ -77,19 +95,19 @@ const CategoryList = ({ categoryId, _item_category_id, item_category_name, sub_c
         <ul
           className={cn(
             "overflow-hidden transition-[height] duration-300",
-            "bg-stone-100 rounded-b-xl ps-3 pe-2",
-          )} 
-          style={{ height: openSub ? ulHeight + 'px' : 0 }}
+            "bg-stone-100 rounded-b-xl ps-3 pe-2"
+          )}
+          style={{ height: openSub ? ulHeight + "px" : 0 }}
         >
           {sub_categories.map((sub: any, key: number) => (
             <li key={key} ref={sub.listRef}>
-              <Link 
-                href={'/items/?sub_category_id=' + sub.item_sub_category_id}
+              <Link
+                href={"/items/?sub_category_id=" + sub.item_sub_category_id}
                 className={cn(
-                  'w-full px-3 py-2 flex justify-between ps-5',
-                  'items-center hover:bg-stone-200 text-stone-600',
-                  'rounded-xl',
-                  sub.item_sub_category_id === sub_category_id && 'bg-stone-200'
+                  "w-full px-3 py-2 flex justify-between ps-5",
+                  "items-center hover:bg-stone-200",
+                  "rounded-xl",
+                  sub.item_sub_category_id === sub_category_id && "bg-stone-200"
                 )}
               >
                 {sub.item_sub_category_name}
@@ -99,7 +117,7 @@ const CategoryList = ({ categoryId, _item_category_id, item_category_name, sub_c
         </ul>
       )}
     </li>
-  )
-}
+  );
+};
 
 export default memo(CategoryList);

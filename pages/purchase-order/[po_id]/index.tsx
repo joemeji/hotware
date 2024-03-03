@@ -7,8 +7,10 @@ import { fetchApi } from "@/utils/api.config";
 import React from "react";
 import PurchaseDetails from "@/components/PurchaseOrder/PurchaseDetails";
 import PurchaseItemContent from "@/components/PurchaseOrder/PurchaseItemContent";
+import { useSession } from "next-auth/react";
 
 export default function PurchaseView({ po_id, user }: any) {
+  const sessData = useSession();
   const { data, isLoading, error } = useSWR(
     [`/api/purchases/details/${po_id}`, user.access_token],
     fetchApi
@@ -19,7 +21,7 @@ export default function PurchaseView({ po_id, user }: any) {
       <div className="p-[20px] w-full max-w-[1600px] mx-auto">
         <div className="flex gap-5">
           <PurchaseItemContent po_id={po_id} _data={data} />
-          <PurchaseDetails data={data} />
+          <PurchaseDetails data={data} sessData={sessData} />
         </div>
       </div>
     </AdminLayout>

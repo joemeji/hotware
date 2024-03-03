@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { AddRiskManagementModal } from "../../modals/AddRiskManagementModal";
 import { DeleteRiskManagementModalConfirmModal } from "../../modals/DeleteRiskManagementModalConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsRiskManagementLists = () => {
   const router = useRouter();
@@ -106,7 +107,7 @@ const SettingsRiskManagementLists = () => {
                   return (
                     <tr key={i} className=''>
                       <TD className='text-center'>
-                        {textBlock.risk_management_id}
+                      {(page - 1) * PER_PAGE + i + 1}
                       </TD>
                       <TD>{textBlock.risk_management_name}</TD>
                       <TD className='text-center'>

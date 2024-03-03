@@ -4,34 +4,69 @@ import { fetchApi } from "@/utils/api.config";
 import { formErrorClassNames } from "@/utils/app";
 import ErrorFormMessage from "./error-form-message";
 import { cn } from "@/lib/utils";
-import { useSession } from "next-auth/react"
+import { useSession } from "next-auth/react";
+import React, { useState } from "react";
+import useSWRInfinite from "swr/infinite";
+import { beginScrollDataPagerForInfiniteswr } from "../pagination";
 
 const ProjectTypeSelect = (props: ProjectTypeSelectProps) => {
   const { data: session }: any = useSession();
   const { value, onChangeValue, placeholder, error: formError } = props;
+  const [isOpenPopover, setIsOpenPopover] = useState(false);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading } = useSWR(
-    session?.user?.access_token ?
-      ['/api/projects/types', session?.user?.access_token] :
-      null,
-    fetchApi,
-    { revalidateOnFocus: false }
-  );
+  const { data, isLoading, error, mutate, size, setSize, isValidating } =
+    useSWRInfinite((index) => {
+      let paramsObj: any = {};
+      paramsObj["page"] = index + 1;
+      paramsObj["search"] = search;
+      let searchParams = new URLSearchParams(paramsObj);
+      return [
+        session?.user?.access_token && `/api/projects/types?${searchParams}`,
+        session?.user?.access_token,
+      ];
+    }, fetchApi);
+
+  const _data: any = data ? [].concat(...data) : [];
+  const isLoadingMore =
+    isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
+
+  const onscrollend = () => {
+    const currentPage = beginScrollDataPagerForInfiniteswr(_data, size);
+
+    if (currentPage) {
+      setSize(currentPage + 1);
+    }
+  };
 
   const contentData = () => {
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map((item: any) => {
-        return {
-          value: item.project_type_id,
-          text: (
-            <div className="flex gap-2 items-center justify-between w-full">
-              <span className="font-medium">{item.project_type_name}</span>
-            </div>
-          )
+    const items: any = [];
+    if (_data && Array.isArray(_data)) {
+      _data.forEach((item: any) => {
+        if (item && Array.isArray(item.type)) {
+          item.type.forEach((item: any) => {
+            items.push({
+              text: (
+                <div
+                  className={cn(
+                    "flex justify-between py-1",
+                    "items-start hover:bg-stone-100 cursor-pointer"
+                  )}
+                >
+                  <div className="flex gap-2 items-center justify-between w-full">
+                    <span className="font-medium">
+                      {item.project_type_name}
+                    </span>
+                  </div>
+                </div>
+              ),
+              value: item.project_type_id,
+            });
+          });
         }
       });
     }
-    return;
+    return items;
   };
 
   return (
@@ -43,21 +78,23 @@ const ProjectTypeSelect = (props: ProjectTypeSelectProps) => {
         onChangeValue={onChangeValue}
         isLoading={isLoading}
         className={cn(formError && formErrorClassNames)}
+        onScrollEnd={onscrollend}
+        isLoadingMore={isLoadingMore}
+        onOpenChange={(open) => setIsOpenPopover(open)}
+        onSearch={(value: any) => {
+          setSearch(value);
+        }}
       />
-      {formError && (
-        <ErrorFormMessage
-          message={formError.message}
-        />
-      )}
+      {formError && <ErrorFormMessage message={formError.message} />}
     </div>
   );
 };
 
 type ProjectTypeSelectProps = {
-  value?: any
-  onChangeValue?: (value?: any) => void
-  placeholder?: any
-  error?: any
-}
+  value?: any;
+  onChangeValue?: (value?: any) => void;
+  placeholder?: any;
+  error?: any;
+};
 
-export default ProjectTypeSelect;
+export default React.memo(ProjectTypeSelect);

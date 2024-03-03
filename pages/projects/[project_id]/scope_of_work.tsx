@@ -1,6 +1,7 @@
 import AdminLayout from "@/components/admin-layout";
 import Equipments from "@/components/projects/project-page/ProjectDetails/Equipments";
 import Layout from "@/components/projects/project-page/ProjectDetails/Layout";
+import ScopeOfWork from "@/components/projects/project-page/ProjectDetails/ScopeOfWork";
 import { AccessTokenContext } from "@/context/access-token-context";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSidePropsContext } from "next";
@@ -11,7 +12,7 @@ export default function ScopeOfWorkPage({ access_token }: any) {
     <AdminLayout>
       <AccessTokenContext.Provider value={access_token}>
         <Layout
-          render={(headerSize) => <Equipments headerSize={headerSize} />}
+          render={(headerSize) => <ScopeOfWork headerSize={headerSize} />}
         />
       </AccessTokenContext.Provider>
     </AdminLayout>

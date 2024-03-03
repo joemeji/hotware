@@ -1,4 +1,5 @@
 import AvatarProfile from "@/components/AvatarProfile";
+import SearchInput from "@/components/app/search-input";
 import { beginScrollDataPagerForInfiniteswr } from "@/components/pagination";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -6,20 +7,32 @@ import { AccessTokenContext } from "@/context/access-token-context";
 import { cn } from "@/lib/utils";
 import { baseUrl, fetchApi } from "@/utils/api.config";
 import { Search } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { memo, useContext, useEffect, useMemo } from "react";
+import { memo, useContext, useEffect, useMemo, useState } from "react";
 import useSWRInfinite from "swr/infinite";
 
-const Employees = ({ filterHeight, onClickEmployee }: Employees) => {
+const Employees = ({
+  filterHeight,
+  onClickEmployee,
+  selectedCategory,
+  selectedCompany,
+  selectedRole,
+}: Employees) => {
   const access_token = useContext(AccessTokenContext);
   const router = useRouter();
+  const [search, setSearch] = useState("");
 
   const { data, isLoading, error, size, setSize, isValidating } =
     useSWRInfinite((index) => {
       let paramsObj: any = {};
       paramsObj["page"] = index + 1;
+      paramsObj["company"] = selectedCompany ? selectedCompany : "";
+      paramsObj["role"] = selectedRole ? selectedRole : "";
+      paramsObj["category"] = selectedCategory ? selectedCategory : "";
       paramsObj["per_page"] = 20;
+      paramsObj["search"] = search;
       let searchParams = new URLSearchParams(paramsObj);
       return [
         !open ? null : `/api/users?${searchParams.toString()}`,
@@ -72,17 +85,27 @@ const Employees = ({ filterHeight, onClickEmployee }: Employees) => {
     >
       <div className="sticky top-0 z-10 backdrop-blur px-3 py-3 flex flex-col gap-2">
         <p className="text-base font-medium">Employees</p>
-        <div className="bg-stone-100 flex items-center w-full rounded-app px-2 h-10 focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 ring-offset-background ring-offset-2 border border-input">
-          <Search className="text-stone-400 w-5 h-5" />
-          <input
-            type="search"
-            placeholder="Search"
-            className="outline-none text-sm w-full px-2 bg-transparent h-full"
+        <div className="w-full">
+          <SearchInput
+            width={360}
+            onChange={(e) => setSearch(e.target.value)}
+            value={search}
+            delay={500}
           />
         </div>
       </div>
 
       <div className="flex flex-col px-3 pb-3">
+        {_data[0] && Array.isArray(_data) && _data[0].users?.length === 0 && (
+          <div className="flex justify-center">
+            <Image
+              src="/images/No data-rafiki.svg"
+              width={300}
+              height={300}
+              alt="No Data to Shown"
+            />
+          </div>
+        )}
         {Array.isArray(_data) &&
           _data.map((data: any) => {
             return (
@@ -142,6 +165,9 @@ const Employees = ({ filterHeight, onClickEmployee }: Employees) => {
 type Employees = {
   filterHeight?: number;
   onClickEmployee?: (user: any) => void;
+  selectedCompany?: any;
+  selectedCategory?: any;
+  selectedRole?: any;
 };
 
 export default memo(Employees);

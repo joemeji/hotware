@@ -48,7 +48,7 @@ const DetailsTab = () => {
     if (json.success) {
       toast({
         title: "Successfully updated.",
-        variant: "default",
+        variant: "success",
         duration: 1000,
       });
     }

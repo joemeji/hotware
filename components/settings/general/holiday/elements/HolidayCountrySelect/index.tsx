@@ -11,41 +11,47 @@ export const HolidayCountrySelect = (props: IDocumentTypeSelect) => {
     revalidateIfStale: false,
   };
 
-  const { data, isLoading, error } = useSWR('/api/country/all', fetcher, swrOptions);
+  const { data, isLoading, error } = useSWR(
+    "/api/country/all",
+    fetcher,
+    swrOptions
+  );
 
   const contentData = () => {
-
-    return data && data.length > 0 && data.map((country: any, key: number) => {
-
-      return {
-        text: (
-          <div key={key}>
-            <span className="font-medium">{country.country_name}</span>
-          </div>
-        ),
-        label: country.country_name,
-        value: country.country_id,
-      }
-    });
-  }
+    return (
+      data &&
+      data.length > 0 &&
+      data.map((country: any, key: number) => {
+        return {
+          text: (
+            <div key={key}>
+              <span className="font-medium">{country.country_name}</span>
+            </div>
+          ),
+          label: country.country_name,
+          value: country.country_id,
+        };
+      })
+    );
+  };
 
   return (
     <div className="flex flex-col gap-2">
       <ComboboxMultiple
-        placeholder='Choose'
+        placeholder="Choose"
         isLoading={isLoading}
         value={value}
         onChangeValue={onChangeValue}
         contents={contentData()}
         className="h-10"
-        defaultValue={defaultValue}
+        // defaultValue={defaultValue}
       />
     </div>
-  )
-}
+  );
+};
 
 type IDocumentTypeSelect = {
-  onChangeValue?: (value?: any) => void
-  defaultValue?: any
-  value?: any
-}
+  onChangeValue?: (value?: any) => void;
+  defaultValue?: any;
+  value?: any;
+};

@@ -3,7 +3,7 @@
 import GenericModal from "@/components/admin-pages/company-letters/modals/GenericModal";
 import { VatForm } from "../../form/VatForm";
 
-export const VatModal = (props: IAddCurrencyModal) => {
+export const VatModal = (props: AddVatModal) => {
   const { open, onOpenChange, data, listUrl } = props;
 
   return (
@@ -15,7 +15,7 @@ export const VatModal = (props: IAddCurrencyModal) => {
   );
 };
 
-type IAddCurrencyModal = {
+type AddVatModal = {
   open?: boolean;
   data?: any
   listUrl: string

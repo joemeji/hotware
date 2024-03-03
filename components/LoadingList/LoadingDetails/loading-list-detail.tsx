@@ -14,28 +14,32 @@ function LoadingListDetails(props: LoadingListDetailsProps) {
   const loadingDetails: any = useContext(LoadingListDetailsContext);
   const loadingID = loadingDetails && loadingDetails.loading_id;
 
-  const { data, isLoading, error } = useSWR('/api/loading-list/' + loadingID + '/details', fetcher, swrOptions);
+  const { data, isLoading, error } = useSWR(
+    "/api/loading-list/" + loadingID + "/details",
+    fetcher,
+    swrOptions
+  );
 
   return (
     <div className="flex flex-col gap-3">
-      <div className="rounded-xl border-2 border-stone-200 p-3 flex flex-col gap-2">
-        <div className="text-sm text-right flex gap-1">
+      <div className="rounded-xl border-2 border-stone-200 p-3 flex flex-col gap-4">
+        <div className="text-sm text-right flex gap-1 flex-col">
           <p>Created at</p>
-          <p className="font-medium">{formatDate(data && data)}</p>
+          <p>{formatDate(data && data)}</p>
         </div>
-        <div className="flex gap-1 items-center">
-          <p className="text-stone-600">by</p>
-          <div>
+        <div className="flex gap-1 flex-col">
+          <p className="text-stone-600">Added by</p>
+          <div className="flex gap-1 items-center">
             <AvatarProfile
               firstname={data && data.user_firstname}
               lastname={data && data.user_lastname}
-              photo={baseUrl + '/users/thumbnail/' + data && data?.user_photo}
+              photo={baseUrl + "/users/thumbnail/" + data && data?.user_photo}
               avatarClassName="w-7 h-7"
               avatarColor={data && data.avatar_color}
               avatarFallbackClassName="font-medium text-white text-xs"
             />
+            <p className="font-medium">{data && data.added_by_name}</p>
           </div>
-          <p className="font-medium">{data && data.added_by_name}</p>
         </div>
       </div>
       <div className="rounded-xl border-2 border-stone-200 p-3 flex flex-col gap-2">
@@ -79,14 +83,14 @@ function LoadingListDetails(props: LoadingListDetailsProps) {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default memo(LoadingListDetails);
 
 type LoadingListDetailsProps = {
-  open?: any
-}
+  open?: any;
+};
 
 // export const LoadingCreated = () => {
 //   const loadingDetails: any = useContext(LoadingListDetailsContext);
@@ -118,7 +122,7 @@ type LoadingListDetailsProps = {
 
 const formatDate = (data: any) => {
   if (!data || !data.added_date) {
-    return 'Invalid Date';
+    return "Invalid Date";
   }
 
   const year = parseInt(data.added_date.substring(0, 4));
@@ -129,18 +133,25 @@ const formatDate = (data: any) => {
   const second = parseInt(data.added_date.substring(12, 14));
 
   // Create a Date object
-  const formattedDate = new Date(year, month, day, hour, minute, second).toLocaleString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
+  const formattedDate = new Date(
+    year,
+    month,
+    day,
+    hour,
+    minute,
+    second
+  ).toLocaleString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
     hour12: true,
   });
 
   return formattedDate;
-}
+};
 
 // export const LoadingDescription = () => {
 //   const loadingDetails: any = useContext(LoadingListDetailsContext);

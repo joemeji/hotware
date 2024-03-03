@@ -6,6 +6,8 @@ import { Buttons } from "./main-page/Buttons";
 import List from "./main-page/List";
 
 const AddressManager = () => {
+  const [search, setSearch] = useState("");
+  const [success, setSuccess] = useState(false);
   return (
     <>
       <div className="w-full h-full">
@@ -19,10 +21,13 @@ const AddressManager = () => {
               "backdrop-blur-sm bg-white/90 rounded-t-app"
             )}
           >
-            <AddNewContact />
-            <Buttons />
+            <AddNewContact onSuccess={(value: any) => setSuccess(value)} />
+            <Buttons
+              onSearch={(value: any) => setSearch(value)}
+              success={success}
+            />
           </div>
-          <List />
+          <List search={search} success={success} />
         </ScrollArea>
       </div>
     </>

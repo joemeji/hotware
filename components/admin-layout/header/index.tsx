@@ -71,7 +71,7 @@ export default function Header({ onToggleSidebar }: HeaderProp) {
           width: bp === "md" ? "auto" : "33.33%",
         }}
       >
-        <HeaderIcons />
+        {/* <HeaderIcons /> */}
         <Avatar />
       </div>
     </header>

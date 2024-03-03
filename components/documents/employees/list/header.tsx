@@ -14,135 +14,170 @@ import { doc_employee_base } from "@/lib/azureUrls";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import MoveDocument from "../modals/FolderModal/MoveDocument";
+import SearchInput from "@/components/app/search-input";
 
-const Header = forwardRef(({ onSuccess, onDeselect }: { onSuccess?: () => void, onDeselect?: () => void }, ref: any) => {
-  const { data: session }: any = useSession();
-  const router = useRouter();
-  const [newFolderOpen, setNewFolderOpen] = useState(false);
-  const [newDocumentOpen, setNewDocumentOpen] = useState(false);
-  const [onMoveDocument, setOnMoveDocument] = useState(false);
-  const [isDownloading, setIsDownloading] = useState(false);
-  const checkedFiles: any = useContext(CheckedFilesContext);
-  const selectedEmployee: any = useContext(SelectedEmployeeContext);
+export function getDateToday() {
+  const currentDate = new Date();
 
-  const onDownloadAsZip = async (e: any) => {
-    e.preventDefault();
-    setIsDownloading(true);
-    const requestOptions = {
-      method: 'POST',
-      headers: authHeaders(session.user.access_token),
-      body: JSON.stringify(checkedFiles)
+  const year = currentDate.getFullYear();
+  const month = (currentDate.getMonth() + 1).toString().padStart(2, "0"); // Months are zero-indexed
+  const day = currentDate.getDate().toString().padStart(2, "0");
+  const hours = currentDate.getHours().toString().padStart(2, "0");
+  const minutes = currentDate.getMinutes().toString().padStart(2, "0");
+  const seconds = currentDate.getSeconds().toString().padStart(2, "0");
+
+  const dateNow = `${year}${month}${day}${hours}${minutes}${seconds}`;
+  return dateNow;
+}
+
+const Header = forwardRef(
+  (
+    {
+      onSuccess,
+      onDeselect,
+      onDirectory,
+      onSearch,
+    }: {
+      onSuccess?: () => void;
+      onDeselect?: () => void;
+      onDirectory?: any;
+      onSearch?: (search: any) => void;
+    },
+    ref: any
+  ) => {
+    const { data: session }: any = useSession();
+    const router = useRouter();
+    const [newFolderOpen, setNewFolderOpen] = useState(false);
+    const [newDocumentOpen, setNewDocumentOpen] = useState(false);
+    const [onMoveDocument, setOnMoveDocument] = useState(false);
+    const [isDownloading, setIsDownloading] = useState(false);
+    const checkedFiles: any = useContext(CheckedFilesContext);
+    const selectedEmployee: any = useContext(SelectedEmployeeContext);
+
+    const onDownloadAsZip = async (e: any) => {
+      e.preventDefault();
+      setIsDownloading(true);
+      const requestOptions = {
+        method: "POST",
+        headers: authHeaders(session.user.access_token),
+        body: JSON.stringify(checkedFiles),
+      };
+
+      const res = await fetch(
+        `${baseUrl}/api/document/download_files`,
+        requestOptions
+      );
+      const blob = await res.blob();
+
+      const url = window.URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `FILES_${getDateToday()}.zip`;
+      a.click();
+      setIsDownloading(false);
     };
 
-    const res = await fetch(`${baseUrl}/api/document/download_files`, requestOptions);
-    const blob = await res.blob();
-
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `FILES_${getDateToday()}.zip`;
-    a.click();
-    setIsDownloading(false);
-  };
-
-  function getDateToday() {
-    const currentDate = new Date();
-
-    const year = currentDate.getFullYear();
-    const month = (currentDate.getMonth() + 1).toString().padStart(2, '0'); // Months are zero-indexed
-    const day = currentDate.getDate().toString().padStart(2, '0');
-    const hours = currentDate.getHours().toString().padStart(2, '0');
-    const minutes = currentDate.getMinutes().toString().padStart(2, '0');
-    const seconds = currentDate.getSeconds().toString().padStart(2, '0');
-
-    const dateNow = `${year}${month}${day}${hours}${minutes}${seconds}`;
-    return dateNow;
-  }
-
-  return (
-    <>
-      <NewFolderModal
-        open={newFolderOpen}
-        onOpenChange={(open) => setNewFolderOpen(open)}
-        onSuccess={onSuccess}
-      />
-      <NewDocumentModal
-        open={newDocumentOpen}
-        onOpenChange={(open) => setNewDocumentOpen(open)}
-        onSuccess={onSuccess}
-      />
-      {onMoveDocument && (
-        <MoveDocument
-          open={onMoveDocument}
-          onOpenChange={(open) => setOnMoveDocument(open)}
+    return (
+      <>
+        <NewFolderModal
+          open={newFolderOpen}
+          onOpenChange={(open) => setNewFolderOpen(open)}
           onSuccess={onSuccess}
         />
-      )}
-      <div
-        ref={ref}
-        className="flex justify-between p-3 sticky top-0 backdrop-blur z-10"
-      >
-        {Array.isArray(checkedFiles) && checkedFiles.length > 0 ? (
-          <div className="flex gap-1">
-            <Button className="py-1 flex gap-2 ps-2 pe-3" variant={"secondary"} onClick={() => setOnMoveDocument(true)}>
-              <Forward className="w-[18px] text-red-400" /> Move
-            </Button>
-            <form action="" method="post" onSubmit={onDownloadAsZip}>
-              <Button className={`py-1 gap-2 ps-2 pe-3 ${isDownloading ? 'loading' : ''}`} variant={"secondary"} type="submit">
-                <Download className="w-[18px] text-blue-400" /> Download
-              </Button>
-            </form>
-            <Button className={`py-1 gap-2 ps-2 pe-3`} variant={"secondary"} onClick={() => onDeselect && onDeselect()}>
-              <X className="w-[18px] text-rose-400" /> Deselect
-            </Button>
-          </div>
-        ) : (
-          <FolderNavs />
+        <NewDocumentModal
+          open={newDocumentOpen}
+          onOpenChange={(open) => setNewDocumentOpen(open)}
+          onSuccess={onSuccess}
+        />
+        {onMoveDocument && (
+          <MoveDocument
+            open={onMoveDocument}
+            onOpenChange={(open) => setOnMoveDocument(open)}
+            onSuccess={() => {
+              onSuccess && onSuccess();
+              onDeselect && onDeselect();
+            }}
+          />
         )}
-
-        <div className="flex gap-2">
-          {selectedEmployee && (
-            <MoreOption
-              menuTriggerChildren={
-                <Button className="py-1 flex gap-1 px-2 ps-3">
-                  <span>New</span>
-                  <ChevronDown className="w-[18px]" />
+        <div
+          ref={ref}
+          className="flex justify-between p-3 sticky top-0 backdrop-blur z-10"
+        >
+          {Array.isArray(checkedFiles) && checkedFiles.length > 0 ? (
+            <div className="flex gap-1">
+              <Button
+                className="py-1 flex gap-2 ps-2 pe-3"
+                variant={"secondary"}
+                onClick={() => setOnMoveDocument(true)}
+              >
+                <Forward className="w-[18px] text-red-400" /> Move
+              </Button>
+              <form action="" method="post" onSubmit={onDownloadAsZip}>
+                <Button
+                  className={`py-1 gap-2 ps-2 pe-3 ${
+                    isDownloading ? "loading" : ""
+                  }`}
+                  variant={"secondary"}
+                  type="submit"
+                >
+                  <Download className="w-[18px] text-blue-400" /> Download
                 </Button>
-              }
-            >
-              <ItemMenu
-                className="gap-3"
-                onClick={() => setNewFolderOpen(true)}
+              </form>
+              <Button
+                className={`py-1 gap-2 ps-2 pe-3`}
+                variant={"secondary"}
+                onClick={() => onDeselect && onDeselect()}
               >
-                <Folder className="w-[18px] h-[18px] fill-orange-300 stroke-orange-300" />
-                <span className="font-medium">Folder</span>
-              </ItemMenu>
-              <ItemMenu
-                className="gap-3"
-                onClick={() => setNewDocumentOpen(true)}
-              >
-                <File className="w-[18px] h-[18px] fill-red-500 stroke-red-600" />
-                <span className="font-medium">Document</span>
-              </ItemMenu>
-            </MoreOption>
+                <X className="w-[18px] text-rose-400" /> Deselect
+              </Button>
+            </div>
+          ) : (
+            <FolderNavs onDirectory={(e: any) => onDirectory(e)} />
           )}
 
-          <Input
-            placeholder="Search"
-            className="bg-stone-100 border-0 py-1 h-auto w-[250px]"
-          />
+          <div className="flex gap-2">
+            {selectedEmployee && (
+              <MoreOption
+                menuTriggerChildren={
+                  <Button className="py-1 flex gap-1 px-2 ps-3">
+                    <span>New</span>
+                    <ChevronDown className="w-[18px]" />
+                  </Button>
+                }
+              >
+                <ItemMenu
+                  className="gap-3"
+                  onClick={() => setNewFolderOpen(true)}
+                >
+                  <Folder className="w-[18px] h-[18px] fill-orange-300 stroke-orange-300" />
+                  <span className="font-medium">Folder</span>
+                </ItemMenu>
+                <ItemMenu
+                  className="gap-3"
+                  onClick={() => setNewDocumentOpen(true)}
+                >
+                  <File className="w-[18px] h-[18px] fill-red-500 stroke-red-600" />
+                  <span className="font-medium">Document</span>
+                </ItemMenu>
+              </MoreOption>
+            )}
+            <SearchInput
+              onChange={(e) => onSearch && onSearch(e.target.value)}
+              delay={500}
+            />
+          </div>
         </div>
-      </div>
-    </>
-  );
-});
+      </>
+    );
+  }
+);
 
 Header.displayName = "Header";
 
 export default memo(Header);
 
-const FolderNavs = () => {
+const FolderNavs = ({ onDirectory }: { onDirectory?: (e: any) => void }) => {
   const router = useRouter();
   const selectedEmployee: any = useContext(SelectedEmployeeContext);
   let dirs: any = [];
@@ -154,9 +189,11 @@ const FolderNavs = () => {
 
   const onNavigateUser = () => {
     if (selectedEmployee) {
+      onDirectory && onDirectory(true);
       router.push(
         `/documents/employees?user_id=${selectedEmployee._user_id}&parent_id=0`
       );
+      onDirectory && onDirectory(true);
     }
   };
 

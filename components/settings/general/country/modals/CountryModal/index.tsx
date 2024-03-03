@@ -5,7 +5,7 @@ export const CountryModal = (props: ICountryModal) => {
   const { open, onOpenChange, id, listUrl } = props;
 
   return (
-    <GenericModal open={open} onOpenChange={onOpenChange} title='Countrys'>
+    <GenericModal open={open} onOpenChange={onOpenChange} title='Country'>
       <div className='pb-5 px-5'>
         <CountryForm id={id} listUrl={listUrl} onOpenChange={onOpenChange}/>
       </div>

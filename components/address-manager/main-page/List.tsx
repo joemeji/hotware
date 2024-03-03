@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { TableHead } from "./TableHead";
 import { ItemMenu, TD } from "@/components/items";
 import MoreOption from "@/components/MoreOption";
@@ -25,7 +25,7 @@ import TemporaryLogo from "../temporary-logo";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 
-const List = () => {
+const List = ({ search, success }: { search?: any; success?: any }) => {
   const [changeCategory, setChangeCategory] = useState(false);
   const [linkToCompany, setLinkToCompany] = useState(false);
   const [addToAllCategories, setAddToAllCategories] = useState(false);
@@ -34,10 +34,15 @@ const List = () => {
   const router = useRouter();
   const page = router.query?.page || 1;
 
-  let paramsObj: any = { page: String(page), category: null, ...router.query };
+  let paramsObj: any = {
+    page: String(page),
+    search: search,
+    category: null,
+    ...router.query,
+  };
   let searchParams = new URLSearchParams(paramsObj);
 
-  let { data, isLoading, error } = useSWR(
+  let { data, isLoading, error, mutate } = useSWR(
     `/api/cms?${searchParams.toString()}`,
     fetcher,
     {
@@ -45,6 +50,12 @@ const List = () => {
       revalidateIfStale: false,
     }
   );
+
+  useEffect(() => {
+    if (success) {
+      mutate(data);
+    }
+  }, [data, success, mutate]);
 
   function onViewCms(cms_id: any) {
     router.push("/address-manager/" + cms_id);

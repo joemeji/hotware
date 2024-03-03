@@ -4,31 +4,64 @@ import { fetcher } from "@/utils/api.config";
 import ErrorFormMessage from "./error-form-message";
 import { formErrorClassNames } from "@/utils/app";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
+import React, { useState } from "react";
+import useSWRInfinite from "swr/infinite";
+import { beginScrollDataPagerForInfiniteswr } from "../pagination";
 
 preload('/api/warehouse', fetcher);
 
 const WarehouseSelect = (props: WarehouseSelectProps) => {
   const { value, onChangeValue, placeholder, error: formError } = props;
   const [isOpenPopover, setIsOpenPopover] = useState(false);
+  const [search, setSearch] = useState("");
 
-  const { data, isLoading, error, mutate } = useSWR('/api/warehouse', fetcher);
+  const { data, isLoading, error, mutate, size, setSize, isValidating } = useSWRInfinite((index) => {
+    let paramsObj: any = {};
+    paramsObj["page"] = index + 1;
+    paramsObj["search"] = search;
+    let searchParams = new URLSearchParams(paramsObj);
+    return `/api/warehouse?${searchParams}`;
+  }, fetcher);
+
+  const _data: any = data ? [].concat(...data) : [];
+  const isLoadingMore =
+    isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
+
+  const onscrollend = () => {
+    const currentPage = beginScrollDataPagerForInfiniteswr(_data, size);
+
+    if (currentPage) {
+      setSize(currentPage + 1);
+    }
+  };
 
   const contentData = () => {
-    if (Array.isArray(data) && data.length > 0) {
-      return data.map((item: any) => {
-        return {
-          value: item.warehouse_id,
-          text: (
-            <div className="flex flex-col">
-              <span className="font-medium">{item.warehouse_name}</span>
-              <span className=" opacity-80">{item.warehouse_location}</span>
-            </div>
-          )
+    const items: any = [];
+    if (_data && Array.isArray(_data)) {
+      _data.forEach((item: any) => {
+        if (item && Array.isArray(item.warehouse)) {
+          item.warehouse.forEach((item: any) => {
+            items.push({
+              text: (
+                <div
+                  className={cn(
+                    "flex justify-between py-1",
+                    "items-start hover:bg-stone-100 cursor-pointer"
+                  )}
+                >
+                  <div className="flex gap-0 flex-col">
+                    <span className="font-medium">{item.warehouse_name}</span>
+                    <span className=" opacity-80">{item.warehouse_location}</span>
+                  </div>
+                </div>
+              ),
+              value: item.warehouse_id,
+            });
+          });
         }
       });
     }
-    return;
+    return items;
   };
 
   return (
@@ -37,9 +70,14 @@ const WarehouseSelect = (props: WarehouseSelectProps) => {
         contents={contentData()}
         placeholder={placeholder}
         value={value}
+        onScrollEnd={onscrollend}
         onChangeValue={onChangeValue}
         className={cn(formError && formErrorClassNames)}
+        isLoadingMore={isLoadingMore}
         onOpenChange={open => setIsOpenPopover(open)}
+        onSearch={(value: any) => {
+          setSearch(value);
+        }}
       />
       {formError && (
         <ErrorFormMessage 

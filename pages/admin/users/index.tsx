@@ -20,6 +20,7 @@ import useSWR from "swr";
 import UserLanguageModal from "@/components/admin-pages/users/modals/UserLanguageModal";
 import AdditionalInfoModal from "@/components/admin-pages/users/modals/AdditionalInfoModal";
 import DataProtectionModal from "@/components/admin-pages/users/modals/DataProtectionModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 type UsersProps = {
   user: any,
@@ -35,6 +36,7 @@ export default function Users(props: UsersProps) {
   const { user, serverStatus } = props;
   const router = useRouter();
   const [userPager, setUserPager] = useState<any>(null);
+  const [page, setPage] = useState(1);
   const [deleteUser, setDeleteUser] = useState(false);
   const [userDetails, setUserDetails] = useState<any>(null);
   const [emergencyContact, setEmergencyContacts] = useState(false);
@@ -44,10 +46,10 @@ export default function Users(props: UsersProps) {
   const [dataProtectionModal, setDataProtectionModal] = useState(false);
 
   const onPaginate = (page: any) => {
+    setPage(page);
     router.query.page = page;
     router.push(router);
   };
-  console.log({ index: user })
 
   const onClickAction = (actionType: string, user_id: any, _user: any) => {
 
@@ -174,7 +176,7 @@ export default function Users(props: UsersProps) {
             <tbody>
               {user && Array.isArray(user.users) && user.users.map((user: any, key: number) => (
                 <tr key={key} className="even:bg-stone-50 hover:bg-stone-100">
-                  <TD className="font-bold text-stone-600 text-center">{user.user_identification}</TD>
+                  <TD className="font-bold text-stone-600 text-center">{(page - 1) * PER_PAGE + key + 1}</TD>
                   <TD className="w-20">
                     <div>
                       <Avatar className="w-12 h-12">

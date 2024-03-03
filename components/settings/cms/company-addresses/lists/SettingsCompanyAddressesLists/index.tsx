@@ -14,6 +14,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { addCmsOwner } from "../../schema";
 import { toast } from "@/components/ui/use-toast";
 import { NotCmsOwnerSelect } from "../../form/NotCmsOwnerSelect";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsCompanyAddressesLists = () => {
   const router = useRouter();
@@ -147,7 +148,7 @@ const SettingsCompanyAddressesLists = () => {
                 cmsOwner.map((cmsOwner: any, i: number) => {
                   return (
                     <tr key={i} className='text-center'>
-                      <TD>{cmsOwner.cms_owner_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>{cmsOwner.cms_name}</TD>
                       <TD>{cmsOwner?.company_name}</TD>
                       <TD>

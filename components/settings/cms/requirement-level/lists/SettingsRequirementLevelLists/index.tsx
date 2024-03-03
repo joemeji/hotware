@@ -12,6 +12,7 @@ import Pagination from "@/components/pagination";
 import { AddRequirementLevelModal } from "../../modals/AddRequirementLevelModal";
 import { DeleteRequirementLevelConfirmModal } from "../../modals/DeleteRequirementLevelConfirmModal";
 import { AddDocumentCategoryModal } from "../../modals/AddDocumentCategoryModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsRequirementLevelLists = () => {
   const router = useRouter();
@@ -92,7 +93,7 @@ const SettingsRequirementLevelLists = () => {
               }}
             >
               <Plus {...iconProps} />
-              Add Department
+              Add Requirement Level
             </Button>
           </div>
         </div>
@@ -117,7 +118,7 @@ const SettingsRequirementLevelLists = () => {
                 requirementLevel.map((rLevel: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{rLevel.document_level_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>
                         {rLevel.document_level_name}
                       </TD>

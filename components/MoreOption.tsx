@@ -24,7 +24,7 @@ export default function MoreOption({
   onOpenChange?: (open: boolean) => void;
 }) {
   return (
-    <DropdownMenu modal={true} onOpenChange={onOpenChange} open={open}>
+    <DropdownMenu modal={false} onOpenChange={onOpenChange} open={open}>
       <DropdownMenuTrigger asChild>
         {menuTriggerChildren || (
           <Button

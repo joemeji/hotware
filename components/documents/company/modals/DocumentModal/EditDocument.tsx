@@ -44,7 +44,7 @@ function EditDocument(props: EditDocumentProps) {
   const [inputDaysValues, setInputDaysValues] = useState<any>({});
   const parent_id = router.query.parent_id;
   const user_id = router.query.user_id;
-  console.log({ document: document });
+
   const {
     control,
     register,
@@ -63,7 +63,7 @@ function EditDocument(props: EditDocumentProps) {
       document_expiry_date: document.expiry_date,
     },
   });
-  console.log({ edit: document });
+
   const [withSerial, setWithSerial] = useState(
     getValues("document_with_expiry")
   );

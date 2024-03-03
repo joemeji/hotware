@@ -1,5 +1,10 @@
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
@@ -14,15 +19,15 @@ import { mutate } from "swr";
 import { toast } from "@/components/ui/use-toast";
 
 const yupObject: any = {
-  loading_description: yup.string().required('This field is required.'),
-  loading_furnace: yup.string().required('This field is required.'),
-  loading_type_id: yup.number().required('This field is required'),
-  loading_work_id: yup.number().required('This field is required'),
-  loading_additional_notes: yup.string().required('This field is required.')
+  loading_description: yup.string().required("This field is required."),
+  loading_furnace: yup.string().required("This field is required."),
+  loading_type_id: yup.number().required("This field is required"),
+  loading_work_id: yup.number().required("This field is required"),
+  loading_additional_notes: yup.string().required("This field is required."),
 };
 
 export const AddNewLoadingListModal = (props: AddLoadingList) => {
-  const { open, onOpenChange } = props;
+  const { open, onOpenChange, onSuccess } = props;
 
   const yupSchema = yup.object(yupObject);
 
@@ -32,52 +37,45 @@ export const AddNewLoadingListModal = (props: AddLoadingList) => {
     setValue,
     formState: { errors },
     clearErrors,
-    control
+    control,
   } = useForm({
-    resolver: yupResolver(yupSchema)
+    resolver: yupResolver(yupSchema),
   });
 
   const handleFormSubmit = async (data: any) => {
     try {
       const payload = {
-        ...data
+        ...data,
       };
 
-      const res = await fetch('/api/loading-list/create', {
+      const res = await fetch("/api/loading-list/create", {
         method: "POST",
-        body: JSON.stringify(payload)
-      })
+        body: JSON.stringify(payload),
+      });
 
       const json = await res.json();
       if (json && json.success) {
-        mutate(`/api/loading-list/lists`);
         toast({
           title: "Successfully Added",
-          variant: 'success',
-          duration: 4000
+          variant: "success",
+          duration: 4000,
         });
         setTimeout(() => {
+          onSuccess && onSuccess(true);
           onOpenChange && onOpenChange(false);
         }, 300);
       }
       if (onOpenChange) {
         onOpenChange(false);
       }
-    } catch {
-
-    }
-  }
+    } catch {}
+  };
 
   return (
-    <Dialog
-      open={open}
-      onOpenChange={onOpenChange}
-    >
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[700px] p-0 overflow-auto gap-0 ">
         <DialogHeader className="py-2 px-3 flex justify-between flex-row items-center sticky top-0 bg-white z-10">
-          <DialogTitle>
-            Add New Loading List
-          </DialogTitle>
+          <DialogTitle>Add New Loading List</DialogTitle>
           <DialogPrimitive.Close className="w-fit p-1.5 rounded-full bg-stone-100 hover:bg-stone-200">
             <X />
           </DialogPrimitive.Close>
@@ -122,7 +120,6 @@ export const AddNewLoadingListModal = (props: AddLoadingList) => {
                   />
                 )}
               />
-
             </div>
             <div className="flex flex-col gap-3">
               <label className="font-medium">Work</label>
@@ -137,8 +134,6 @@ export const AddNewLoadingListModal = (props: AddLoadingList) => {
                 )}
               />
             </div>
-
-
           </div>
           <div className="p-3">
             <div className="flex flex-col gap-3">
@@ -154,21 +149,20 @@ export const AddNewLoadingListModal = (props: AddLoadingList) => {
                 </span>
               )}
             </div>
-
           </div>
           <div className="w-full flex items-center justify-end p-3">
-            <Button
-              type="submit"
-              className="w-[10%] bg-stone-600"
-            >Save</Button>
+            <Button type="submit" className="w-[10%] bg-stone-600">
+              Save
+            </Button>
           </div>
         </form>
       </DialogContent>
     </Dialog>
-  )
-}
+  );
+};
 
 type AddLoadingList = {
-  open?: boolean
-  onOpenChange?: (open?: boolean) => void
-}
+  open?: boolean;
+  onOpenChange?: (open?: boolean) => void;
+  onSuccess?: (success: boolean) => void;
+};

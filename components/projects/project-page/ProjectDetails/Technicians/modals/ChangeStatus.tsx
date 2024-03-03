@@ -27,7 +27,7 @@ const swrOptions = {
 };
 
 const yupObject: any = {
-  project_technician_status: yup.number().required('This field is required.'),
+  project_technician_status: yup.number().required("This field is required."),
 };
 
 export const ChangeStatus = (props: ChangeStatus) => {
@@ -48,7 +48,6 @@ export const ChangeStatus = (props: ChangeStatus) => {
   });
 
   const handleCancel = () => {
-    onSuccess && onSuccess(false);
     if (onOpenChange) {
       onOpenChange(false);
     }
@@ -56,12 +55,14 @@ export const ChangeStatus = (props: ChangeStatus) => {
 
   const handleContinue = async (data: any) => {
     try {
-
-      const res = await fetch(`${baseUrl}/api/projects/${project._project_id}/changeTechnicianListStatus`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-        headers: authHeaders(session.user.access_token)
-      });
+      const res = await fetch(
+        `${baseUrl}/api/projects/${project._project_id}/changeTechnicianListStatus`,
+        {
+          method: "POST",
+          body: JSON.stringify(data),
+          headers: authHeaders(session.user.access_token),
+        }
+      );
       const json = await res.json();
       if (json.success) {
         toast({
@@ -80,8 +81,7 @@ export const ChangeStatus = (props: ChangeStatus) => {
           duration: 4000,
         });
       }
-
-    } catch { }
+    } catch {}
   };
 
   return (
@@ -89,7 +89,9 @@ export const ChangeStatus = (props: ChangeStatus) => {
       <AlertDialogContent className="max-w-[400px]">
         <form action="" method="post" onSubmit={handleSubmit(handleContinue)}>
           <AlertDialogHeader>
-            <AlertDialogTitle>Change Status for the List of Technicians</AlertDialogTitle>
+            <AlertDialogTitle>
+              Change Status for the List of Technicians
+            </AlertDialogTitle>
             <AlertDialogDescription>
               <div className="flex flex-col gap-3">
                 <label>Select Status</label>
@@ -106,10 +108,9 @@ export const ChangeStatus = (props: ChangeStatus) => {
                   )}
                 />
               </div>
-
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="mt-5">
             <AlertDialogCancel onClick={handleCancel}>Cancel</AlertDialogCancel>
             <Button type="submit" onClick={handleContinue}>
               Save

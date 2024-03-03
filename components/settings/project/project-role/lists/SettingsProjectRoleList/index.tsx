@@ -14,6 +14,7 @@ import { DeleteProjectRoleConfirmModal } from "../../modals/DeleteProjectRoleCon
 import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
 import { ProductRoleDocumentModal } from "../../modals/ProductRoleDocumentModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 interface ISettingsProjectRoleList {
   companySettingValue?: boolean;
@@ -82,7 +83,7 @@ const SettingsProjectRoleList = (props: ISettingsProjectRoleList) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Saved",
+          title: "Successfully saved!",
           variant: "success",
           duration: 4000,
         });
@@ -144,6 +145,7 @@ const SettingsProjectRoleList = (props: ISettingsProjectRoleList) => {
               variant='red'
               onClick={() => {
                 setOpenAddModal(true);
+                setSelectedData(null);
               }}
             >
               <Plus {...iconProps} />
@@ -172,7 +174,7 @@ const SettingsProjectRoleList = (props: ISettingsProjectRoleList) => {
                 projectRoles.map((role: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{i + 1}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>{role.project_role_name}</TD>
                       <TD>
                         <ActionMenu

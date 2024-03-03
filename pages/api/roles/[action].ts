@@ -1,60 +1,158 @@
-import type { NextApiRequest, NextApiResponse } from 'next'
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]';
-import { authHeaders, baseUrl } from '@/utils/api.config';
+import type { NextApiRequest, NextApiResponse } from "next";
+import { getServerSession } from "next-auth";
+import { authHeaders, baseUrl } from "@/utils/api.config";
+import { authOptions } from "../auth/[...nextauth]";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  const { action, type, from, to } = req.query
-
-
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   const { user } = await getServerSession(req, res, authOptions);
   const access_token = user ? user.access_token : null;
 
+  const { action, page, search, id } = req.query;
 
-  if (action === 'lists') {
+  if (action == "paginate") {
+    const response = await fetch(
+      baseUrl +
+        `/api/role/paginate?page=${page}&search=${search}`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+      }
+    );
+    const json = await response.json();
 
-    const resp = await fetch(baseUrl + `/api/users/get_roles`, {
-      headers: { ...authHeaders(access_token) },
-    });
-
-    res.status(201).json(await resp.json());
+    res.status(200).json(json);
   }
 
-  if (action === 'create') {
-    const resp = await fetch(baseUrl + '/api/letter/create', {
-      headers: { ...authHeaders(access_token) },
-      method: 'POST',
-      body: req.body
-    });
+  if (action == "getModules") {
+    const response = await fetch(
+      baseUrl +
+        `/api/role/getModules/${id}`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+      }
+    );
+    const json = await response.json();
 
-    res.status(201).json(await resp.json());
+    res.status(200).json(json);
   }
 
-  if (action === 'delete') {
-    const resp = await fetch(baseUrl + '/api/letter/delete', {
-      headers: { ...authHeaders(access_token) },
-      method: 'POST',
-      body: req.body
-    });
+  if (action == "getAddedModules") {
+    const response = await fetch(
+      baseUrl +
+        `/api/role/getAddedModules/${id}`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+      }
+    );
+    const json = await response.json();
 
-    res.status(201).json(await resp.json());
+    res.status(200).json(json);
   }
 
-  if (action === 'generate-pdf') {
-    const resp = await fetch(baseUrl + `/api/letter/generate-pdf?type=${type}&from=${from}&to=${to}`, {
-      headers: {
-        ...authHeaders(access_token),
-        'Content-Type': 'application/json',
-      },
-    });
-    const resBlob = await resp.blob();
+  if (action == "create") {
+    const response = await fetch(
+      baseUrl + `/api/role/create`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+        method: "POST",
+        body: req.body,
+      }
+    );
 
+    const json = await response.json();
 
-    return res
-      .setHeader('Content-Type', 'application/pdf')
-      .setHeader('Content-Type', 'application/pdf; charset=UTF-8')
-      .send(resBlob);
+    res.status(200).json(json);
   }
 
-  res.status(500)
+  if (action == "update") {
+    const response = await fetch(
+      baseUrl + `/api/role/update`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+        method: "POST",
+        body: req.body,
+      }
+    );
+
+    const json = await response.json();
+
+    res.status(200).json(json);
+  }
+
+  if (action == "info") {
+    const response = await fetch(
+      baseUrl + `/api/role/info/${id}`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+      }
+    );
+    const json = await response.json();
+
+    res.status(200).json(json);
+  }
+
+  if (action == "delete") {
+    const response = await fetch(
+      baseUrl + `/api/role/delete`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+        method: "POST",
+        body: req.body,
+      }
+    );
+
+    const json = await response.json();
+
+    res.status(200).json(json);
+  }
+
+  if (action == "deleteModule") {
+    const response = await fetch(
+      baseUrl + `/api/role/deleteModule`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+        method: "POST",
+        body: req.body,
+      }
+    );
+
+    const json = await response.json();
+
+    res.status(200).json(json);
+  }
+
+  if (action == "createModule") {
+    const response = await fetch(
+      baseUrl + `/api/role/addModule`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+        method: "POST",
+        body: req.body,
+      }
+    );
+
+    const json = await response.json();
+
+    res.status(200).json(json);
+  }
 }

@@ -23,3 +23,19 @@ export const getCreditStatus = ({
     return "no";
   }
 };
+
+export const isBooked = ({
+  credit_note_is_booked,
+}: {
+  credit_note_is_booked: any;
+}) => {
+  return parseInt(credit_note_is_booked) == 1 ? true : false;
+};
+
+export const isExported = ({
+  credit_note_is_exported_by,
+}: {
+  credit_note_is_exported_by: any;
+}) => {
+  return credit_note_is_exported_by != null ? true : false;
+};

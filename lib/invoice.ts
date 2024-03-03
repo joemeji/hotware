@@ -39,19 +39,35 @@ export const isOpen = ({
   invoice_status,
   invoice_is_booked,
   invoice_has_credit_note,
+  invoice_is_exported_by,
 }: {
   invoice_status: string;
-  invoice_is_booked: boolean;
-  invoice_has_credit_note: string;
+  invoice_is_booked: any;
+  invoice_has_credit_note: any;
+  invoice_is_exported_by: any;
 }) => {
-  const hasCreditNote =
-    isNaN(parseInt(invoice_has_credit_note)) ||
-    Number(invoice_has_credit_note) != 0;
+  const hasCreditNote = invoice_has_credit_note != 0;
+  const isBooked = invoice_is_booked != 0;
   if (
     invoice_status == "active" &&
-    !Number(invoice_is_booked) &&
-    !hasCreditNote
+    !isBooked &&
+    !hasCreditNote &&
+    !invoice_is_exported_by
   ) {
+    return true;
+  }
+
+  return false;
+};
+
+export const canBook = ({
+  invoice_is_booked,
+  invoice_is_exported_by,
+}: {
+  invoice_is_booked: boolean;
+  invoice_is_exported_by: any;
+}) => {
+  if (!invoice_is_booked || !invoice_is_exported_by) {
     return true;
   }
 

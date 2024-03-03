@@ -5,7 +5,7 @@ import itemQrCodeDraw, {
   itemTypePlate,
 } from "@/utils/itemQrCodeDraw";
 import { useRouter } from "next/router";
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useContext, useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { SelectAll, TH, actionMenu } from "..";
 import { cn } from "@/lib/utils";
@@ -19,6 +19,10 @@ import Pagination from "@/components/pagination";
 import ActionButtonHeader from "../ActionButtonHeader";
 import ItemEquipmentList from "../ItemEquipmentList";
 import dynamic from "next/dynamic";
+import AddEquipmentModal from "../modals/AddEquipmentModal";
+import { MainCategoryContext } from "@/pages/items";
+import { AccessTokenContext } from "@/context/access-token-context";
+import SearchInput from "@/components/app/search-input";
 
 const SerialNumberModal = dynamic(() => import("../modals/SerialNumberModal"));
 const TypePlateQRCodeModal = dynamic(
@@ -26,19 +30,11 @@ const TypePlateQRCodeModal = dynamic(
 );
 const QRCodeModal = dynamic(() => import("../modals/QRCodeModal"));
 
-type ItemsDataType = {
-  access_token: string;
-  categories?: any;
-};
-
-const ItemsData = (props: ItemsDataType) => {
-  const { categories } = props;
+const ItemsData = () => {
   const router = useRouter();
-  let indexParams = router.query?.index;
-  const categoryId = indexParams ? indexParams[0] : undefined;
-  const page = router.query?.page || 1;
-  const search: any = router.query?.search || "";
+  const page: any = router.query?.page || 1;
   const sub_category_id = router.query?.sub_category_id || "";
+  const category_id = router.query?.category_id || "";
   const [dataToSelect, setDataToSelect] = useState<any[]>([]);
   const [openQrCodesModal, setOpenQrCodesModal] = useState<boolean>(false);
   const [openTypePlateQrCodesModal, setOpenTypePlateQrCodesModal] =
@@ -52,21 +48,27 @@ const ItemsData = (props: ItemsDataType) => {
   const [itemData, setItemData] = useState<any>(undefined);
   const [itemIsLoading, setItemIsLoading] = useState<any>(false);
   const [itemError, setItemError] = useState<any>(null);
+  const [openAddItemModal, setOpenAddItemModal] = useState(false);
+  const { categories } = useContext(MainCategoryContext);
+  const [search, setSearch] = useState(router.query?.search || "");
 
   let paramsObj: any = { page: String(page) };
   if (sub_category_id) paramsObj = { sub_category_id };
+  if (category_id) paramsObj = { category_id };
+  paramsObj.with_inventory = 1;
+
+  if (search) paramsObj.search = search;
+
   let searchParams = new URLSearchParams(paramsObj);
 
-  let { data, isLoading, error } = useSWR(
-    search
-      ? null
-      : `/api/item/category${
-          categoryId ? "/" + categoryId : ""
-        }?${searchParams.toString()}`,
+  let { data, isLoading, error, mutate } = useSWR(
+    `/api/item/category${
+      category_id ? "/" + category_id : ""
+    }?${searchParams.toString()}`,
     fetcher,
     {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
+      revalidateOnFocus: true,
+      revalidateIfStale: true,
     }
   );
 
@@ -75,8 +77,13 @@ const ItemsData = (props: ItemsDataType) => {
   }
 
   function onPaginate(page: any) {
-    router.query.page = page;
-    router.push(router);
+    router.push({
+      pathname: router.pathname,
+      query: {
+        ...router.query,
+        page,
+      },
+    });
   }
 
   function onClickActionHeader(e: any, actionType: string) {
@@ -105,12 +112,10 @@ const ItemsData = (props: ItemsDataType) => {
     }
   }
 
-  async function handleSearch(e: any) {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const search: any = formData.get("search") || "";
-    router.push("/items?search=" + search);
-  }
+  const onSearch = (value: any) => {
+    setSearch(value);
+    router.push(`/items?search=${value || ""}`);
+  };
 
   async function printTypePlateOverview(e: any) {
     const qrCodeValues: any[] = [];
@@ -173,7 +178,10 @@ const ItemsData = (props: ItemsDataType) => {
   async function generateItemQrCode(_item_id: string, serial_number?: string) {
     const items = itemData ? itemData.items : [];
     const item = items.find((item: any) => item._item_id === _item_id);
-    const itemSerialNumber = serial_number || item.article_number;
+    let itemSerialNumber = "";
+
+    if (serial_number) itemSerialNumber = serial_number;
+    else itemSerialNumber = itemNumber(item);
 
     const qrcodeUri = await generateQrCode(itemSerialNumber);
 
@@ -194,7 +202,7 @@ const ItemsData = (props: ItemsDataType) => {
   function getSingleCategory() {
     if (categories && Array.isArray(categories)) {
       const category = categories.find(
-        (item) => item._item_category_id === categoryId
+        (item) => item._item_category_id === category_id
       );
       if (!category) return "All  Categories";
       return category.item_category_name;
@@ -233,58 +241,58 @@ const ItemsData = (props: ItemsDataType) => {
     setDataToSelect(_dataToSelect);
   }
 
+  // useEffect(() => {
+  //   (async () => {
+  //     if (search) {
+  //       let __data = { ...data };
+  //       let ___isLoading = isLoading;
+  //       let ___error = error;
+  //       try {
+  //         const index = client.initIndex("item_index");
+
+  //         const hits = await index.search(search, {
+  //           page: Number(page) - 1,
+  //           hitsPerPage: PER_PAGE,
+  //           attributesToHighlight: [
+  //             "item_name",
+  //             "item_number",
+  //             "item_category_name",
+  //             "item_sub_category_name",
+  //             "_item_id",
+  //           ],
+  //         });
+
+  //         if (hits && hits.hits) {
+  //           __data["items"] = hits.hits;
+  //           ___isLoading = false;
+  //         }
+
+  //         if (hits && hits.nbHits > PER_PAGE) {
+  //           const res = await fetch(
+  //             baseUrl + `/pager/links?page=${page}&total=${hits.nbHits}`
+  //           );
+  //           const links = await res.text();
+  //           __data["pager"] = links;
+  //         }
+  //       } catch (err: any) {
+  //         ___isLoading = false;
+  //         ___error = err;
+  //       }
+
+  //       setItemData(__data);
+  //       setItemIsLoading(___isLoading);
+  //       setItemError(___error);
+  //     }
+  //   })();
+  // }, [data, search, page, error, isLoading]);
+
   useEffect(() => {
-    (async () => {
-      if (search) {
-        let __data = { ...data };
-        let ___isLoading = isLoading;
-        let ___error = error;
-        try {
-          const index = client.initIndex("item_index");
-
-          const hits = await index.search(search, {
-            page: Number(page) - 1,
-            hitsPerPage: PER_PAGE,
-            attributesToHighlight: [
-              "item_name",
-              "item_number",
-              "item_category_name",
-              "item_sub_category_name",
-              "_item_id",
-            ],
-          });
-
-          if (hits && hits.hits) {
-            __data["items"] = hits.hits;
-            ___isLoading = false;
-          }
-
-          if (hits && hits.nbHits > PER_PAGE) {
-            const res = await fetch(
-              baseUrl + `/pager/links?page=${page}&total=${hits.nbHits}`
-            );
-            const links = await res.text();
-            __data["pager"] = links;
-          }
-        } catch (err: any) {
-          ___isLoading = false;
-          ___error = err;
-        }
-
-        setItemData(__data);
-        setItemIsLoading(___isLoading);
-        setItemError(___error);
-      }
-    })();
-  }, [data, search, page, error, isLoading]);
-
-  useEffect(() => {
-    if (!search) {
-      setItemData(data);
-      setItemIsLoading(isLoading);
-      setItemError(error);
-    }
-  }, [data, isLoading, error, search]);
+    // if (!search) {
+    setItemData(data);
+    setItemIsLoading(isLoading);
+    setItemError(error);
+    // }
+  }, [data, isLoading, error]);
 
   useEffect(() => {
     if (itemData && itemData.items && Array.isArray(itemData.items)) {
@@ -330,10 +338,16 @@ const ItemsData = (props: ItemsDataType) => {
         />
       )}
 
+      <AddEquipmentModal
+        onOpenChange={(open: any) => setOpenAddItemModal(open)}
+        open={openAddItemModal}
+        onSuccess={() => mutate(data)}
+      />
+
       <div className="w-[calc(100%-400px)] h-full">
         <ScrollArea
           className="flex flex-col"
-          viewPortClassName="min-h-[400px] rounded-app bg-white"
+          viewPortClassName="min-h-[400px] rounded-xl shadow bg-white"
           viewPortStyle={{
             height: `calc(100vh - var(--header-height) - 40px)`,
           }}
@@ -350,9 +364,14 @@ const ItemsData = (props: ItemsDataType) => {
                 "border-b border-b-stone-100"
               )}
             >
-              <span className="text-lg">{getSingleCategory()}</span>
+              <span className="text-lg font-medium">{getSingleCategory()}</span>
               <div className="flex items-center gap-2">
-                <Button>Add Equipment</Button>
+                <Button
+                  className="rounded-xl"
+                  onClick={() => setOpenAddItemModal(true)}
+                >
+                  Add Equipment
+                </Button>
               </div>
             </div>
 
@@ -383,19 +402,11 @@ const ItemsData = (props: ItemsDataType) => {
                     />
                   ))}
               </div>
-              <form
-                id="Search"
-                className="max-w-[400px] w-full"
-                onSubmit={handleSearch}
-              >
-                <Input
-                  type="search"
-                  placeholder="Search"
-                  className="rounded-xl placeholder:text-stone-400"
-                  name="search"
-                  defaultValue={router.query.search || ""}
-                />
-              </form>
+              <SearchInput
+                delay={1000}
+                onChange={(e) => onSearch(e.target.value)}
+                value={search}
+              />
             </div>
           </div>
           <table className="w-full">
@@ -426,7 +437,7 @@ const ItemsData = (props: ItemsDataType) => {
                       }
                       item_image={item.item_image}
                       current_quantity={item.current_quantity}
-                      article_number={item.article_number}
+                      article_number={itemNumber(item)}
                       onClickAction={(actionType: string) =>
                         onClickAction(actionType, item._item_id)
                       }
@@ -487,7 +498,11 @@ const ItemsData = (props: ItemsDataType) => {
 
           {itemData && itemData.pager && (
             <div className="mt-auto border-t border-t-stone-100">
-              <Pagination pager={itemData.pager} onPaginate={onPaginate} />
+              <Pagination
+                pager={itemData.pager}
+                onPaginate={onPaginate}
+                currPage={page}
+              />
             </div>
           )}
         </ScrollArea>
@@ -497,3 +512,14 @@ const ItemsData = (props: ItemsDataType) => {
 };
 
 export default memo(ItemsData);
+
+export function itemNumber(item: any) {
+  let iPrefix = item.with_prefix == 1 ? item.prefix + "." : "";
+  let str = item.item_number;
+
+  if (str >= 0 && str <= 999) {
+    return iPrefix + str.padStart(3, 0);
+  }
+
+  return iPrefix + str;
+}

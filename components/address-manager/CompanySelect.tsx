@@ -40,7 +40,7 @@ const CompanySelect = (props: CompanySelectProps) => {
         placeholder={placeholder}
         value={value}
         onChangeValue={onChangeValue}
-        className={cn("py-2 px-2", formError && formErrorClassNames)}
+        className={cn(formError && formErrorClassNames)}
       />
       {formError && <ErrorFormMessage message={formError.message} />}
     </div>

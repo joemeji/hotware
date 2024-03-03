@@ -5,17 +5,25 @@ import { authHeaders } from "@/utils/api.config";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
 import { getInvoice } from "@/services/projects/invoice";
+import { AccessTokenContext } from "@/context/access-token-context";
 
-export default function Editinvoice({ _invoice_id, invoice }: any) {
+export default function EditInvoice({
+  _invoice_id,
+  invoice,
+  access_token,
+}: any) {
   return (
     <AdminLayout>
-      <EditInvoiceDetails id={_invoice_id} invoice={invoice} />
+      <AccessTokenContext.Provider value={access_token}>
+        <EditInvoiceDetails id={_invoice_id} invoice={invoice} />
+      </AccessTokenContext.Provider>
     </AdminLayout>
   );
 }
 
 export async function getServerSideProps(context: GetServerSidePropsContext) {
   const session = await getServerSession(context.req, context.res, authOptions);
+  let token = null;
 
   if (!session?.user?.access_token) {
     return {
@@ -24,6 +32,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
         permanent: false,
       },
     };
+  } else {
+    token = session.user.access_token;
   }
 
   if (!context?.params?.invoice_id) {
@@ -52,6 +62,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     props: {
       _invoice_id: context.params.invoice_id,
       invoice,
+      access_token: token,
     },
   };
 }

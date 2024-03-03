@@ -1,5 +1,5 @@
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { createContext, memo, useContext, useState } from "react";
+import { createContext, memo, useContext, useEffect, useState } from "react";
 import Header from "./header";
 import { AccessTokenContext } from "@/context/access-token-context";
 import { authHeaders, baseUrl, fetchApi } from "@/utils/api.config";
@@ -29,8 +29,11 @@ const List = () => {
   const selectedEmployee: any = useContext(SelectedEmployeeContext);
   const router = useRouter();
   const [checkedFiles, setCheckedFiles] = useState([]);
+  const [redirect, setRedirect] = useState(false);
+  const [search, setSearch] = useState("");
 
   const urlPayload: any = {};
+  urlPayload["search"] = search;
   if (router.query?.user_id) urlPayload["_user_id"] = router.query?.user_id;
 
   const parentId = router.query?.parent_id || 0;
@@ -38,7 +41,9 @@ const List = () => {
   let searchParams = new URLSearchParams(urlPayload);
   const { data, isLoading, error, mutate } = useSWR(
     [
-      `/api/document/directories/${parentId}?${searchParams.toString()}`,
+      selectedEmployee
+        ? `/api/document/directories/${parentId}?${searchParams.toString()}`
+        : null,
       access_token,
     ],
     fetchApi,
@@ -48,36 +53,60 @@ const List = () => {
     }
   );
 
-  console.log({ value: data });
+  useEffect(() => {
+    if (redirect) {
+      mutate(data);
+    }
+  });
+
   const onPreview = (dir: any) => {
-    const a = document.createElement("a");
-    a.target = "_blank";
-    a.href = `${doc_employee_base}/${dir.document_file_name}`;
-    a.click();
+    if (dir.document_file_name) {
+      const a = document.createElement("a");
+      a.target = "_blank";
+      a.href = `${doc_employee_base}/${dir.document_file_name}`;
+      a.click();
+    } else {
+      toast({
+        title: "Problem encounter upon viewing file.",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
   };
 
   const onDownload = async (dir: any) => {
-    const requestOptions = {
-      method: 'POST',
-      headers: authHeaders(access_token),
-      body: JSON.stringify(dir)
-    };
+    if (dir.document_file_name) {
+      const requestOptions = {
+        method: "POST",
+        headers: authHeaders(access_token),
+        body: JSON.stringify(dir),
+      };
 
-    toast({
-      title: "Download may take a while, please wait.",
-      variant: "success",
-      duration: 2000,
-    });
+      toast({
+        title: "Download may take a while, please wait.",
+        variant: "success",
+        duration: 2000,
+      });
 
-    const res = await fetch(`${baseUrl}/api/document/download_document`, requestOptions);
-    const blob = await res.blob();
+      const res = await fetch(
+        `${baseUrl}/api/document/download_document`,
+        requestOptions
+      );
+      const blob = await res.blob();
 
-    const url = window.URL.createObjectURL(blob);
+      const url = window.URL.createObjectURL(blob);
 
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = dir.document_file_name;
-    a.click();
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = dir.document_file_name;
+      a.click();
+    } else {
+      toast({
+        title: "Problem encounter while downloading file.",
+        variant: "destructive",
+        duration: 2000,
+      });
+    }
   };
 
   return (
@@ -92,6 +121,10 @@ const List = () => {
           }}
           onSuccess={() => mutate(data)}
           onDeselect={() => setCheckedFiles([])}
+          onDirectory={(redirect: any) => {
+            setRedirect(redirect);
+          }}
+          onSearch={(search: any) => setSearch(search)}
         />
 
         {isLoading ? (

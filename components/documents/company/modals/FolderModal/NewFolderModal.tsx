@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { memo } from "react";
+import { memo, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,15 +18,17 @@ import { toast } from "@/components/ui/use-toast";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
+import { cn } from "@/lib/utils";
 
 const yupObject: any = {
-  folder_name: yup.string().required('This field is required.'),
-  folder_description: yup.string().required('This field is required.'),
+  folder_name: yup.string().required("This field is required."),
+  folder_description: yup.string().required("This field is required."),
 };
 
 function NewFolderModal(props: NewFolderModalProps) {
   const { data: session }: any = useSession();
   const { open, onOpenChange, onSuccess } = props;
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   const parentID = router.query?.parent_id;
   const yupSchema = yup.object(yupObject);
@@ -37,17 +39,22 @@ function NewFolderModal(props: NewFolderModalProps) {
     setValue,
     formState: { errors },
     clearErrors,
-    control
+    control,
+    reset,
   } = useForm({
-    resolver: yupResolver(yupSchema)
+    resolver: yupResolver(yupSchema),
   });
 
   async function onSave(data: any) {
-    const res = await fetch(`${baseUrl}/api/document/company/create_company_folder/${parentID}`, {
-      method: 'POST',
-      body: JSON.stringify(data),
-      headers: authHeaders(session.user.access_token)
-    });
+    setLoading(true);
+    const res = await fetch(
+      `${baseUrl}/api/document/company/create_company_folder/${parentID}`,
+      {
+        method: "POST",
+        body: JSON.stringify(data),
+        headers: authHeaders(session.user.access_token),
+      }
+    );
 
     const json = await res.json();
     if (json && json.success) {
@@ -70,6 +77,8 @@ function NewFolderModal(props: NewFolderModalProps) {
     if (onOpenChange) {
       onOpenChange(false);
     }
+    setLoading(false);
+    reset();
   }
 
   return (
@@ -125,7 +134,9 @@ function NewFolderModal(props: NewFolderModalProps) {
               <Button variant={"ghost"} type="button">
                 Cancel
               </Button>
-              <Button type="submit">Submit</Button>
+              <Button className={cn(loading && "loading")} type="submit">
+                Submit
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>

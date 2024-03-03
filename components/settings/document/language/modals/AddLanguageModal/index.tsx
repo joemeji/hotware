@@ -5,7 +5,7 @@ export const AddLanguageModal = (props: IAddCurrencyModal) => {
   const { open, onOpenChange, data, listUrl } = props;
 
   return (
-    <GenericModal open={open} onOpenChange={onOpenChange} title='Industry'>
+    <GenericModal open={open} onOpenChange={onOpenChange} title='Language'>
       <div className='pb-5 px-7'>
         <LanguageForm
           id={data?.document_language_id}

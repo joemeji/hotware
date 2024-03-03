@@ -7,11 +7,14 @@ import useSWR from "swr";
 
 const CmsAddressSelect = (props: CmsAddressSelectProps) => {
   const { cms_id, value, onChangeValue, placeholder, error: formError } = props;
+  const [search, setSearch] = useState("");
   const [_value, set_value] = useState<any>(null);
   const [isOpenPopover, setIsOpenPopover] = useState(false);
 
   const { data, isLoading, error, mutate } = useSWR(
-    `/api/cms/${cms_id}/cms_address?${value ? `first=${value}` : ""}`,
+    `/api/cms/${cms_id}/cms_address?${
+      value ? `first=${value}` : ""
+    }&search=${search}`,
     fetcher
   );
 
@@ -83,6 +86,7 @@ const CmsAddressSelect = (props: CmsAddressSelectProps) => {
         isLoading={isLoading}
         className={formError && formErrorClassNames}
         onOpenChange={(open) => setIsOpenPopover(open)}
+        onSearch={(value: any) => setSearch(value)}
       />
       {formError && <ErrorFormMessage message={formError.message} />}
     </div>

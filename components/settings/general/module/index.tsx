@@ -91,10 +91,10 @@ export const tableHeadings = [
   },
   {
     name: "Code Controller",
-    class: "uppercase text-center",
+    class: "uppercase text-left",
   },
   {
     name: "Description",
-    class: "uppercase text-center",
+    class: "uppercase text-left",
   },
 ];

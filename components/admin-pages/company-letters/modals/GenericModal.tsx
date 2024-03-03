@@ -28,7 +28,7 @@ function GenericModal(props: IGenericModal) {
       <DialogContent
         className={`max-w-[700px] p-0 overflow-auto gap-0 ${className}`}
       >
-        <DialogHeader className='py-2 px-3 flex justify-between flex-row content-start sticky top-0 bg-white z-10 border-b'>
+        <DialogHeader className={`py-2 px-3 flex justify-between flex-row content-start sticky top-0 bg-white z-10 ${title ? 'border-b' : ''}`}>
           <div
             className={cn(`flex flex-col gap-4 p-2`, {
               "mb-10": subTitle,

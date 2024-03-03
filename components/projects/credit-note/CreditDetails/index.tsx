@@ -8,7 +8,7 @@ import { Pencil } from "lucide-react";
 import Link from "next/link";
 import { memo } from "react";
 import { StatusChip } from "@/components/projects/credit-note/StatusChip";
-import { getCreditStatus } from "@/lib/credit";
+import { getCreditStatus, isExported } from "@/lib/credit";
 
 function CreditDetails({ data }: CreditDetailsProps) {
   return (
@@ -30,7 +30,7 @@ function CreditDetails({ data }: CreditDetailsProps) {
           )}
         </ScrollArea>
 
-        {data && (
+        {data && !isExported(data) && (
           <Link href={`/projects/credit-note/${data._credit_note_id}/edit`}>
             <Button
               className={cn(

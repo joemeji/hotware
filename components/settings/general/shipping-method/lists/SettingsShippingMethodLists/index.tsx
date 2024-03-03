@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { ShippingMethodModal } from "../../modals/ShippingMethodModal";
 import { DeleteShippingMethodConfirmModal } from "../../modals/DeleteShippingMethodConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsShippingMethodLists = () => {
   const router = useRouter();
@@ -41,20 +42,20 @@ const SettingsShippingMethodLists = () => {
 
   const handleEdit = (data : any) => {
     setSelectedData(data)
-    setOpenCurrencyModal(true)
+    setOpenShippingMethodModal(true)
   };
 
-  const [openCurrencyModal, setOpenCurrencyModal] = useState(false);
+  const [openShippingMethodModal, setOpenShippingMethodModal] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [selectedData, setSelectedData] = useState<any>()
 
   return (
     <div className='grid bg-white'>
       <ShippingMethodModal
-        open={openCurrencyModal}
+        open={openShippingMethodModal}
         data={selectedData}
         listUrl={listUrl}
-        onOpenChange={(open: any) => setOpenCurrencyModal(open)}
+        onOpenChange={(open: any) => setOpenShippingMethodModal(open)}
       />
       <DeleteShippingMethodConfirmModal
         open={openDeleteConfirm}
@@ -75,7 +76,8 @@ const SettingsShippingMethodLists = () => {
             <Button
               variant='red'
               onClick={() => {
-                setOpenCurrencyModal(true);
+                setOpenShippingMethodModal(true);
+                setSelectedData(null);
               }}
             >
               <Plus {...iconProps} />
@@ -104,7 +106,7 @@ const SettingsShippingMethodLists = () => {
                 shippingMethod.map((shippingMethod: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{shippingMethod.shipping_method_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>
                         {shippingMethod.shipping_method_name}
                       </TD>

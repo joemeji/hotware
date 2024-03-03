@@ -1,5 +1,5 @@
 import Combobox from "../ui/combobox";
-import { useState } from "react";
+import React, { useState } from "react";
 import { fetcher } from "@/utils/api.config";
 import useSWRInfinite from "swr/infinite";
 import { cn } from "@/lib/utils";
@@ -115,6 +115,7 @@ const CmsSelect = (props: CmsSelectProps) => {
           className={cn(className, formError && formErrorClassNames)}
           popOverContentClassName={popOverContentClassName}
           onOpenChange={(open) => setIsOpenPopover(open)}
+          onSearch={(value: any) => setSearch(value)}
         />
         {formError && <ErrorFormMessage message={formError.message} />}
       </div>
@@ -134,4 +135,4 @@ type CmsSelectProps = {
   shipping_id?: any;
   error?: any;
 };
-export default CmsSelect;
+export default React.memo(CmsSelect);

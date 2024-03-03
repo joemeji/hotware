@@ -20,57 +20,33 @@ import { Input } from "@/components/ui/input";
 
 export const LoadingListDetailsContext = React.createContext(null);
 
-export default function LoadingListPage(access_token: any) {
+export default function LoadingListPage(token: any) {
   const router = useRouter();
   const { push } = useRouterNav();
-  const [search, setSearch] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const [addNewLoadingListModal, setNewLoadingListModal] = useState(false);
   const [loadingDetails, setLoadingDetails] = useState(null);
-  const [isCloseLoadingDetail, setIsCloseLoadingDetail] = useState(true);
-
-  const showNewLoadingListModal = () => {
-    setNewLoadingListModal(true);
-  };
-
-  const closeLoadingDetailsContent = (e: any) => {
-    setIsCloseLoadingDetail(true);
-  };
 
   const handleSetLoadingDetails = (loadingDetails: any) => {
     setLoadingDetails(loadingDetails);
-    setIsCloseLoadingDetail(false);
   };
 
   return (
     <AdminLayout>
-      <AccessTokenContext.Provider value={access_token}>
-        <AddNewLoadingListModal
-          open={addNewLoadingListModal}
-          onOpenChange={(open: any) => setNewLoadingListModal(open)}
-        />
+      <AccessTokenContext.Provider value={token.access_token}>
         <div className="p-[20px] w-full max-w-[1600px] mx-auto flex gap-3 ">
-          <div className="bg-white w-[20%] rounded-app shadow-sm">
-            <ScrollArea viewPortClassName="h-[calc(100vh-var(--header-height)-40px)]">
-              <div className="flex flex-col">
-                <LoadingList
-                  onClickItem={() => handleSetLoadingDetails(loadingDetails)}
-                  access_token={access_token}
-                />
-              </div>
-              <div className="p-2 sticky bottom-0">
-                <Button className="w-full" onClick={showNewLoadingListModal}>
-                  New Loading List
-                </Button>
-              </div>
-            </ScrollArea>
+          <div className="bg-white rounded-xl shadow overflow-hidden w-[400px]">
+            <div className="flex flex-col">
+              <LoadingList
+                onClickItem={(loading: any) => handleSetLoadingDetails(loading)}
+                access_token={token.access_token}
+                onSuccess={success}
+              />
+            </div>
           </div>
           <div
-            className={`bg-white rounded-app shadow-sm h-[calc(100vh-var(--header-height)-40px)] max-h-screen overflow-hidden ${
-              isCloseLoadingDetail && isCloseLoadingDetail
-                ? "w-[100%]"
-                : "w-[60%]"
-            } transition-width duration-300 ease-in-out`}
+            className={`bg-white rounded-app shadow-sm h-[calc(100vh-var(--header-height)-40px)] max-h-screen overflow-hidden w-[calc(100%-400px)] transition-width duration-300 ease-in-out`}
           >
             <LoadingListDetailsContext.Provider value={loadingDetails}>
               <LoadingListHeader />
@@ -80,32 +56,6 @@ export default function LoadingListPage(access_token: any) {
                 <LoadingListItem />
               </LoadingListDetailsContext.Provider>
             </ScrollArea>
-          </div>
-
-          <div
-            className={`bg-white w-[20%] rounded-app shadow-sm p-2 h-[calc(100vh-var(--header-height)-40px)] ${
-              isCloseLoadingDetail && isCloseLoadingDetail ? "hidden" : "block"
-            } transition-width duration-300 ease-in-out`}
-          >
-            <div className="float-right w-fit p-1.5 rounded-full bg-stone-100 hover:bg-stone-200">
-              <X
-                className="cursor-pointer"
-                onClick={(e: any) => closeLoadingDetailsContent(e)}
-              />
-            </div>
-            <div className="p-3">
-              <p className="font-medium text-lg mb-4">
-                Loading Description Details
-              </p>
-
-              {/* <div className="flex flex-col gap-3"> */}
-              {/* <ScrollArea viewPortClassName="h-[calc(100vh-var(--header-height)-40px)]"> */}
-              <LoadingListDetailsContext.Provider value={loadingDetails}>
-                <LoadingListDetail open={isCloseLoadingDetail} />
-              </LoadingListDetailsContext.Provider>
-              {/* </ScrollArea> */}
-              {/* </div> */}
-            </div>
           </div>
         </div>
       </AccessTokenContext.Provider>

@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Pencil, Trash, X } from "lucide-react";
 import { Search } from "./Search";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { useSession } from "next-auth/react";
 import { fetcher } from "@/utils/api.config";
@@ -10,31 +10,52 @@ import EditCmsCategoryModal from "../modals/EditCmsCategoryModal";
 import { DeleteCmsCategoryModal } from "../modals/DeleteCmsCategoryModal";
 import { useRouter } from "next/router";
 import { cn } from "@/lib/utils";
+import { debounce } from "lodash";
+import SearchInput from "@/components/app/search-input";
 
 const swrOptions = {
   revalidateOnFocus: false,
   revalidateIfStale: false,
 };
 
-export const Buttons = () => {
+export const Buttons = ({
+  onSearch,
+  success,
+}: {
+  onSearch?: (search: any) => void;
+  success?: any;
+}) => {
+  const router = useRouter();
   const [eventCategory, setEventCategory] = useState(null);
   const [openEditCategoryModal, setOpenEditCategoryModal] = useState(false);
   const [openDeleteCategoryModal, setOpenDeleteCategoryModal] = useState(false);
   const [cmsCategory, setCmsCategory] = useState(null);
-  const [activeCategory, setActiveCategory] = useState(null);
+  const [activeCategory, setActiveCategory] = useState<any>(null);
 
-  const router = useRouter();
   const page = router.query?.page || 1;
 
-  const { data, isLoading, error } = useSWR(
+  const { data, isLoading, error, mutate } = useSWR(
     "/api/cms/get_categories",
     fetcher,
     swrOptions
   );
 
+  useEffect(() => {
+    if (router.query?.category) {
+      setActiveCategory(router.query?.category);
+    }
+
+    if (success) {
+      mutate(data);
+    }
+  }, [router, setActiveCategory, data, success, mutate]);
+
   function filterCmsLists(category: any) {
     setActiveCategory(category);
-    let paramsObj: any = { page: String(page), category: category };
+    let paramsObj: any = {
+      page: String(page),
+      category: category,
+    };
     let searchParams = new URLSearchParams(paramsObj);
 
     router.push(`/address-manager?${searchParams.toString()}`);
@@ -62,7 +83,7 @@ export const Buttons = () => {
             variant="secondary"
             className={cn(
               "rounded-xl py-1.5 flex gap-2 hover:bg-stone-200",
-              activeCategory === null &&
+              activeCategory === "null" &&
                 "bg-primary text-white pointer-events-none"
             )}
             onClick={() => filterCmsLists(null)}
@@ -126,7 +147,11 @@ export const Buttons = () => {
             onClickItem={(action: any) => setEventCategory(action)}
           />
         </div>
-        <Search />
+        <SearchInput
+          onChange={(e) => onSearch && onSearch(e.target.value)}
+          // value={search}
+          delay={500}
+        />
       </div>
     </>
   );

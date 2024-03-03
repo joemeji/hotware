@@ -21,6 +21,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import SearchInput from "@/components/app/search-input";
 
 const Location = () => {
   const [openCreateLocation, setOpenCreateLocation] = useState(false);
@@ -29,9 +30,10 @@ const Location = () => {
   const access_token = useContext(AccessTokenContext);
   const [openDeleteAlert, setOpenDeleteAlert] = useState<any>(false);
   const [loadingDeleteBtn, setLoadingDeleteBtn] = useState(false);
+  const [search, setSearch] = useState<any>(null);
 
   let { data, isLoading, error, mutate } = useSWR(
-    `/api/cms/${cms?._cms_id}/address`,
+    `/api/cms/${cms?._cms_id}/address?search=${search}`,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -154,9 +156,10 @@ const Location = () => {
         <div className="flex justify-between pt-3 px-3">
           <span className="text-base font-medium">Locations</span>
           <div className="flex items-center gap-2">
-            <Input
-              className="bg-stone-100 border-none w-[300px] py-2 h-auto"
-              placeholder="Search Location..."
+            <SearchInput
+              onChange={(e) => setSearch(e.target.value)}
+              value={search}
+              delay={500}
             />
             <Button
               className="p-2 rounded-xl"

@@ -1,6 +1,15 @@
 import React, { useState } from "react";
 import { useSession } from "next-auth/react";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 
 export const useDeleteItem = ({ offer_id, onDelete }: any) => {
@@ -32,7 +41,7 @@ export const useDeleteItem = ({ offer_id, onDelete }: any) => {
 
     setLoading(false);
     setOpen(false);
-  }
+  };
 
   const Dialog = () => {
     return (
@@ -45,7 +54,9 @@ export const useDeleteItem = ({ offer_id, onDelete }: any) => {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setOpen(false)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
             <AlertDialogAction disabled={loading} onClick={submit}>
               Delete
             </AlertDialogAction>
@@ -53,7 +64,7 @@ export const useDeleteItem = ({ offer_id, onDelete }: any) => {
         </AlertDialogContent>
       </AlertDialog>
     );
-  }
+  };
 
   return { mutateDelete, Dialog };
-}
+};

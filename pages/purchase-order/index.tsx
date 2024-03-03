@@ -41,6 +41,7 @@ import { useDelete } from "@/components/PurchaseOrder/useDelete";
 import { useCopy } from "@/components/PurchaseOrder/useCopy";
 import { useRevision } from "@/components/PurchaseOrder/useRevision";
 import { useChangeStatus } from "@/components/PurchaseOrder/useChangeStatus";
+import SearchInput from "@/components/app/search-input";
 
 const ActivityLogSheetModal = dynamic(
   () => import("@/components/PurchaseOrder/modals/ActivityLogSheetModal")
@@ -57,7 +58,11 @@ export default function PurchaseOrder({ access_token }: any) {
 
   const payload: any = {};
   if (router.query.page) payload["page"] = router.query.page;
-  if (router.query.search) payload["search"] = router.query.search;
+  if (router.query.search) {
+    payload["search"] = router.query?.search;
+  } else {
+    payload["search"] = search;
+  }
   const queryString = new URLSearchParams(payload).toString();
 
   const { data, isLoading, mutate } = useSWR(
@@ -98,12 +103,6 @@ export default function PurchaseOrder({ access_token }: any) {
 
   const onPaginate = (page: string) => {
     router.query.page = page;
-    router.push(router);
-  };
-
-  const onSearch = () => {
-    if (!search) return;
-    router.query.search = search;
     router.push(router);
   };
 
@@ -153,19 +152,18 @@ export default function PurchaseOrder({ access_token }: any) {
         <div className="bg-white w-full rounded-sm shadow-sm">
           <div className="flex justify-between p-4 items-center">
             <p className="text-xl flex font-medium">Purchase Order</p>
-            <form onSubmit={onSearch}>
-              <Input
-                type="search"
-                placeholder="Search"
-                className="rounded-xl placeholder:text-stone-400 w-[400px]"
-                name="search"
+            <div className="flex gap-3">
+              <SearchInput
+                onChange={(e) => {
+                  setSearch(e.target.value);
+                }}
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                delay={500}
               />
-            </form>
-            <Link href="/PurchaseOrder/create">
-              <Button>New Purchase Order</Button>
-            </Link>
+              <Link href="/purchase-order/create">
+                <Button>New Purchase Order</Button>
+              </Link>
+            </div>
           </div>
           <table className="w-full">
             <thead className="sticky z-10 top-[var(--header-height)]">
@@ -311,29 +309,29 @@ export default function PurchaseOrder({ access_token }: any) {
                             <span className="text-sm font-medium">Update</span>
                           </Link>
                           <div
+                            onClick={() => mutateDelete(row._po_id)}
+                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+                          >
+                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
+                            <span className="text-sm font-medium">Delete</span>
+                          </div>
+                          <div
                             onClick={() => mutateRevision(row._po_id)}
                             className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                           >
                             <FileOutput className="w-[18px] h-[18px] text-cyan-500" />
                             <span className="text-sm font-medium">
-                              Revision
+                              New Revision
                             </span>
                           </div>
                           <div
                             onClick={() => mutateChange(row._po_id)}
                             className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                           >
-                            <FileOutput className="w-[18px] h-[18px] text-rose-500" />
+                            <FileOutput className="w-[18px] h-[18px] text-blue-500" />
                             <span className="text-sm font-medium">
                               Change Status
                             </span>
-                          </div>
-                          <div
-                            onClick={() => mutateDelete(row._po_id)}
-                            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-                          >
-                            <Trash2 className="w-[18px] h-[18px] text-red-500" />
-                            <span className="text-sm font-medium">Delete</span>
                           </div>
                         </>
                       ) : null}
@@ -342,7 +340,7 @@ export default function PurchaseOrder({ access_token }: any) {
                         className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
                       >
                         <Copy className="w-[18px] h-[18px] text-teal-500" />
-                        <span className="text-sm font-medium">Copy</span>
+                        <span className="text-sm font-medium">New Copy</span>
                       </div>
                       <Separator className="my-2" />
                       <div

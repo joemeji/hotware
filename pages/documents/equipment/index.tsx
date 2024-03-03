@@ -9,6 +9,7 @@ import React, { useState } from "react";
 import { baseUrl } from "@/utils/api.config";
 import List from "@/components/documents/equipment/List";
 import { truncate } from "lodash";
+import EquipmentToAdd from "@/components/projects/project-page/ProjectDetails/Equipments/EquipmentToAdd";
 
 export const EquipmentDocsContext = React.createContext(null);
 export const SelectedEquipmentContext = React.createContext(null);
@@ -35,7 +36,12 @@ const Context = ({
   );
 };
 
-const EquipmentPage = ({ main_categories, categories, access_token, onLoad }: any) => {
+const EquipmentPage = ({
+  main_categories,
+  categories,
+  access_token,
+  onLoad,
+}: any) => {
   const [filterHeight, setFilterHeight] = useState(0);
   const [selectedEquipment, setSelectedEquipment] = useState<any>(null);
 
@@ -48,17 +54,10 @@ const EquipmentPage = ({ main_categories, categories, access_token, onLoad }: an
       >
         <div className="pt-[20px] px-[20px] pb-[20px] w-full max-w-[1600px] mx-auto flex gap-3">
           <div className="flex gap-5 w-full">
-            <div className="w-[25%] flex flex-col gap-[10px]">
-              <div className="max-w-[25%]">
-                <Category
-                  filterHeight={filterHeight}
-                  main_categories={main_categories}
-                  onClickItem={(item) => setSelectedEquipment(item)}
-                  onLoad={onLoad}
-                />
-              </div>
-            </div>
-            <List />
+            <List
+              filterHeight={filterHeight}
+              onClickEquipment={(item: any) => setSelectedEquipment(item)}
+            />
           </div>
         </div>
       </Context>
@@ -83,11 +82,11 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     };
   }
 
-  const headers = { Authorization: 'Bearer ' + token };
-  let res = await fetch(baseUrl + '/api/main_categories', { headers });
+  const headers = { Authorization: "Bearer " + token };
+  let res = await fetch(baseUrl + "/api/main_categories", { headers });
   // let main_categories = await res.json();
 
-  res = await fetch(baseUrl + '/api/categories/all', { headers });
+  res = await fetch(baseUrl + "/api/categories/all", { headers });
   let main_categories = await res.json();
 
   let allCategories: any[] = [];
@@ -97,8 +96,8 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       if (item.categories && Array.isArray(item.categories)) {
         item.categories.forEach((item: any) => {
           allCategories.push({
-            ...item
-          })
+            ...item,
+          });
         });
       }
     });
@@ -109,7 +108,7 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
       main_categories,
       categories: allCategories,
       access_token: token,
-      onLoad: true
+      onLoad: true,
     },
   };
 }

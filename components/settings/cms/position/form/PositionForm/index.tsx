@@ -48,7 +48,7 @@ export const PositionForm = (props: IPositionForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Added",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });

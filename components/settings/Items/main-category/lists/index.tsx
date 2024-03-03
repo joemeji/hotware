@@ -176,7 +176,7 @@ export const SettingsItemsMainCategoryLists = (props: ISettingsItemsMainCategory
                 return (
                   <tr key={i}>
                     <TD>
-                      {category?.item_main_category_id}
+                      {++i}
                       {(tableMode == "edit" || tableMode == "delete") && (
                         <Input type='hidden' {...register("category_id")} />
                       )}

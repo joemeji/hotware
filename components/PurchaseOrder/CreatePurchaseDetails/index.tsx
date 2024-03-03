@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,12 +26,16 @@ import ShippingMethodSelect from "@/components/app/shipping-method-select";
 import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { purchaseSchema } from "../schema";
+import { PurchaseOrderApproverSelect } from "@/components/app/po-approver-select";
+import SendTaskEmail from "@/components/projects/send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
 function CreatePurchaseDetails() {
   const { data: session }: any = useSession();
   const [loadingSubmit, setLoadingSubmit] = useState(false);
+  const [isEnabled, setIsEnabled] = useState(false);
+
   const router = useRouter();
 
   const {
@@ -67,12 +71,39 @@ function CreatePurchaseDetails() {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/purchase-order/" + json._po_id);
+
+          // send task emails
+          SendTaskEmail("CREATE_PURCHASE_ORDER", session.user.access_token);
         }, 300);
       }
     } catch (err: any) {
       setLoadingSubmit(false);
     }
   };
+
+  useEffect(() => {
+    const fetchApproverData = async () => {
+      try {
+        const res = await fetch(`${baseUrl}/api/purchases/enabled`, {
+          headers: authHeaders(session?.user?.access_token),
+        });
+  
+        const data = await res.json();
+        
+        if (data?.company_setting_value == 1) {
+          setIsEnabled(true);
+        } else {
+          setIsEnabled(false);
+        }
+      } catch (err) {
+        // Handle error if needed
+      }
+    };
+    if (session?.user?.access_token) {
+      fetchApproverData();
+    }
+    
+  }, [session]);
 
   return (
     <form onSubmit={handleSubmit(onSubmitForm)}>
@@ -376,7 +407,7 @@ function CreatePurchaseDetails() {
                   )}
                 />
               </div>
-              <div className="flex flex-col gap-1">
+              <div className="flex flex-1 flex-col gap-1">
                 <label>Remarks</label>
                 <Textarea
                   className="bg-stone-100 border-0"
@@ -389,7 +420,26 @@ function CreatePurchaseDetails() {
               </div>
             </div>
           </div>
-          <div className="w-1/3" />
+          {isEnabled && (
+            <div className="w-1/3 bg-background p-6 rounded-app shadow-sm">
+              <p className="mb-3 font-medium text-base">Approver</p>
+                <div className="flex flex-col gap-5">
+                  <div className="flex flex-1 flex-col gap-1">
+                    <label>Select approver</label>
+                    <Controller
+                      name="po_approver_id"
+                      control={control}
+                      render={({ field }) => (
+                        <PurchaseOrderApproverSelect
+                          onChangeValue={(value: any) => field.onChange(value)}
+                          value={field.value}
+                        />
+                      )}
+                    />
+                  </div>
+                </div>
+            </div>
+          )}
         </div>
       </div>
     </form>

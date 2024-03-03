@@ -11,6 +11,7 @@ import {
   BellPlus,
   ChevronDown,
   Download,
+  Loader2,
   MoreVertical,
   Pencil,
   Plus,
@@ -25,6 +26,9 @@ import { ProjectTechnicianStatus } from "./FormElements/ChangeStatusSelect";
 import { ChangeStatus } from "./modals/ChangeStatus";
 import { RemoveProjectTechnician } from "./modals/DeleteProjectTechnician";
 import { useRouter } from "next/router";
+import Image from "next/image";
+import UpdateTechnician from "./modals/UpdateTechnician";
+import AddScopeOfWork from "./modals/AddScopeOfWork";
 
 const Technicians = ({ headerSize }: { headerSize?: any }) => {
   const router = useRouter();
@@ -34,6 +38,8 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
   const queryString = new URLSearchParams(payload).toString();
   const [selectedTechnician, setSelectedTechnician] = useState<any>([]);
   const [addNewTechnician, setAddNewTechnician] = useState(false);
+  const [updateTechnician, setUpdateTechnician] = useState(false);
+  const [addScopeWork, setAddScopeWork] = useState(false);
   const [changeStatus, setChangeStatus] = useState(false);
   const [removeTechnician, setRemoveTechnician] = useState(false);
   const [sendApproval, setSendApproval] = useState(false);
@@ -41,7 +47,7 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
   const { data, isLoading, error, mutate } = useSWR(
     [
       project.data &&
-      `/api/projects/${project.data?._project_id}/technician?${queryString}`,
+        `/api/projects/${project.data?._project_id}/technician?${queryString}`,
       access_token,
     ],
     fetchApi,
@@ -50,7 +56,6 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
       revalidateIfStale: false,
     }
   );
-  console.log({ technician: data, project: project })
 
   return (
     <div className="flex flex-col gap-2 mt-2">
@@ -87,13 +92,44 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
           onSuccess={() => mutate(data)}
         />
       )}
+      {updateTechnician && (
+        <UpdateTechnician
+          open={updateTechnician}
+          onOpenChange={(open: any) => {
+            setUpdateTechnician(open);
+          }}
+          project={project.data && project.data}
+          onSuccess={() => mutate(data)}
+          technician={selectedTechnician}
+        />
+      )}
+      {addScopeWork && (
+        <AddScopeOfWork
+          open={addScopeWork}
+          onOpenChange={(open: any) => {
+            setAddScopeWork(open);
+          }}
+          project={project.data && project.data}
+          onSuccess={() => mutate(data)}
+          technician={selectedTechnician}
+        />
+      )}
       <div className="flex justify-between bg-background p-3 rounded-xl">
         <div className="flex flex-col gap-2">
           <div className="flex gap-2">
             <p className="text-base font-medium">Technicians</p>
-            <TechConsent consent={project.data && project.data.project_technician_status == 1 ? 'official' : 'temporary'} />
+            <TechConsent
+              consent={
+                project.data && project.data.project_technician_status == 1
+                  ? "official"
+                  : "temporary"
+              }
+            />
           </div>
-          <span className="opacity-80">Maximum No. of Technicians: {data && data.list.length} of {project.data && project.data.project_man_power}</span>
+          <span className="opacity-80">
+            Maximum No. of Technicians: {data && data.list.length} of{" "}
+            {project.data && project.data.project_man_power}
+          </span>
         </div>
         <div className="flex items-center gap-2">
           <form>
@@ -106,33 +142,46 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
               />
             </div>
           </form>
-          {project.data && project.data.project_status === 'active' && (
+          {project.data && project.data.project_status === "active" && (
             <MoreOption
               menuTriggerChildren={
-                <Button className="px-3 rounded-xl py-1.5" variant={"secondary"}>
+                <Button
+                  className="px-3 rounded-xl py-1.5"
+                  variant={"secondary"}
+                >
                   <ChevronDown className="w-[18px]" />
                 </Button>
               }
             >
-              <ItemMenu className="flex gap-3 items-center" onClick={() => setAddNewTechnician(true)}>
+              <ItemMenu
+                className="flex gap-3 items-center"
+                onClick={() => setAddNewTechnician(true)}
+              >
                 <Plus className="w-[18px]" />
                 <span className="font-medium">Add Technician</span>
               </ItemMenu>
               <Separator className="my-2" />
-              <ItemMenu className="flex gap-3 items-center" onClick={() => setChangeStatus(true)}>
+              <ItemMenu
+                className="flex gap-3 items-center"
+                onClick={() => setChangeStatus(true)}
+              >
                 <Star className="w-[18px]" />
                 <span className="font-medium">Change Status</span>
               </ItemMenu>
-              <ItemMenu className="flex gap-3 items-center" onClick={() => setSendApproval(true)}>
+              <ItemMenu
+                className="flex gap-3 items-center"
+                onClick={() => setSendApproval(true)}
+              >
                 <BellPlus className="w-[18px]" />
                 <span className="font-medium">Send Approval Notification</span>
               </ItemMenu>
-              {project.data && project.data.enabled_project_role_document === 1 && (
-                <ItemMenu className="flex gap-3 items-center">
-                  <Download className="w-[18px]" />
-                  <span className="font-medium">Download</span>
-                </ItemMenu>
-              )}
+              {project.data &&
+                project.data.enabled_project_role_document === 1 && (
+                  <ItemMenu className="flex gap-3 items-center">
+                    <Download className="w-[18px]" />
+                    <span className="font-medium">Download</span>
+                  </ItemMenu>
+                )}
             </MoreOption>
           )}
 
@@ -141,7 +190,18 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
           </Button> */}
         </div>
       </div>
+      {!isLoading && data?.list.length == 0 && (
+        <div className="flex justify-center">
+          <Image
+            src="/images/No data-rafiki.svg"
+            width={300}
+            height={300}
+            alt="No Data to Shown"
+          />
+        </div>
+      )}
 
+      {isLoading && <Loader2 className="animate-spin mx-auto m-5" />}
       <div className="columns-4 gap-[10px]">
         {Array.isArray(data?.list) &&
           data.list.map((item: any, key: number) => (
@@ -157,9 +217,12 @@ const Technicians = ({ headerSize }: { headerSize?: any }) => {
               project_role_name={item.project_role_name}
               project_second_role_name={item.project_second_role_name}
               onClick={(evt: any) => {
-                if (evt == 'delete') {
+                if (evt == "delete") {
                   setRemoveTechnician(true);
-                  console.log({ evet: evt })
+                } else if (evt == "update") {
+                  setUpdateTechnician(true);
+                } else if (evt == "scope") {
+                  setAddScopeWork(true);
                 }
 
                 setSelectedTechnician(item);
@@ -183,7 +246,7 @@ const Technician = ({
   isSignature,
   project_role_name,
   project_second_role_name,
-  onClick
+  onClick,
 }: {
   user_firstname?: any;
   user_lastname?: any;
@@ -194,7 +257,7 @@ const Technician = ({
   isSignature?: "accepted" | "not_accepted";
   project_role_name?: any;
   project_second_role_name?: any;
-  onClick?: (evt: any) => void
+  onClick?: (evt: any) => void;
 }) => {
   return (
     <div className="grid grid-rows-[2fr_auto] break-inside-avoid mb-[10px]">
@@ -218,7 +281,11 @@ const Technician = ({
             </div>
 
             <div className="flex items-center gap-1">
-              <Button className="py-1 rounded-xl" variant={"outline"}>
+              <Button
+                className="py-1 rounded-xl"
+                variant={"outline"}
+                onClick={() => onClick && onClick("scope")}
+              >
                 Add Scope
               </Button>
               <MoreOption
@@ -228,11 +295,17 @@ const Technician = ({
                   </Button>
                 }
               >
-                <ItemMenu className="flex gap-3 items-center">
+                <ItemMenu
+                  className="flex gap-3 items-center"
+                  onClick={() => onClick && onClick("update")}
+                >
                   <Pencil className="w-[18px]" strokeWidth={1} />
                   <span className="font-medium">Update</span>
                 </ItemMenu>
-                <ItemMenu className="flex gap-3 items-center" onClick={() => onClick && onClick('delete')}>
+                <ItemMenu
+                  className="flex gap-3 items-center"
+                  onClick={() => onClick && onClick("delete")}
+                >
                   <Trash className="w-[18px]" strokeWidth={1} />
                   <span className="font-medium">Delete</span>
                 </ItemMenu>
@@ -312,7 +385,7 @@ const TechConsent = ({
         "bg-[rgba(var(--bg-hover),0.08)] text-[rgba(var(--bg-hover))] w-fit px-3 py-[2px] rounded-full",
         "flex items-center font-medium text-[12px]",
         (consent === "temporary" || consent === "official") &&
-        "bg-[rgba(var(--bg-hover))] text-white"
+          "bg-[rgba(var(--bg-hover))] text-white"
       )}
       ref={(el) => {
         el?.style.setProperty("--bg-hover", consentColor);

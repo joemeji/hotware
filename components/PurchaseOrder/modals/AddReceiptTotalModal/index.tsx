@@ -5,7 +5,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useState, useRef } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,14 +16,15 @@ import VatSelect from "@/components/app/vat-select";
 import ReceiptTotalTypeSelect from "@/components/app/receipt-total-type-select";
 import { XIcon } from "lucide-react";
 import { useReceiptTotal } from "./useReceiptTotal";
-import useSWR from "swr";
-import { useSWRConfig } from "swr";
+import useSWR, { useSWRConfig } from "swr";
+import { isEqual } from "lodash";
 
 function AddReceiptTotalModal(props: AddReceiptTotalModalProps) {
   const { data: session }: any = useSession();
   const { open, onOpenChange, _po_id } = props;
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { mutate } = useSWRConfig();
+  const prevData = useRef(null);
   const { data, isLoading } = useSWR(
     session?.user?.access_token
       ? [`/api/purchases/receipt_totals/${_po_id}`, session?.user?.access_token]
@@ -102,8 +103,13 @@ function AddReceiptTotalModal(props: AddReceiptTotalModalProps) {
         (receiptTotal: any) => receiptTotal.port_is_surcharge == 0
       );
 
-      setSurcharges(existingSurcharges);
-      setDeductions(existingDeductions);
+      // Check if data has changed before updating state
+      if (!isEqual(prevData.current, data)) {
+        setSurcharges(existingSurcharges);
+        setDeductions(existingDeductions);
+        // Update the reference variable to the current data
+        prevData.current = data;
+      }
     }
   }, [data, setDeductions, setSurcharges]);
 

@@ -6,14 +6,19 @@ import {
   flexRender,
   createColumnHelper,
 } from "@tanstack/react-table";
-import { authHeaders, baseUrl, fetchApi } from "@/utils/api.config";
+import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import MoreOption from "@/components/MoreOption";
 import { ItemMenu } from "@/components/items";
-import { GripVertical, Trash, Move } from "lucide-react";
+import { Trash, Move, Paperclip } from "lucide-react";
 import EditableTextareaCell from "./table/EditableTextAreaCell";
 import { cn } from "@/lib/utils";
 import { useDeleteTextBlock } from "./useDeleteTextBlock";
+import dynamic from "next/dynamic";
+const AddTextBlockAttachmentModal = dynamic(
+  () =>
+    import("@/components/projects/invoices/modals/AddTextBlockAttachmentModal")
+);
 
 const iconProps = (colorClassName?: any) => ({
   className: cn("mr-2 h-[18px] w-[18px]", colorClassName),
@@ -42,9 +47,22 @@ export default function TextBlocks({
     },
   });
 
+  const [openAddTextBlockAttachmentModal, setOpenAddTextBlockAttachmentModal] =
+    useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+
   const Actions = ({ row }: any) => {
     return (
       <MoreOption>
+        <ItemMenu
+          onClick={() => {
+            setSelectedItem(row.original.itb_id);
+            setOpenAddTextBlockAttachmentModal(true);
+          }}
+        >
+          <Paperclip {...iconProps()} />
+          <span className="font-medium">TextBlock Attachments</span>
+        </ItemMenu>
         <ItemMenu
           onClick={() => {
             mutateDelete(row.original.itb_id);
@@ -242,6 +260,11 @@ export default function TextBlocks({
         </Droppable>
       </DragDropContext>
       <DeleteDialog />
+      <AddTextBlockAttachmentModal
+        onOpenChange={setOpenAddTextBlockAttachmentModal}
+        open={openAddTextBlockAttachmentModal}
+        itb_id={selectedItem}
+      />
     </>
   );
 }

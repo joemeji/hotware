@@ -10,6 +10,7 @@ import { AccessTokenContext } from "@/context/access-token-context";
 import { Skeleton } from "@/components/ui/skeleton";
 import Image from "next/image";
 import RequirementListModal from "./modals/RequirementListModal";
+import SearchInput from "@/components/app/search-input";
 
 const RequirementsTab = () => {
   const cms: any = useContext(CmsDetailsContext);
@@ -18,8 +19,12 @@ const RequirementsTab = () => {
   const [listOpen, setListOpen] = useState(false);
   const [document_level_id, set_document_level_id] = useState(null);
   const [document_level_name, set_document_level_name] = useState(null);
+  const [search, setSearch] = useState<any>(null);
 
-  const queryString = new URLSearchParams({ page: String(page) }).toString();
+  const queryString = new URLSearchParams({
+    page: String(page),
+    search: search,
+  }).toString();
 
   const { data, isLoading, error, mutate } = useSWR(
     [
@@ -49,9 +54,10 @@ const RequirementsTab = () => {
           <div className="flex justify-between items-center">
             <span className="text-base font-medium">Requirements</span>
             <div className="flex items-center gap-2">
-              <Input
-                className="bg-stone-100 border-none w-[300px]"
-                placeholder="Search"
+              <SearchInput
+                onChange={(e) => setSearch(e.target.value)}
+                value={search}
+                delay={500}
               />
             </div>
           </div>

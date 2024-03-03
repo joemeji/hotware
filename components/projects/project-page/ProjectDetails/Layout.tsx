@@ -95,11 +95,7 @@ const Layout = ({ render }: Layout) => {
 
   const { data, isLoading } = useSWR(
     [`/api/projects/${router.query.project_id}?${queryString}`, access_token],
-    fetchApi,
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
-    }
+    fetchApi
   );
 
   return (
@@ -107,14 +103,18 @@ const Layout = ({ render }: Layout) => {
       <div className="pt-[20px] px-[20px] pb-[20px] w-full max-w-[1600px] mx-auto">
         <div
           ref={headerRef}
-          className="bg-[url(/images/wave-bg.jpg)] rounded-xl relative z-0 after:content-[''] after:absolute after:top-0 after:left-0 after:w-full after:h-full after:bg-stone-100/30 after:z-[-1]"
+          className="bg-[url(/images/wave-bg.jpg)] rounded-xl relative z-0 after:content-[''] after:absolute after:top-0 after:left-0 after:w-full after:h-full after:bg-stone-100/30 after:z-[-1] shadow"
         >
           <div className="py-3 px-3 flex items-start justify-between">
             <div className="flex flex-col gap-1">
-              <p className="text-xl font-bold text-white">Atlantic Hardware</p>
-              <p className="opacity-90 text-white">P.023.1009.0</p>
+              <p className="text-xl font-bold text-white">
+                {data?.project_name}
+              </p>
+              <p className="opacity-90 text-white">{data?.project_number}</p>
             </div>
-            <Button>Edit Project</Button>
+            <Link href={`/projects/${router.query.project_id}/edit`}>
+              <Button>Edit Project</Button>
+            </Link>
           </div>
           <div className="flex items-start mt-[1px] px-3 py-2 gap-1">
             {links.map((item: any, key: number) => (

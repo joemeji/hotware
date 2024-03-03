@@ -22,6 +22,7 @@ import DeliverTo, { AddressForm, EmployeeForm } from "../DeliverTo";
 import InvoiceTo, {
   InvoiceAddressForm,
   InvoiceEmployeeForm,
+  InvoiceVatForm,
 } from "../InvoiceTo";
 import CopyTo, { CopyAddressForm, CopyEmployeeForm } from "../CopyTo";
 import ErrorFormMessage from "@/components/app/error-form-message";
@@ -29,6 +30,7 @@ import ShippingMethodSelect from "@/components/app/shipping-method-select";
 import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { invoiceSchema } from "../schema";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
@@ -72,6 +74,9 @@ function EditInvoiceDetails({ id, invoice }: any) {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/projects/invoices/" + id);
+
+          // send task emails
+          SendTaskEmail("UPDATE_INVOICE", session?.user?.access_token);
         }, 300);
       }
     } catch (err: any) {
@@ -187,25 +192,38 @@ function EditInvoiceDetails({ id, invoice }: any) {
                           )}
                         />
                       }
+                      renderVat={
+                        <Controller
+                          name="invoice_supplier_vat_id"
+                          control={control}
+                          render={({ field }) => (
+                            <InvoiceVatForm
+                              invoice_to_id={getValues("invoice_supplier_id")}
+                              value={field.value}
+                              onChangeValue={(value) => field.onChange(value)}
+                            />
+                          )}
+                        />
+                      }
                     />
                   )}
                 />
               </div>
-              <div className="flex flex-1 flex-col gap-1">
+              {/* <div className="flex flex-1 flex-col gap-1">
                 <label>VAT</label>
                 <Controller
                   name="invoice_supplier_vat_id"
                   control={control}
                   render={({ field }) => (
                     <CmsVatSelect
-                      cms_id={getValues("invoice_supplier_vat_id")}
+                      cms_id={getValues("invoice_supplier_id")}
                       value={field.value}
                       onChangeValue={(value) => field.onChange(value)}
                       placeholder="Select VAT"
                     />
                   )}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

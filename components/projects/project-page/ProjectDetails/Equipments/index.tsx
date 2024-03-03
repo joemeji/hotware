@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
+import AddFromShipping from "./AddFromShipping";
 
 const Equipments = ({ headerSize }: { headerSize?: any }) => {
   const project: any = useContext(ProjectDetailsContext);
@@ -88,42 +89,6 @@ const Equipments = ({ headerSize }: { headerSize?: any }) => {
     }
   };
 
-  const onAddFromShipping = async () => {
-    try {
-      setalertLoading(true);
-      const response = await fetch(
-        `${baseUrl}/api/projects/${project?.data?._project_id}/equipment/add_from_shipping`,
-        {
-          headers: authHeaders(access_token, true),
-          method: "POST",
-        }
-      );
-      const json = await response.json();
-      if (json.success) {
-        toast({
-          title: `Deleted successfully.`,
-          variant: "success",
-          duration: 2000,
-        });
-        mutate(data);
-        setalertLoading(false);
-        setAlertFromShipping(false);
-      } else {
-        toast({
-          title: `No item to add from shipping.`,
-          variant: "error",
-          duration: 2000,
-        });
-        setalertLoading(false);
-        setAlertFromShipping(false);
-      }
-    } catch (err) {
-      console.log(err);
-      setalertLoading(false);
-      setAlertFromShipping(false);
-    }
-  };
-
   return (
     <>
       <AlertDialog open={openAlertMessage}>
@@ -152,27 +117,12 @@ const Equipments = ({ headerSize }: { headerSize?: any }) => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={alertFromShipping}>
-        <AlertDialogContent className="max-w-[360px]">
-          <AlertDialogHeader>
-            <AlertDialogTitle>{"Are you sure?"}</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to add item from Shipping List?
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setAlertFromShipping(false)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={onAddFromShipping}
-              className={cn(alertLoading && "loading")}
-            >
-              Okay
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <AddFromShipping
+        onSuccess={() => mutate(data)}
+        _project_id={project?.data?._project_id}
+        open={alertFromShipping}
+        onOpenChange={(open: any) => setAlertFromShipping(open)}
+      />
 
       <div className="flex items-start gap-[10px] mt-[10px]">
         <EquipmentToAdd

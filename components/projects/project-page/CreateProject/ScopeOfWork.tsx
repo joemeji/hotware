@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import dayjs from "dayjs";
 import { Trash } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 
 type ScopeOfWork = {
   project_travelling_date?: any;
@@ -378,7 +378,7 @@ const ScopeOfWork = ({
   );
 };
 
-export default ScopeOfWork;
+export default React.memo(ScopeOfWork);
 
 const GroupForm = ({
   date,
@@ -439,18 +439,4 @@ const GroupForm = ({
       </div>
     </div>
   );
-};
-
-const calcDates = (date: any, days: any, action: any) => {
-  const result: any = new Date(date);
-
-  if (action === "add") {
-    result.setDate(result.getDate() + days);
-  }
-
-  if (action === "substract") {
-    result.setDate(result.getDate() - days);
-  }
-
-  return isNaN(result) ? 0 : result;
 };

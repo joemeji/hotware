@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useRouter } from "next/router"
 import Pagination from "@/components/pagination";
 import { fetcher } from "@/utils/api.config";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 
 interface ISettingsItemsSubcategoryLists {
@@ -192,7 +193,7 @@ export const SettingsItemsSubcategoryLists = (props: ISettingsItemsSubcategoryLi
                 return (
                   <tr key={i}>
                     <TD>
-                      {category?.item_sub_category_id}
+                      {(page - 1) * PER_PAGE + i + 1}
                       {(tableMode == "edit" || tableMode == "delete") && (
                         <Input type='hidden' {...register("subcategory_id")} />
                       )}

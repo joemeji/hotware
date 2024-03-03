@@ -1,11 +1,10 @@
-import Combobox from "@/components/ui/combobox";
-import ComboboxMultiple from "@/components/ui/combobox-multiple";
+import ComboboxMultiple2 from "@/components/ui/combobox-multiple";
 import { fetcher } from "@/utils/api.config";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
 
 export const TriggerSelect = (props: ITriggerSelect) => {
-  const { onChangeValue, value, multiple, setValues: setValue } = props;
+  const { onChangeValue, value, setValues: setValue } = props;
 
   const swrOptions = {
     revalidateOnFocus: false,
@@ -26,7 +25,7 @@ export const TriggerSelect = (props: ITriggerSelect) => {
         return {
           text: (
             <div key={key}>
-              <span className='font-medium'>{trigger?.trigger_name}</span>
+              <span className="font-medium">{trigger?.trigger_name}</span>
             </div>
           ),
           label: trigger?.trigger_name,
@@ -37,14 +36,12 @@ export const TriggerSelect = (props: ITriggerSelect) => {
   };
 
   return (
-    <div className='flex flex-col gap-2'>
-      <ComboboxMultiple
-        isLoading={isLoading}
+    <div className="flex flex-col gap-2">
+      <ComboboxMultiple2
         value={value}
         onChangeValue={onChangeValue}
         contents={contentData()}
-        className='h-10'
-        defaultValue={[]}
+        className="h-10"
       />
     </div>
   );
@@ -53,7 +50,6 @@ export const TriggerSelect = (props: ITriggerSelect) => {
 type ITriggerSelect = {
   onChangeValue?: (value?: any) => void;
   value?: any;
-  multiple?: boolean;
   defaultValue?: any;
   setValues?: any;
 };

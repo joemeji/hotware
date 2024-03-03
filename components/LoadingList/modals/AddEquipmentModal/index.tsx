@@ -110,7 +110,6 @@ function AddEquipmentModal(props: AddEquipmentModalType) {
           _selectedItems[index].shippingCategory = selectedCategory;
         }
       });
-      console.log({ selectedItems: _selectedItems });
       setSelectedItems(_selectedItems);
     },
     [selectedItems]
@@ -136,7 +135,6 @@ function AddEquipmentModal(props: AddEquipmentModalType) {
       }
       return returnData;
     });
-    console.log({ items: payload });
     const options = {
       method: "POST",
       body: JSON.stringify({ items: payload }),

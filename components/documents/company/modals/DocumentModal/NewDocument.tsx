@@ -23,13 +23,14 @@ import { useRouter } from "next/router";
 import { toast } from "@/components/ui/use-toast";
 import ReminderDay from "@/components/documents/employees/modals/NewDocumentModal/ReminderDay";
 import ApiDocumentLanguageSelect from "@/components/app/api-document-language-select";
+import { cn } from "@/lib/utils";
 
 const yupSchema = yup.object({
   document_name: yup.string().required("Document name is required."),
   document_description: yup.string(),
   document_language_id: yup.string(),
   document_category_id: yup.string(),
-  userfile: yup.mixed().required("Document File is required."),
+  userfile: yup.mixed(),
   document_with_expiry: yup.boolean(),
   document_expiry_date: yup.string(),
 });
@@ -42,6 +43,7 @@ function NewDocumentModal(props: NewDocumentModalProps) {
   const [footerHeight, setFooterHeight] = useState(0);
   const [reminderExt, setReminderExt] = useState({});
   const [inputDaysValues, setInputDaysValues] = useState<any>({});
+  const [loading, setLoading] = useState(false);
   const parent_id = router.query.parent_id;
 
   const {
@@ -51,7 +53,7 @@ function NewDocumentModal(props: NewDocumentModalProps) {
     formState: { errors },
     getValues,
     setValue,
-    reset
+    reset,
   } = useForm({
     resolver: yupResolver(yupSchema),
     defaultValues: {
@@ -79,6 +81,7 @@ function NewDocumentModal(props: NewDocumentModalProps) {
   };
 
   const onSubmit = async (data: any) => {
+    setLoading(true);
     const _data = { ...data };
     const formData = new FormData();
 
@@ -97,11 +100,14 @@ function NewDocumentModal(props: NewDocumentModalProps) {
       formData.append(key, value as string);
     }
     // TODO onSubmit
-    const res = await fetch(`${baseUrl}/api/document/company/add_company_document/${parent_id}`, {
-      method: 'POST',
-      body: formData,
-      headers: authHeaders(session.user.access_token, true)
-    });
+    const res = await fetch(
+      `${baseUrl}/api/document/company/add_company_document/${parent_id}`,
+      {
+        method: "POST",
+        body: formData,
+        headers: authHeaders(session.user.access_token, true),
+      }
+    );
 
     const json = await res.json();
     if (json && json.success) {
@@ -112,7 +118,7 @@ function NewDocumentModal(props: NewDocumentModalProps) {
       });
       setTimeout(() => {
         onOpenChange && onOpenChange(false);
-        onSuccess && onSuccess(true)
+        onSuccess && onSuccess(true);
       }, 300);
     } else {
       toast({
@@ -124,6 +130,7 @@ function NewDocumentModal(props: NewDocumentModalProps) {
     if (onOpenChange) {
       onOpenChange(false);
     }
+    setLoading(false);
     reset();
   };
 
@@ -246,7 +253,7 @@ function NewDocumentModal(props: NewDocumentModalProps) {
 
                 <div className="flex flex-col gap-1">
                   <label>Upload Document</label>
-                  <InputFile required onChange={onFileChange} />
+                  <InputFile onChange={onFileChange} />
                 </div>
 
                 <div className="flex gap-3 w-full  items-end">
@@ -360,7 +367,9 @@ function NewDocumentModal(props: NewDocumentModalProps) {
                   <Button variant={"ghost"} type="button">
                     Cancel
                   </Button>
-                  <Button type="submit">Submit</Button>
+                  <Button className={cn(loading && "loading")} type="submit">
+                    Submit
+                  </Button>
                 </div>
               </DialogFooter>
             </ScrollArea>

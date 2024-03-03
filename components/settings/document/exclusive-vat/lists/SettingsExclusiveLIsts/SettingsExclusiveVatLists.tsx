@@ -14,6 +14,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { addVatDocument } from "../../schema";
 import { VatTypeSelect } from "../../form/VatTypeSelect";
 import { toast } from "@/components/ui/use-toast";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 export const SettingsExclusiveVatLists = () => {
   const router = useRouter();
@@ -152,7 +153,7 @@ export const SettingsExclusiveVatLists = () => {
                   return (
                     <tr key={i} className=''>
                       <TD className='text-center'>
-                        {exclusiveVat.company_vat_id}
+                      {(page - 1) * PER_PAGE + i + 1}
                       </TD>
                       <TD>{exclusiveVat?.company_vat_type}</TD>
                       <TD>{exclusiveVat?.company_name}</TD>

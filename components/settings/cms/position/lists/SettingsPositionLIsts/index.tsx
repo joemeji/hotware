@@ -13,6 +13,7 @@ import { AddDepartmentModal } from "../../../department/modals/AddDepartmentModa
 import { DeleteDepartmentConfirmModal } from "../../../department/modals/DeleteDepartmentConfirmModal";
 import { AddPositionModal } from "../../modals/AddPositiontModal";
 import { DeletePositionConfirmModal } from "../../modals/DeletePositionConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsPositionLists = () => {
   const router = useRouter();
@@ -78,6 +79,7 @@ const SettingsPositionLists = () => {
               variant='red'
               onClick={() => {
                 setOpenAddModal(true);
+                setSelectedData(null)
               }}
             >
               <Plus {...iconProps} />
@@ -106,7 +108,7 @@ const SettingsPositionLists = () => {
                 positions.map((department: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{department.cms_position_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>
                         {department.cms_position_name}
                       </TD>

@@ -69,7 +69,6 @@
 }
 
 @layer base {
-
   * {
     @apply border-border;
   }
@@ -122,7 +121,7 @@
   }
 
   button.loading:after {
-    @apply absolute border-2 border-stone-300 border-t-transparent rounded-full w-[20px] h-[20px] animate-spin;
+    @apply absolute border-2 border-red-700 border-t-transparent rounded-full w-[20px] h-[20px] animate-spin;
     content: "";
   }
 
@@ -164,7 +163,7 @@
 
   .combobox-selector div[data-radix-scroll-area-viewport] {
     /* min-height: 100px; */
-    max-height: 250px;
+    max-height: 350px;
   }
 
   .truncate {

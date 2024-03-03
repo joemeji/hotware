@@ -9,13 +9,14 @@ import { fetcher } from "@/utils/api.config";
 import { projectSecondRoleSchema } from "../../schema";
 import { useEffect } from "react";
 
-interface IProjectSecondRoleForm {
+interface ProjectSecondRoleForm {
   id?: string;
   onOpenChange?: (open: boolean) => void;
   listUrl?: any
 }
-export const ProjectSecondRoleForm = (props: IProjectSecondRoleForm) => {
-  const { id, onOpenChange } = props;
+
+export const ProjectSecondRoleForm = (props: ProjectSecondRoleForm) => {
+  const { id, listUrl, onOpenChange } = props;
 
   const { data, isLoading } = useSWR(
     id ? `/api/project/project-second-role/info?id=${id}` : null,
@@ -50,12 +51,12 @@ export const ProjectSecondRoleForm = (props: IProjectSecondRoleForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Added",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });
 
-        // mutate(listUrl);
+        mutate(listUrl);
 
         setTimeout(() => {
           onOpenChange && onOpenChange(false);

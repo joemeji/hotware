@@ -19,10 +19,7 @@ const Client = ({ headerSize }: { headerSize?: any }) => {
   const [openNewTask, setOpenNewTask] = useState(false);
 
   const { data, isLoading, error, mutate } = useSWR(
-    [
-      _project_id ? `/api/projects/${_project_id}/client` : null,
-      access_token,
-    ],
+    [_project_id ? `/api/projects/${_project_id}/client` : null, access_token],
     fetchApi,
     {
       revalidateOnFocus: false,
@@ -30,42 +27,45 @@ const Client = ({ headerSize }: { headerSize?: any }) => {
     }
   );
 
-  console.log({ dataclient: data })
-
   return (
     <div className="flex items-start gap-[10px] mt-[10px]">
-      <ClientInfo
-        cms={data && data.project}
-      />
+      <ClientInfo cms={data && data.project} />
       <div className="w-1/2 flex flex-col gap-3">
-        <div className="bg-background rounded-xl overflow-hidden">
+        <div className="bg-background rounded-xl overflow-hidden shadow">
           <div className="flex justify-between p-3 sticky top-0 z-10 backdrop-blur-sm">
             <p className="font-medium text-lg">Contact Person</p>
           </div>
 
           <div className="px-5 pb-5 flex flex-wrap gap-[10px]">
-            {data && data.contact_persons.map((contact: any, key: number) => (
-              <ContactPeron
-                contact={contact}
-                key={key}
-              />
-            ))}
+            {data && data.contact_persons.length > 0 ? (
+              data.contact_persons.map((contact: any, key: number) => (
+                <ContactPeron key={key} contact={contact} />
+              ))
+            ) : (
+              <NoRecordsTemplate />
+            )}
           </div>
         </div>
 
-        <div className="bg-background rounded-xl overflow-hidden">
+        <div className="bg-background rounded-xl overflow-hidden shadow">
           <div className="flex justify-between p-3 sticky top-0 z-10 backdrop-blur-sm">
             <p className="font-medium text-lg">Requirement Levels</p>
           </div>
 
           <div className="px-5 pb-5 flex flex-col w-full max-w-[450px]">
             <div className="border rounded-2xl overflow-hidden">
-              {data && data.levels.map((level: any, key: number) => (
-                <Level
-                  level={level.document_level_name}
-                  key={key}
-                />
-              ))}
+              {data && data.levels.length > 0 ? (
+                data.levels.map((level: any) => (
+                  <Level
+                    key={level.document_level_name}
+                    level={level.document_level_name}
+                  />
+                ))
+              ) : (
+                <div className="border-b last:border-b-0 py-2 px-4 hover:bg-stone-100">
+                  <NoRecordsTemplate />
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -78,15 +78,25 @@ export default Client;
 
 const Level = ({ level }: { level?: any }) => {
   return (
-    <div className="border-b last:border-b-0 py-2 px-4 hover:bg-stone-100">
+    <div
+      className="border-b last:border-b-0 py-2 px-4 hover:bg-stone-100"
+      key={level.document_level_id}
+    >
       <span className="font-medium">{level}</span>
     </div>
   );
 };
 
+const NoRecordsTemplate = () => {
+  return <span>No records found.</span>;
+};
+
 const ContactPeron = ({ contact }: { contact?: any }) => {
   return (
-    <div className="flex flex-col border rounded-xl w-[calc(50%-5px)] p-2">
+    <div
+      className="flex flex-col border rounded-xl w-[calc(50%-5px)] p-2"
+      key={contact.cms_employee_id}
+    >
       <div className="flex gap-2 items-center">
         <AvatarProfile
           firstname={contact.cms_employee_firstname}
@@ -96,7 +106,9 @@ const ContactPeron = ({ contact }: { contact?: any }) => {
           avatarColor={""}
         />
         <div className="flex gap-1 items-center">
-          <p className="text-base font-medium">{contact.cms_employee_firstname} {contact.cms_employee_lastname}</p>
+          <p className="text-base font-medium">
+            {contact.cms_employee_firstname} {contact.cms_employee_lastname}
+          </p>
           <span className="opacity-70">({contact.pcc_alias})</span>
         </div>
       </div>
@@ -117,7 +129,6 @@ const ContactPeron = ({ contact }: { contact?: any }) => {
               <span>{contact.cms_employee_phone_number}</span>
             </>
           )}
-
         </div>
         <div className="flex gap-2 items-center">
           {contact.cms_employee_email && (
@@ -126,7 +137,6 @@ const ContactPeron = ({ contact }: { contact?: any }) => {
               <span>{contact.cms_employee_email}</span>
             </>
           )}
-
         </div>
         <div className="flex gap-2 items-center">
           {contact.cms_position_name && (

@@ -4,7 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Plus, Forward, FileText } from "lucide-react";
 import AddNewContactModal from "../modals/AddNewContactModal";
 
-export const AddNewContact = () => {
+export const AddNewContact = ({
+  onSuccess,
+}: {
+  onSuccess?: (value: boolean) => void;
+}) => {
   const [openContactModal, setOpenContactModal] = useState(false);
 
   return (
@@ -13,6 +17,7 @@ export const AddNewContact = () => {
         <AddNewContactModal
           open={openContactModal}
           onOpenChange={(open: any) => setOpenContactModal(open)}
+          onSuccess={(value: any) => onSuccess && onSuccess(value)}
         />
       )}
       <div

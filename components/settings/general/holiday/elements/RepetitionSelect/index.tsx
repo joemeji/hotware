@@ -22,7 +22,7 @@ export const RepetitionSelect = (props: IRepetitionSelect) => {
             <span className='font-medium'>Once</span>
           </div>
         ),
-        value: 0 as number 
+        value: '0'
       },
       {
         text: (
@@ -30,7 +30,7 @@ export const RepetitionSelect = (props: IRepetitionSelect) => {
             <span className='font-medium'>Every year</span>
           </div>
         ),
-        value: 1 
+        value: '1' 
       },
     ];
   }

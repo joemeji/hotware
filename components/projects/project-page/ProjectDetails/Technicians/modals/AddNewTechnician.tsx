@@ -7,36 +7,30 @@ import {
 } from "@/components/ui/dialog";
 import { memo, useEffect, useState } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import * as yup from "yup";
 import { useForm, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { toast } from "@/components/ui/use-toast";
 import { authHeaders, baseUrl } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
-import { TH } from "@/components/items";
-import { supplier_base } from "@/lib/azureUrls";
-import { SupplierSelect } from "../../AddressSupplier/FormElements/SupplierSelect";
-import { CompanySelect } from "../FormElements/CompanySelect";
 import { ProjectTechnicianSelect } from "../FormElements/ProjectTechnicianSelect";
 import { ProjectRoleSelect } from "../FormElements/ProjectRoleSelect";
 import { ProjectSecondRoleSelect } from "../FormElements/ProjectSecondRoleSelect";
 import { Switch } from "@/components/ui/switch";
-import { ServiceSelect } from "../FormElements/ServiceSelect";
 import { SkillSelect } from "../FormElements/SkillSelect";
 import { TechnicianOverlap } from "./TechnicianOverlap";
+import CompanySelect from "@/components/app/company-select";
+import UserServiceSelect from "@/components/app/user-service-select";
 
 const yupObject: any = {
-  company_id: yup.number().required('This field is required.'),
+  company_id: yup.number().required("This field is required."),
   user_service_id: yup.number(),
   user_skill_id: yup.number(),
-  project_technician_id: yup.number().required('This field is required.'),
-  project_role_id: yup.number().required('This field is required.'),
-  project_second_role_id: yup.number().required('This field is required.'),
+  project_technician_id: yup.number().required("This field is required."),
+  project_role_id: yup.number().required("This field is required."),
+  project_second_role_id: yup.number().required("This field is required."),
 };
 
 function AddNewTechnician(props: AddNewTechnicianProps) {
@@ -52,6 +46,7 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
   const [technicianOverlapAlert, setTechnicianOverlapAlert] = useState(false);
   const [addExistTechnician, setAddExistTechnician] = useState(false);
   const [projectOverlap, setProjectOverlap] = useState<any>([]);
+  const [secondRole, setSecondRole] = useState<any>([]);
 
   const {
     register,
@@ -65,15 +60,21 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
     resolver: yupResolver(yupSchema),
   });
 
-  useEffect(() => {
-  }, [addExistTechnician]);
+  useEffect(() => {}, [addExistTechnician]);
 
-  async function checkIfUserIsAddedOnProject(userID: any, e: any, shouldClose: any) {
+  async function checkIfUserIsAddedOnProject(
+    userID: any,
+    e: any,
+    shouldClose: any
+  ) {
     e.preventDefault();
-    const res = await fetch(`${baseUrl}/api/projects/${project._project_id}/technician/checkIfUserIsAddedOnProject/${userID}`, {
-      method: 'POST',
-      headers: authHeaders(session.user.access_token)
-    });
+    const res = await fetch(
+      `${baseUrl}/api/projects/${project._project_id}/technician/checkIfUserIsAddedOnProject/${userID}`,
+      {
+        method: "POST",
+        headers: authHeaders(session.user.access_token),
+      }
+    );
     const json = await res.json();
 
     if (!json.success) {
@@ -88,9 +89,8 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
 
     if (json.data.length > 0) {
       setTechnicianOverlapAlert(true);
-      setProjectOverlap(json.data)
+      setProjectOverlap(json.data);
       if (addExistTechnician) {
-
         onSave(true, shouldClose);
       } else {
         onSave(true, shouldClose);
@@ -104,12 +104,15 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
   async function onSave(toSave: any, shouldClose: any) {
     const payload = getValues();
     if (toSave) {
-      console.log({ shouldClose: shouldClose })
-      const res = await fetch(`${baseUrl}/api/projects/${project._project_id}/technician/add`, {
-        method: 'POST',
-        body: JSON.stringify(payload),
-        headers: authHeaders(session.user.access_token)
-      })
+      payload.project_second_role_id = secondRole;
+      const res = await fetch(
+        `${baseUrl}/api/projects/${project._project_id}/technician/add`,
+        {
+          method: "POST",
+          body: JSON.stringify(payload),
+          headers: authHeaders(session.user.access_token),
+        }
+      );
 
       const json = await res.json();
       if (json && json.success) {
@@ -119,7 +122,7 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
           duration: 4000,
         });
         setTimeout(() => {
-          onSuccess && onSuccess(true)
+          onSuccess && onSuccess(true);
         }, 300);
       } else {
         toast({
@@ -129,7 +132,7 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
         });
       }
       if (shouldClose == true) {
-        console.log({ shouldClose: shouldClose })
+        console.log({ shouldClose: shouldClose });
         onOpenChange && onOpenChange(shouldClose);
       }
     }
@@ -141,7 +144,9 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
         <TechnicianOverlap
           open={technicianOverlapAlert}
           onOpenChange={(open: any) => setTechnicianOverlapAlert(open)}
-          onSuccess={(evt: any) => { setAddExistTechnician(evt) }}
+          onSuccess={(evt: any) => {
+            setAddExistTechnician(evt);
+          }}
           projects={projectOverlap}
         />
       )}
@@ -154,17 +159,14 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
           className="max-w-[550px] p-0 overflow-auto gap-0"
         >
           <DialogHeader className="py-2 px-3 flex justify-between flex-row items-center sticky top-0 bg-white z-10">
-            <DialogTitle>
-              Add Project Technician
-            </DialogTitle>
+            <DialogTitle>Add Project Technician</DialogTitle>
             <DialogPrimitive.Close className="w-fit p-1.5 rounded-full bg-stone-100 hover:bg-stone-200">
               <X />
             </DialogPrimitive.Close>
           </DialogHeader>
           <div className="p-2">
             <div className="flex flex-col gap-2 py-1 rounded-app bg-white">
-              <div className=" py-1 px-2">
-              </div>
+              <div className=" py-1 px-2"></div>
               <form action="" method="post">
                 <div className="flex flex-col gap-3 px-2">
                   <div className="flex flex-col gap-3">
@@ -184,13 +186,14 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
                     />
                   </div>
                   <div className="flex justify-end items-center space-x-2">
-                    <Switch id="show-filter"
+                    <Switch
+                      id="show-filter"
                       onCheckedChange={(evt: any) => {
                         setShowFilters(evt);
                         if (!evt) {
-                          setValue('user_service_id', 0);
-                          setValue('user_skill_id', 0)
-                          setSelectedService(null)
+                          setValue("user_service_id", 0);
+                          setValue("user_skill_id", 0);
+                          setSelectedService(null);
                           setSelectedSkill(null);
                         }
                       }}
@@ -205,7 +208,7 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
                           name="user_service_id"
                           control={control}
                           render={({ field }) => (
-                            <ServiceSelect
+                            <UserServiceSelect
                               onChangeValue={(value: any) => {
                                 field.onChange(value);
                                 setSelectedService(value);
@@ -225,7 +228,7 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
                             <SkillSelect
                               onChangeValue={(value: any) => {
                                 field.onChange(value);
-                                setSelectedCompany(getValues('company_id'))
+                                setSelectedCompany(getValues("company_id"));
                                 setSelectedSkill(value);
                               }}
                               value={field.value}
@@ -250,7 +253,7 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
                           value={field.value}
                           company_id={selectedCompany}
                           project_id={project._project_id}
-                          user_service_id={getValues('user_service_id')}
+                          user_service_id={getValues("user_service_id")}
                           user_skill_id={selectedSkill}
                         />
                       )}
@@ -275,31 +278,29 @@ function AddNewTechnician(props: AddNewTechnicianProps) {
                     </div>
                     <div className="flex flex-col gap-3">
                       <label>Second Role</label>
-                      <Controller
-                        name="project_second_role_id"
-                        control={control}
-                        render={({ field }) => (
-                          <ProjectSecondRoleSelect
-                            onChangeValue={(value: any) => {
-                              field.onChange(value);
-                              console.log({ selected: value })
-                            }}
-                            value={field.value}
-                            project_id={project._project_id}
-                          />
-                        )}
+                      <ProjectSecondRoleSelect
+                        onChangeValue={(value: any) => {
+                          setSecondRole(value);
+                        }}
+                        value={secondRole}
+                        project_id={project._project_id}
                       />
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <Button className="mt-2" onClick={(e: any) => {
-                      setCloseAfter(false);
-                      checkIfUserIsAddedOnProject(getValues('project_technician_id'), e, false);
-                    }}>ADD</Button>
-                    {/* <Button className="mt-2 bg-red-500 hover:bg-red-400" onClick={(e: any) => {
-                      setCloseAfter(true);
-                      checkIfUserIsAddedOnProject(getValues('project_technician_id'), e, true);
-                    }}>ADD & CLOSE</Button> */}
+                  <div>
+                    <Button
+                      className="mt-2 w-full"
+                      onClick={(e: any) => {
+                        setCloseAfter(false);
+                        checkIfUserIsAddedOnProject(
+                          getValues("project_technician_id"),
+                          e,
+                          false
+                        );
+                      }}
+                    >
+                      ADD
+                    </Button>
                   </div>
                 </div>
               </form>
@@ -316,6 +317,6 @@ export default memo(AddNewTechnician);
 type AddNewTechnicianProps = {
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
-  project?: any,
-  onSuccess?: (success: boolean) => void
+  project?: any;
+  onSuccess?: (success: boolean) => void;
 };

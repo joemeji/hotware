@@ -10,7 +10,7 @@ import {
   FileText,
   Copy,
 } from "lucide-react";
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import { useSWRConfig } from "swr";
 import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
@@ -31,7 +31,17 @@ import { CreateBookButton } from "../../buttons/CreateBookButton";
 import { CreateOfferButton } from "@/components/projects/buttons/CreateOfferButton";
 import { CreateOrderConfirmationButton } from "@/components/projects/buttons/CreateOrderConfirmationButton";
 import { CreateCreditNoteButton } from "@/components/projects/buttons/CreateCreditNoteButton";
-import { isOpen } from "@/lib/invoice";
+import { canBook, isOpen } from "@/lib/invoice";
+import { ExportAbacusButton } from "@/components/projects/buttons/ExportAbacusButton";
+import { ExportPaymentButton } from "@/components/projects/buttons/ExportPaymentButton";
+import { ExportDiscountButton } from "@/components/projects/buttons/ExportDiscountButton";
+import AbacusExportModal from "@/components/projects/invoices/modals/AbacusExportModal";
+import ViewAbacusExportModal from "@/components/projects/invoices/modals/ViewAbacusExportModal";
+import ExportPaymentModal from "@/components/projects/invoices/modals/ExportPaymentModal";
+import ViewExportPaymentModal from "@/components/projects/invoices/modals/ViewExportPaymentModal";
+import ExportDiscountModal from "@/components/projects/invoices/modals/ExportDiscountModal";
+import ViewExportDiscountModal from "@/components/projects/invoices/modals/ViewExportDiscountModal";
+import { authHeaders, baseUrl } from "@/utils/api.config";
 
 const ChangeStatusModal = dynamic(
   () => import("../../modals/ChangeStatusModal")
@@ -49,8 +59,18 @@ function DetailsActions({ _invoice_id, data }: DetailsActionsParams) {
   const { mutate } = useSWRConfig();
   const router = useRouter();
   const { data: session }: any = useSession();
+  const [isConnected, setIsConnected] = useState(false);
   const [statusModalOpen, setStatusModalOpen] = useState(false);
   const [activityOpen, setActivityOpen] = useState(false);
+  const [exportAbacus, setExportAbacus] = useState<boolean>(false);
+  const [exportAbacusInvoice, setExportAbacusInvoice] = useState<any>(null);
+  const [viewExportedAbacus, setViewExportedAbacus] = useState<boolean>(false);
+  const [exportPayment, setExportPayment] = useState<boolean>(false);
+  const [exportDiscount, setExportDiscount] = useState<boolean>(false);
+  const [viewExportedPayment, setViewExportedPayment] =
+    useState<boolean>(false);
+  const [viewExportedDiscount, setViewExportedDiscount] =
+    useState<boolean>(false);
   const { mutateDelete, Dialog: DeleteDialog } = useDelete({
     onDelete: () => {
       toast({
@@ -145,6 +165,61 @@ function DetailsActions({ _invoice_id, data }: DetailsActionsParams) {
     a.click();
   };
 
+  const handleAbacusExport = (invoice: any) => {
+    setExportAbacus(true);
+    setExportAbacusInvoice(invoice);
+  };
+
+  const handleViewAbacusExported = (invoice: any) => {
+    setViewExportedAbacus(true);
+    setExportAbacusInvoice(invoice);
+  };
+
+  const handleExportPayment = (invoice: any) => {
+    setExportPayment(true);
+    setExportAbacusInvoice(invoice);
+  };
+
+  const handleViewExportedPayment = (invoice: any) => {
+    setViewExportedPayment(true);
+    setExportAbacusInvoice(invoice);
+  };
+
+  const handleExportDiscount = (invoice: any) => {
+    setExportDiscount(true);
+    setExportAbacusInvoice(invoice);
+  };
+
+  const handleViewExportedDiscount = (invoice: any) => {
+    setViewExportedDiscount(true);
+    setExportAbacusInvoice(invoice);
+  };
+
+  useEffect(() => {
+    const checkAbacusConnection = async () => {
+      try {
+        const res = await fetch(
+          `${baseUrl}/api/projects/invoices/settings/check-connection`,
+          {
+            headers: authHeaders(session?.user?.access_token),
+          }
+        );
+
+        const data = await res.json();
+
+        if (data?.is_abacus_connected == 1) {
+          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+        }
+      } catch (err) {
+        // Handle error if needed
+      }
+    };
+
+    checkAbacusConnection();
+  }, [session?.user?.access_token]);
+
   return (
     <React.Fragment>
       <DeleteDialog />
@@ -159,6 +234,66 @@ function DetailsActions({ _invoice_id, data }: DetailsActionsParams) {
       <ChangeStatusModal
         onOpenChange={(open: any) => setStatusModalOpen(open)}
         open={statusModalOpen}
+      />
+      <AbacusExportModal
+        open={exportAbacus}
+        onOpenChange={setExportAbacus}
+        invoice={exportAbacusInvoice}
+        onSubmit={() => {
+          mutate([
+            `/api/projects/invoices/details/${_invoice_id}`,
+            session?.user?.access_token,
+          ]);
+          mutate([
+            `/api/projects/invoices/${_invoice_id}/abacus`,
+            session?.user?.access_token,
+          ]);
+        }}
+      />
+      <ViewAbacusExportModal
+        open={viewExportedAbacus}
+        onOpenChange={setViewExportedAbacus}
+        _invoice_id={_invoice_id}
+      />
+      <ExportPaymentModal
+        open={exportPayment}
+        onOpenChange={setExportPayment}
+        invoice={exportAbacusInvoice}
+        onSubmit={() => {
+          mutate([
+            `/api/projects/invoices/details/${_invoice_id}`,
+            session?.user?.access_token,
+          ]);
+          mutate([
+            `/api/projects/invoices/${_invoice_id}/abacus`,
+            session?.user?.access_token,
+          ]);
+        }}
+      />
+      <ViewExportPaymentModal
+        open={viewExportedPayment}
+        onOpenChange={setViewExportedPayment}
+        _invoice_id={exportAbacusInvoice?._invoice_id}
+      />
+      <ExportDiscountModal
+        open={exportDiscount}
+        onOpenChange={setExportDiscount}
+        invoice={exportAbacusInvoice}
+        onSubmit={() => {
+          mutate([
+            `/api/projects/invoices/details/${_invoice_id}`,
+            session?.user?.access_token,
+          ]);
+          mutate([
+            `/api/projects/invoices/${_invoice_id}/abacus`,
+            session?.user?.access_token,
+          ]);
+        }}
+      />
+      <ViewExportDiscountModal
+        open={viewExportedDiscount}
+        onOpenChange={setViewExportedDiscount}
+        _invoice_id={exportAbacusInvoice?._invoice_id}
       />
 
       <ActivityLogSheetModal
@@ -194,16 +329,42 @@ function DetailsActions({ _invoice_id, data }: DetailsActionsParams) {
             <span className="text-sm font-medium">Copy</span>
           </ItemMenu>
           <Separator className="my-2" />
-          <CreateMarkAsPaidButton
-            isPaid={data?.invoice_status}
-            onPaid={() => mutatePaid(_invoice_id)}
-            onUnpaid={() => mutateUnpaid(_invoice_id)}
-          />
-          <CreateBookButton
-            isBooked={data?.invoice_is_booked == 1}
-            onBook={() => mutateBook(_invoice_id, true)}
-            onUnbook={() => mutateBook(_invoice_id, false)}
-          />
+          {isConnected && (
+            <ExportAbacusButton
+              onView={() => handleViewAbacusExported(data)}
+              exported_by={data?.invoice_is_exported_by}
+              onExport={() => handleAbacusExport(data)}
+            />
+          )}
+          {data?.invoice_payment_export_status == 1 &&
+          data?.invoice_is_exported_by != null ? null : (
+            <CreateMarkAsPaidButton
+              isPaid={data?.invoice_status}
+              onPaid={() => mutatePaid(_invoice_id)}
+              onUnpaid={() => mutateUnpaid(_invoice_id)}
+            />
+          )}
+          {isConnected && data?.invoice_is_exported_by != null && (
+            <ExportPaymentButton
+              invoice={data}
+              onView={() => handleViewExportedPayment(data)}
+              onExport={() => handleExportPayment(data)}
+            />
+          )}
+          {data && canBook(data) ? (
+            <CreateBookButton
+              isBooked={data?.invoice_is_booked == 1}
+              onBook={() => mutateBook(_invoice_id, true)}
+              onUnbook={() => mutateBook(_invoice_id, false)}
+            />
+          ) : null}
+          {isConnected && (
+            <ExportDiscountButton
+              invoice={data}
+              onView={() => handleViewExportedDiscount(data)}
+              onExport={() => handleExportDiscount(data)}
+            />
+          )}
           <Separator className="my-2" />
           <CreateOfferButton
             _offer_id={data?.invoice_has_offer}

@@ -10,7 +10,8 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { VatModal } from "../../modals/PaymentTermsModal";
-import { DeleteVatConfirmModal } from "../../modals/DeleteVatConfirmModal";
+import { DeletePaymentTermsConfirmModal } from "../../modals/DeletePaymentTermsConfirmModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 const SettingsPaymentTermsLists = () => {
   const router = useRouter();
@@ -41,22 +42,22 @@ const SettingsPaymentTermsLists = () => {
 
   const handleEdit = (data : any) => {
     setSelectedData(data)
-    setOpenCurrencyModal(true)
+    setOpenPaymentTermsModal(true)
   };
 
-  const [openCurrencyModal, setOpenCurrencyModal] = useState(false);
+  const [openPaymentTermsModal, setOpenPaymentTermsModal] = useState(false);
   const [openDeleteConfirm, setOpenDeleteConfirm] = useState(false);
   const [selectedData, setSelectedData] = useState<any>()
 
   return (
     <div className='grid bg-white'>
       <VatModal
-        open={openCurrencyModal}
+        open={openPaymentTermsModal}
         data={selectedData}
         listUrl={listUrl}
-        onOpenChange={(open: any) => setOpenCurrencyModal(open)}
+        onOpenChange={(open: any) => setOpenPaymentTermsModal(open)}
       />
-      <DeleteVatConfirmModal
+      <DeletePaymentTermsConfirmModal
         open={openDeleteConfirm}
         data={selectedData}
         listUrl={listUrl}
@@ -75,7 +76,8 @@ const SettingsPaymentTermsLists = () => {
             <Button
               variant='red'
               onClick={() => {
-                setOpenCurrencyModal(true);
+                setOpenPaymentTermsModal(true);
+                setSelectedData(null);
               }}
             >
               <Plus {...iconProps} />
@@ -104,7 +106,7 @@ const SettingsPaymentTermsLists = () => {
                 paymentTerms.map((pTerms: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{pTerms?.payment_terms_id}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className="text-left">{pTerms?.payment_terms_name}</TD>
                       <TD>{pTerms?.payment_terms_days}</TD>
                       <TD>{pTerms?.payment_terms_is_month_end === '1' ? 'Yes' : 'No'} </TD>

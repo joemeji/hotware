@@ -2,6 +2,7 @@
 const nextConfig = {
   reactStrictMode: false,
   images: {
+    domains: ["hotware.blob.core.windows.net"],
     remotePatterns: [
       {
         protocol: "https",

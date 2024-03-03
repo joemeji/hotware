@@ -21,6 +21,7 @@ import DeliverTo, { AddressForm, EmployeeForm } from "../DeliverTo";
 import InvoiceTo, {
   InvoiceAddressForm,
   InvoiceEmployeeForm,
+  InvoiceVatForm,
 } from "../InvoiceTo";
 import CopyTo, { CopyAddressForm, CopyEmployeeForm } from "../CopyTo";
 import ErrorFormMessage from "@/components/app/error-form-message";
@@ -29,6 +30,7 @@ import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { orderSchema } from "../schema";
 import InputFile from "@/components/ui/input-file";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
@@ -80,6 +82,12 @@ function CreateOrderDetails() {
           setLoadingSubmit(false);
           router.push(
             "/projects/order-confirmation/" + json._order_confirmation_id
+          );
+
+          // send task emails
+          SendTaskEmail(
+            "CREATE_ORDER_CONFIRMATION",
+            session?.user?.access_token
           );
         }, 300);
       }
@@ -209,11 +217,26 @@ function CreateOrderDetails() {
                           )}
                         />
                       }
+                      renderVat={
+                        <Controller
+                          name="order_confirmation_supplier_vat_id"
+                          control={control}
+                          render={({ field }) => (
+                            <InvoiceVatForm
+                              invoice_to_id={getValues(
+                                "order_confirmation_supplier_id"
+                              )}
+                              value={field.value}
+                              onChangeValue={(value) => field.onChange(value)}
+                            />
+                          )}
+                        />
+                      }
                     />
                   )}
                 />
               </div>
-              <div className="flex flex-1 flex-col gap-1">
+              {/* <div className="flex flex-1 flex-col gap-1">
                 <label>VAT</label>
                 <Controller
                   name="order_confirmation_supplier_vat_id"
@@ -227,7 +250,7 @@ function CreateOrderDetails() {
                     />
                   )}
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 

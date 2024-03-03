@@ -25,6 +25,7 @@ import ShippingMethodSelect from "@/components/app/shipping-method-select";
 import { baseUrl, authHeaders } from "@/utils/api.config";
 import { useSession } from "next-auth/react";
 import { creditSchema } from "../schema";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 dayjs.extend(timezone);
 
@@ -66,6 +67,9 @@ function EditCreditDetails({ id, credit_note }: any) {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/projects/credit-note/" + id);
+
+          // send task emails
+          SendTaskEmail("UPDATE_CREDIT_NOTE", session?.user?.access_token);
         }, 300);
       }
     } catch (err: any) {

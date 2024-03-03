@@ -24,10 +24,12 @@ import { TH } from "@/components/items";
 import SupplierRecords from "./SupplierRecords";
 
 const yupObject: any = {
-  cms_id: yup.number().required('This field is required.'),
-  project_supplier_text: yup.string().required('This field is required.'),
-  project_supplier_additionals: yup.string().required('This field is required.'),
-  project_supplier_attachment: yup.mixed().required('This field is required.'),
+  cms_id: yup.number().required("This field is required."),
+  project_supplier_text: yup.string().required("This field is required."),
+  project_supplier_additionals: yup
+    .string()
+    .required("This field is required."),
+  project_supplier_attachment: yup.mixed().required("This field is required."),
 };
 
 function AddNewSupplierModal(props: AddNewSupplierModalProps) {
@@ -45,9 +47,9 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
     setValue,
     formState: { errors },
     clearErrors,
-    control
+    control,
   } = useForm({
-    resolver: yupResolver(yupSchema)
+    resolver: yupResolver(yupSchema),
   });
 
   async function onSave(data: any) {
@@ -59,11 +61,14 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
       formData.append(key, value as string);
     }
 
-    const res = await fetch(`${baseUrl}/api/projects/supplier/add/${project.project_id}`, {
-      method: 'POST',
-      body: formData,
-      headers: authHeaders(session.user.access_token, true)
-    });
+    const res = await fetch(
+      `${baseUrl}/api/projects/supplier/add/${project.project_id}`,
+      {
+        method: "POST",
+        body: formData,
+        headers: authHeaders(session.user.access_token, true),
+      }
+    );
 
     const json = await res.json();
     if (json && json.success) {
@@ -74,7 +79,7 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
       });
       setTimeout(() => {
         onOpenChange && onOpenChange(false);
-        onSuccess && onSuccess(true)
+        onSuccess && onSuccess(true);
       }, 300);
     } else {
       toast({
@@ -103,15 +108,13 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
           className="max-w-[1200px] p-0 overflow-auto gap-0"
         >
           <DialogHeader className="py-2 px-3 flex justify-between flex-row items-center sticky top-0 bg-white z-10">
-            <DialogTitle>
-              Add Address or Supplier
-            </DialogTitle>
+            <DialogTitle>Add Address or Supplier</DialogTitle>
             <DialogPrimitive.Close className="w-fit p-1.5 rounded-full bg-stone-100 hover:bg-stone-200">
               <X />
             </DialogPrimitive.Close>
           </DialogHeader>
           <div className="flex gap-2 p-2 bg-stone-200">
-            <div className="flex flex-col gap-2 w-1/3 py-1 rounded-app bg-white">
+            <div className="flex flex-col gap-2 w-1/3 py-4 px-2 pt-1 rounded-app bg-white">
               <div className=" py-1 px-2">
                 <p className="font-medium text-base">Supplier Details</p>
               </div>
@@ -127,19 +130,19 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
                           onChangeValue={(value: any) => {
                             field.onChange(value);
                             setSupplierId(value);
-                            console.log({ value: value })
                           }}
                           value={field.value}
                         />
                       )}
                     />
-
                   </div>
                   <div className="flex flex-col gap-1">
                     <label>Text Label</label>
                     <Input
                       className="bg-stone-100 border-transparent"
-                      error={errors && (errors.project_supplier_text ? true : false)}
+                      error={
+                        errors && (errors.project_supplier_text ? true : false)
+                      }
                       {...register("project_supplier_text")}
                     />
                     {errors.project_supplier_text && (
@@ -156,17 +159,24 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
                     <label>Additional Texts</label>
                     <Textarea
                       className="bg-stone-100 border-transparent"
-                      error={errors && (errors.project_supplier_additionals ? true : false)}
+                      error={
+                        errors &&
+                        (errors.project_supplier_additionals ? true : false)
+                      }
                       {...register("project_supplier_additionals")}
                     />
                   </div>
-                  <Button className="mt-2" type="submit">Submit</Button>
+                  <Button className="mt-2" type="submit">
+                    Submit
+                  </Button>
                 </div>
               </form>
             </div>
-            <div className="w-2/3 px-2 py-1 rounded-app bg-white flex flex-col gap-2">
+            <div className="w-2/3 py-4 px-3 pt-1 rounded-app bg-white flex flex-col gap-2">
               <div className="flex items-center justify-between">
-                <p className="font-medium text-base">Related Supplier Records</p>
+                <p className="font-medium text-base">
+                  Related Supplier Records
+                </p>
                 <div className="bg-stone-100 flex items-center w-[300px] rounded-xl overflow-hidden px-2 h-9 focus-within:outline-none focus-within:ring-2 focus-within:ring-ring focus-visible:ring-offset-2">
                   <Search className="text-stone-400 w-5 h-5" />
                   <input
@@ -186,18 +196,20 @@ function AddNewSupplierModal(props: AddNewSupplierModalProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {
-                    supplierId && (
-                      <SupplierRecords
-                        supplierID={supplierId}
-                        projectId={project.project_id}
-                        onOpenChange={(status: any) => onOpenChange && onOpenChange(status)}
-                        onSuccess={(status: any) => onSuccess && onSuccess(status)}
-                      />
-                    )}
+                  {supplierId && (
+                    <SupplierRecords
+                      supplierID={supplierId}
+                      projectId={project.project_id}
+                      onOpenChange={(status: any) =>
+                        onOpenChange && onOpenChange(status)
+                      }
+                      onSuccess={(status: any) =>
+                        onSuccess && onSuccess(status)
+                      }
+                    />
+                  )}
                 </tbody>
               </table>
-
             </div>
           </div>
         </DialogContent>
@@ -210,7 +222,7 @@ export default memo(AddNewSupplierModal);
 
 type AddNewSupplierModalProps = {
   open?: boolean;
-  project?: any,
+  project?: any;
   onOpenChange?: (open: boolean) => void;
-  onSuccess?: (success: boolean) => void
+  onSuccess?: (success: boolean) => void;
 };

@@ -11,7 +11,8 @@ import { cn } from "@/lib/utils";
 import Pagination from "@/components/pagination";
 import { AddProjectSecondRoleModal } from "../../modals/AddProjectSecondRoleModal";
 import { DeleteProjectSecondRoleConfirmModal } from "../../modals/DeleteProjectRoleConfirmModal";
-import { ProductSecondRoleDocumentModal } from "../../modals/ProductSecondRoleDocumentModal";
+import { ProjectSecondRoleDocumentModal } from "../../modals/ProjectSecondRoleDocumentModal";
+import { PER_PAGE } from "@/utils/algoliaConfig";
 
 interface ISettingsProjectSecondRoleList {
   companySettingValue?: boolean;
@@ -79,7 +80,7 @@ const SettingsProjectSecondRoleList = (
         listUrl={listUrl}
         onOpenChange={(open: any) => setOpenDeleteConfirm(open)}
       />
-      <ProductSecondRoleDocumentModal
+      <ProjectSecondRoleDocumentModal
         open={openProductSecondRoleDocument}
         data={selectedData}
         onOpenChange={(open: any) => setOpenProductSecondRoleDocument(open)}
@@ -100,6 +101,7 @@ const SettingsProjectSecondRoleList = (
               variant='red'
               onClick={() => {
                 setOpenAddModal(true);
+                setSelectedData(null);
               }}
             >
               <Plus {...iconProps} />
@@ -128,7 +130,7 @@ const SettingsProjectSecondRoleList = (
                 projectSecondRoles.map((role: any, i: number) => {
                   return (
                     <tr key={i} className='text-center &_td:border-r'>
-                      <TD>{i + 1}</TD>
+                      <TD>{(page - 1) * PER_PAGE + i + 1}</TD>
                       <TD className='text-left'>
                         {role.project_second_role_name}
                       </TD>

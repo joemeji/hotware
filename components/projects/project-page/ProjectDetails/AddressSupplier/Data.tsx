@@ -24,6 +24,7 @@ import { RemoveAttachment } from "./modals/RemoveAttachmentDialog/remove";
 import { toast } from "@/components/ui/use-toast";
 import EditSupplierModal from "./modals/EditSupplierModal";
 import { DeleteSupplier } from "./modals/DeleteSupplierModal";
+import Image from "next/image";
 
 const Data = ({ headerSize }: { headerSize?: any }) => {
   const access_token = useContext(AccessTokenContext);
@@ -48,18 +49,17 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
       revalidateIfStale: false,
     }
   );
-  console.log({ datadata: data })
 
   function supplierEvents(evt: any, supplier: any) {
     console.log({ event: evt, supplierId: supplier });
     setSelectedSupplier(supplier);
-    if (evt == 'view-attach') {
+    if (evt == "view-attach") {
       viewAttachment(supplier);
-    } else if (evt == 'remove-attach') {
+    } else if (evt == "remove-attach") {
       setRemoveAttachmentFile(true);
-    } else if (evt == 'edit') {
+    } else if (evt == "edit") {
       setEditSupplierModal(true);
-    } else if (evt == 'delete') {
+    } else if (evt == "delete") {
       setDeleteSupplierModal(true);
     }
   }
@@ -81,10 +81,11 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
 
   return (
     <ScrollArea
-      className="bg-background w-1/2 rounded-xl"
+      className="bg-background w-1/2 rounded-xl shadow"
       viewPortStyle={{
-        height: `calc(100vh - (var(--header-height) + ${headerSize?.height + 40
-          }px))`,
+        height: `calc(100vh - (var(--header-height) + ${
+          headerSize?.height + 40
+        }px))`,
       }}
     >
       {openAddSupplierModal && (
@@ -92,7 +93,7 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
           open={openAddSupplierModal}
           onOpenChange={(open: any) => setOpenAddSupplierModal(open)}
           project={project.data}
-          onSuccess={(success: any) => success ? mutate(data) : null}
+          onSuccess={(success: any) => (success ? mutate(data) : null)}
         />
       )}
       {removeAttachmentFile && (
@@ -100,7 +101,7 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
           open={removeAttachmentFile}
           onOpenChange={(open: any) => setRemoveAttachmentFile(open)}
           supplier={selectedSupplier}
-          onSuccess={(success: any) => success ? mutate(data) : null}
+          onSuccess={(success: any) => (success ? mutate(data) : null)}
         />
       )}
       {editSupplierMmodal && (
@@ -108,7 +109,7 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
           open={editSupplierMmodal}
           onOpenChange={(open: any) => setEditSupplierModal(open)}
           supplier={selectedSupplier}
-          onSuccess={(success: any) => success ? mutate(data) : null}
+          onSuccess={(success: any) => (success ? mutate(data) : null)}
         />
       )}
       {deleteSupplierMmodal && (
@@ -116,12 +117,15 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
           open={deleteSupplierMmodal}
           onOpenChange={(open: any) => setDeleteSupplierModal(open)}
           supplier={selectedSupplier}
-          onSuccess={(success: any) => success ? mutate(data) : null}
+          onSuccess={(success: any) => (success ? mutate(data) : null)}
         />
       )}
       <div className="flex justify-between p-3 sticky top-0 z-10 backdrop-blur-sm">
         <p className="font-medium text-lg">Suppliers </p>
-        <Button className="flex gap-2 items-center" onClick={() => setOpenAddSupplierModal(true)}>
+        <Button
+          className="flex gap-2 items-center py-1.5"
+          onClick={() => setOpenAddSupplierModal(true)}
+        >
           <Plus className="w-[18px]" /> Add New
         </Button>
       </div>
@@ -145,6 +149,17 @@ const Data = ({ headerSize }: { headerSize?: any }) => {
               onClickItem={(event: any) => supplierEvents(event, item)}
             />
           ))}
+
+        {Array.isArray(data) && data.length === 0 && (
+          <div className="flex justify-center">
+            <Image
+              src="/images/No data-rafiki.svg"
+              width={400}
+              height={400}
+              alt="No Data to Shown"
+            />
+          </div>
+        )}
       </div>
     </ScrollArea>
   );
@@ -157,13 +172,13 @@ const SupplierData = ({
   cms_name,
   additional_text,
   _cms_id,
-  onClickItem
+  onClickItem,
 }: {
   label?: any;
   cms_name?: any;
   additional_text?: any;
   _cms_id?: any;
-  onClickItem?: (event: any) => void
+  onClickItem?: (event: any) => void;
 }) => {
   return (
     <div className="rounded-xl border p-3">
@@ -182,19 +197,31 @@ const SupplierData = ({
               </Button>
             }
           >
-            <ItemMenu className="flex gap-3 items-center" onClick={() => onClickItem && onClickItem('view-attach')}>
+            <ItemMenu
+              className="flex gap-3 items-center"
+              onClick={() => onClickItem && onClickItem("view-attach")}
+            >
               <Paperclip className="w-[18px]" />
               <span className="font-medium">View Attachment</span>
             </ItemMenu>
-            <ItemMenu className="flex gap-3 items-center" onClick={() => onClickItem && onClickItem('remove-attach')}>
+            <ItemMenu
+              className="flex gap-3 items-center"
+              onClick={() => onClickItem && onClickItem("remove-attach")}
+            >
               <FileMinus className="w-[18px]" />
               <span className="font-medium">Remove Attachment</span>
             </ItemMenu>
-            <ItemMenu className="flex gap-3 items-center" onClick={() => onClickItem && onClickItem('edit')}>
+            <ItemMenu
+              className="flex gap-3 items-center"
+              onClick={() => onClickItem && onClickItem("edit")}
+            >
               <Pencil className="w-[18px]" />
               <span className="font-medium">Edit</span>
             </ItemMenu>
-            <ItemMenu className="flex gap-3 items-center" onClick={() => onClickItem && onClickItem('delete')}>
+            <ItemMenu
+              className="flex gap-3 items-center"
+              onClick={() => onClickItem && onClickItem("delete")}
+            >
               <Trash className="w-[18px]" />
               <span className="font-medium">Delete</span>
             </ItemMenu>

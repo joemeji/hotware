@@ -10,7 +10,7 @@ import {
   FileText,
   CoinsIcon,
 } from "lucide-react";
-import React, { memo, useState } from "react";
+import React, { memo, useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import { Separator } from "@/components/ui/separator";
 import { useDelete } from "@/components/projects/credit-note/useDelete";
@@ -21,6 +21,10 @@ import { previewPdf } from "@/services/projects/credit";
 import { useSession } from "next-auth/react";
 import { useSWRConfig } from "swr";
 import Link from "next/link";
+import { ExportAbacusButton } from "@/components/projects/buttons/ExportAbacusButton";
+import AbacusExportModal from "@/components/projects/credit-note/modals/AbacusExportModal";
+import ViewAbacusExportModal from "@/components/projects/credit-note/modals/ViewAbacusExportModal";
+import { authHeaders, baseUrl } from "@/utils/api.config";
 
 const ActivityLogSheetModal = dynamic(
   () => import("../../modals/ActivityLogSheetModal")
@@ -36,6 +40,11 @@ function DetailsActions({ _credit_note_id, data }: DetailsActionsParams) {
   const router = useRouter();
   const { data: session }: any = useSession();
   const [activityOpen, setActivityOpen] = useState(false);
+  const [exportAbacus, setExportAbacus] = useState<boolean>(false);
+  const [exportAbacusCreditNote, setExportAbacusCreditNote] =
+    useState<any>(null);
+  const [viewExportedAbacus, setViewExportedAbacus] = useState<boolean>(false);
+  const [isConnected, setIsConnected] = useState(false);
   const { mutateDelete, Dialog: DeleteDialog } = useDelete({
     onDelete: () => {
       toast({
@@ -55,9 +64,19 @@ function DetailsActions({ _credit_note_id, data }: DetailsActionsParams) {
 
   const { mutateBook, Dialog: BookDialog } = useChangeBookStatus({
     onBook: (item: string) => {
-      mutate([`/api/projects/credits`, session?.user?.access_token], undefined);
+      mutate(
+        [
+          `/api/projects/credits/details/${_credit_note_id}`,
+          session?.user?.access_token,
+        ],
+        undefined
+      );
     },
   });
+
+  const isExported = (exported: any) => {
+    return exported != null ? true : false;
+  };
 
   const onPreviewPdf = async (_credit_note_id: any) => {
     const res = await previewPdf(_credit_note_id, session?.user?.access_token);
@@ -81,6 +100,43 @@ function DetailsActions({ _credit_note_id, data }: DetailsActionsParams) {
     a.click();
   };
 
+  const handleAbacusExport = (credit: any) => {
+    setExportAbacus(true);
+    setExportAbacusCreditNote(credit);
+
+    console.log({ CREDITFROMDETAILS: credit });
+  };
+
+  const handleViewAbacusExported = (credit: any) => {
+    setViewExportedAbacus(true);
+    setExportAbacusCreditNote(credit);
+  };
+
+  useEffect(() => {
+    const checkAbacusConnection = async () => {
+      try {
+        const res = await fetch(
+          `${baseUrl}/api/projects/credits/settings/check-connection`,
+          {
+            headers: authHeaders(session?.user?.access_token),
+          }
+        );
+
+        const data = await res.json();
+
+        if (data?.is_abacus_connected == 1) {
+          setIsConnected(true);
+        } else {
+          setIsConnected(false);
+        }
+      } catch (err) {
+        // Handle error if needed
+      }
+    };
+
+    checkAbacusConnection();
+  }, [session?.user?.access_token]);
+
   return (
     <React.Fragment>
       <DeleteDialog />
@@ -89,6 +145,28 @@ function DetailsActions({ _credit_note_id, data }: DetailsActionsParams) {
         _credit_note_id={_credit_note_id}
         open={activityOpen}
         onOpenChange={(open: any) => setActivityOpen(open)}
+      />
+      <AbacusExportModal
+        open={exportAbacus}
+        onOpenChange={setExportAbacus}
+        credit_note={exportAbacusCreditNote}
+        onSubmit={() => {
+          mutate([
+            `/api/projects/credits/details/${_credit_note_id}`,
+            session?.user?.access_token,
+          ]);
+
+          mutate([
+            `/api/projects/credits//${_credit_note_id}/abacus`,
+            session?.user?.access_token,
+          ]);
+        }}
+      />
+
+      <ViewAbacusExportModal
+        open={viewExportedAbacus}
+        onOpenChange={setViewExportedAbacus}
+        _credit_note_id={_credit_note_id}
       />
 
       <div className="flex items-center gap-1">
@@ -103,30 +181,45 @@ function DetailsActions({ _credit_note_id, data }: DetailsActionsParams) {
             </DetailAction>
           }
         >
-          <DetailActionDropdownItem
-            label="Delete"
-            onClick={() => mutateDelete(_credit_note_id)}
-            icon={<Trash2 className="w-[18px] h-[18px] text-red-500" />}
-          />
-          <Separator className="my-2" />
-          <div
-            onClick={() =>
-              mutateBook(data?._credit_note_id, data?.credit_note_is_booked)
-            }
-            className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
-          >
-            <CoinsIcon
-              className={`w-[18px] h-[18px] ${
-                data?.credit_note_is_booked == 1
-                  ? "text-red-500"
-                  : "text-green-500"
-              }`}
+          {!isExported(data?.credit_note_is_exported_by) ? (
+            <>
+              <DetailActionDropdownItem
+                label="Delete"
+                onClick={() => mutateDelete(_credit_note_id)}
+                icon={<Trash2 className="w-[18px] h-[18px] text-red-500" />}
+              />
+              <Separator className="my-2" />
+            </>
+          ) : null}
+          {isConnected && (
+            <ExportAbacusButton
+              onView={() => handleViewAbacusExported(data)}
+              exported_by={data?.credit_note_is_exported_by}
+              onExport={() => handleAbacusExport(data)}
             />
-            <span className="text-sm font-medium">
-              {data?.credit_note_is_booked == 1 ? "Unbook" : "Book"}{" "}
-              (Accounting)
-            </span>
-          </div>
+          )}
+          {!isExported(data?.credit_note_is_exported_by) ? (
+            <>
+              <div
+                onClick={() =>
+                  mutateBook(data?._credit_note_id, data?.credit_note_is_booked)
+                }
+                className="flex items-center p-2 px-3 cursor-pointer gap-3 hover:bg-stone-100 outline-none"
+              >
+                <CoinsIcon
+                  className={`w-[18px] h-[18px] ${
+                    data?.credit_note_is_booked == 1
+                      ? "text-red-500"
+                      : "text-green-500"
+                  }`}
+                />
+                <span className="text-sm font-medium">
+                  {data?.credit_note_is_booked == 1 ? "Unbook" : "Book"}{" "}
+                  (Accounting)
+                </span>
+              </div>
+            </>
+          ) : null}
           <Separator className="my-2" />
           <Link
             href={`/projects/invoices/${data?._invoice_id}`}

@@ -41,7 +41,7 @@ const PositionSelect = (props: PositionSelectProps) => {
         value={value}
         onChangeValue={onChangeValue}
         isLoading={isLoading}
-        className={cn("py-2 px-2", formError && formErrorClassNames)}
+        className={cn(formError && formErrorClassNames)}
         onOpenChange={(open) => setIsOpenPopover(open)}
       />
       {formError && <ErrorFormMessage message={formError.message} />}

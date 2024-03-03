@@ -8,21 +8,17 @@ import { fetcher } from "@/utils/api.config";
 import { currencySchema } from "../../schema";
 import { useEffect } from "react";
 
-interface IAddCategoryForm {
+interface CurrencyForm {
   id?: string;
   listUrl: string;
   onOpenChange?: (open: boolean) => void;
 }
-export const CurrencyForm = (props: IAddCategoryForm) => {
+export const CurrencyForm = (props: CurrencyForm) => {
   const { id, listUrl, onOpenChange } = props;
 
   const { data, isLoading } = useSWR(
     id ? `/api/currency/info?id=${id}` : null,
-    fetcher,
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: false,
-    }
+    fetcher
   );
 
   const {
@@ -50,7 +46,7 @@ export const CurrencyForm = (props: IAddCategoryForm) => {
       const json = await res.json();
       if (json && json.success) {
         toast({
-          title: "Successfully Added",
+          title: `${id ? "Successfully updated!" : "Successfully added!"}`,
           variant: "success",
           duration: 4000,
         });
@@ -82,7 +78,7 @@ export const CurrencyForm = (props: IAddCategoryForm) => {
   }, [data, setValue]);
 
   return (
-    <form onSubmit={handleSubmit(submit)} className="mt-7 flex flex-col gap-6">
+    <form onSubmit={handleSubmit(submit)} className="mt-7 flex flex-col gap-5 pb-5">
       {id && <Input type="hidden" {...register("id")} value={id} />}
       <div className="flex flex-col gap-3">
         <label className="font-medium">Code</label>

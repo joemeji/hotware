@@ -22,6 +22,7 @@ import { toast } from "@/components/ui/use-toast";
 import { useRouter } from "next/navigation";
 import { CmsDetailsContext } from "@/pages/address-manager/[cms_id]";
 import { AccessTokenContext } from "@/context/access-token-context";
+import SendTaskEmail from "../../send-email/SendTaskEmail";
 
 export const AliasesContext = createContext(null);
 
@@ -56,7 +57,6 @@ const CreateProjectPage = () => {
     const aliasIndex = _aliases.findIndex(
       (item: any) => item.id === employeeId
     );
-    console.log(_aliases);
     if (aliasIndex !== -1) {
       _aliases[aliasIndex].alias = aliasName;
       setAliases(_aliases);
@@ -93,8 +93,6 @@ const CreateProjectPage = () => {
         payload["contacts"] = JSON.stringify(_aliases);
       }
 
-      delete payload.scopes;
-
       const formData = new FormData();
 
       for (let [key, value] of Object.entries(payload)) {
@@ -119,6 +117,9 @@ const CreateProjectPage = () => {
         setTimeout(() => {
           setLoadingSubmit(false);
           router.push("/projects/" + json._project_id);
+
+          // send task emails
+          SendTaskEmail("CREATE_PROJECT", access_token);
         }, 300);
       }
     } catch (err) {
@@ -244,7 +245,18 @@ const CreateProjectPage = () => {
         </div>
         <div className="flex gap-4 w-full">
           <ProjectDetails
-            renderProjectType={<ProjectTypeSelect />}
+            renderProjectType={
+              <Controller
+                name="project_type_id"
+                control={control}
+                render={({ field }) => (
+                  <ProjectTypeSelect
+                    value={field.value}
+                    onChangeValue={(value) => field.onChange(value)}
+                  />
+                )}
+              />
+            }
             renderRequirementLevel={
               <Controller
                 name="requirementsLevel"

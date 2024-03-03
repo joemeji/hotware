@@ -28,6 +28,22 @@ export default async function handler(
     res.status(200).json(json);
   }
 
+  if (action == "enable-purchase-order-approver") {
+    const response = await fetch(
+      baseUrl + `/api/company/settings/enable-purchase-order-approver`,
+      {
+        headers: {
+          ...authHeaders(access_token),
+        },
+        method: "POST",
+        body: req.body,
+      }
+    );
+    const json = await response.json();
+
+    res.status(200).json(json);
+  }
+
   if (action == "info") {
     const response = await fetch(
       baseUrl + `/api/company/settings/info/${companySettingName}`,

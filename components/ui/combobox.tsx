@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
@@ -12,6 +12,7 @@ import {
 } from "./command";
 import { ScrollArea } from "./scroll-area";
 import LoadingMore from "../LoadingMore";
+import SearchInput from "../app/search-input";
 
 export const ARROWDOWM_WIDTH = 16;
 
@@ -33,6 +34,8 @@ type ComboboxProps = {
   onSelectedItem?: (item?: any) => void;
   onOpenChange?: (open: boolean) => void;
   modal?: boolean;
+  onSearch?: (value?: any) => void;
+  searchWidth?: any;
 };
 
 const Combobox = (props: ComboboxProps) => {
@@ -50,6 +53,8 @@ const Combobox = (props: ComboboxProps) => {
     onSelectedItem,
     onOpenChange,
     modal = false,
+    onSearch,
+    searchWidth,
   } = props;
   const buttonPopOverRef = useRef<HTMLButtonElement>(null);
   const buttonPopOverRefCurrent = buttonPopOverRef.current;
@@ -68,20 +73,34 @@ const Combobox = (props: ComboboxProps) => {
     return str;
   };
 
-  const _data = () => {
+  const _data = useMemo(() => {
     if (!Array.isArray(contents)) return "";
     const _dataFirst = contents.find(
       (item: any) => toLower(item.value) == toLower(__value)
     );
     if (_dataFirst) return _dataFirst.text;
     return `${placeholder || ""}`;
-  };
+  }, [contents, placeholder, __value]);
 
   const onSelect = (currentValue?: any, renderedItem?: Content) => {
-    setOpen(false);
-    setValue(currentValue);
-    onChangeValue && onChangeValue(renderedItem?.value);
+    if (currentValue === __value) {
+      setOpen(false);
+      setValue("");
+      onChangeValue && onChangeValue("");
+    } else {
+      setOpen(false);
+      setValue(currentValue);
+      onChangeValue && onChangeValue(renderedItem?.value);
+    }
   };
+
+  useEffect(() => {
+    if (typeof value === "number" && !Number.isNaN(value)) {
+      setValue(String(value));
+    } else {
+      setValue(String(value));
+    }
+  }, [value]);
 
   return (
     <Popover
@@ -107,7 +126,11 @@ const Combobox = (props: ComboboxProps) => {
           type="button"
         >
           <span className={`w-[calc(100%-${ARROWDOWM_WIDTH}px)]`}>
-            {isLoading ? "..." : __value ? _data() : placeholder || ""}
+            {isLoading
+              ? "..."
+              : __value
+              ? _data
+              : <p className="opacity-60">{placeholder}</p> || ""}
           </span>
           <ChevronDown
             className={`ml-2 h-[${ARROWDOWM_WIDTH}px] w-[${ARROWDOWM_WIDTH}px] shrink-0 opacity-50`}
@@ -121,17 +144,26 @@ const Combobox = (props: ComboboxProps) => {
         )}
         align="start"
       >
-        {Array.isArray(contents) && contents.length === 0 && (
+        <div className="p-2 w-full">
+          <SearchInput
+            onChange={(e) => {
+              onSearch && onSearch(e.target.value);
+            }}
+            width={null}
+            delay={500}
+          />
+        </div>
+        {/* {Array.isArray(contents) && contents.length === 0 && (
           <div className="py-4 text-center font-medium px-3">List empty</div>
-        )}
-        {!contents && (
+        )} */}
+        {/* {!Array.isArray(contents) && (
           <div className="py-4 text-center font-medium px-3">List empty</div>
-        )}
+        )} */}
         <Command>
           <ScrollArea
             onScrollEndViewPort={onScrollEnd}
             className="combobox-selector"
-            style={{ minWidth: buttonWidth() + "px", maxWidth: "500px" }}
+            style={{ minWidth: buttonWidth() + "px", maxWidth: "400px" }}
           >
             <CommandGroup className="p-0">
               {contents &&

@@ -1,10 +1,7 @@
 import {
   Briefcase,
-  Building,
-  Landmark,
   ListChecksIcon,
   ListEndIcon,
-  ListPlus,
   User,
 } from "lucide-react";
 
@@ -28,6 +25,11 @@ export const projectSettingsMenu = [
         name: "Task",
         icon: <ListEndIcon {...iconProps} />,
         href: "/settings/project/task",
+      },
+      {
+        name: "Project Type",
+        icon: <Briefcase {...iconProps} />,
+        href: "/settings/project/project-type",
       },
     ],
   },

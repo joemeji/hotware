@@ -100,7 +100,7 @@ function CategorySelect(props: CategorySelectProps) {
   );
 }
 
-CategorySelect.displayName = 'CategorySelect';
+CategorySelect.displayName = "CategorySelect";
 
 export default memo(CategorySelect);
 
@@ -161,7 +161,7 @@ function Category({
     );
   });
 
-  CategoryButton.displayName = 'CategoryButton';
+  CategoryButton.displayName = "CategoryButton";
 
   const SubCategoryButton = React.forwardRef(({ sub }: any, ref: any) => {
     return (
@@ -182,7 +182,7 @@ function Category({
     );
   });
 
-  SubCategoryButton.displayName = 'SubCategoryButton';
+  SubCategoryButton.displayName = "SubCategoryButton";
 
   return (
     <li
@@ -214,7 +214,7 @@ function Category({
   );
 }
 
-Category.displayName = 'Category';
+Category.displayName = "Category";
 
 type CategorySelectProps = {
   access_token: string;

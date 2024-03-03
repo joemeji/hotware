@@ -18,36 +18,34 @@ import { AccessTokenContext } from "@/context/access-token-context";
 
 export const SettingsItemsMainCategory = () => {
   const { data }: any = useSession();
-  const roleId = 1//parseInt(data?.user?.role_id) ?? null;
+  const roleId = 1; // parseInt(data?.user?.role_id) ?? null;
 
-  const [searchText, setSearchText] = useState('');
+  const [searchText, setSearchText] = useState("");
   const [loading, setLoading] = useState(false);
   const listUrl = `/api/item/main-category/lists?search=${searchText}`;
 
   const access_token: any = useContext(AccessTokenContext);
 
   const exportPdf = async () => {
-
-    setLoading(true)
+    setLoading(true);
     try {
-       await fetch(`${baseUrl}/api/main_categories/pdf?search=${searchText}`, {
+      await fetch(`${baseUrl}/api/main_categories/pdf?search=${searchText}`, {
         headers: { ...authHeaders(access_token) },
       })
         .then((res) => res.blob())
         .then((blob) => URL.createObjectURL(blob))
         .then((blob) => {
-          setLoading(false)
+          setLoading(false);
           window.open(blob, "_blank");
         })
-        .catch((e) =>{ 
-          setLoading(false)
-        console.log("e", e);
-      })
-
+        .catch((e) => {
+          setLoading(false);
+          console.log("e", e);
+        });
     } catch (err: any) {
-    } finally { }
+    } finally {
+    }
   };
-
 
   return (
     <div className=''>
@@ -90,8 +88,10 @@ export const SettingsItemsMainCategory = () => {
                     onClick={exportPdf}
                     disabled={loading}
                   >
-                    {!loading && <Download size={13}   />}
-                    {loading && <Loader2  size={13} className='animate-spin mx-auto' />}
+                    {!loading && <Download size={13} />}
+                    {loading && (
+                      <Loader2 size={13} className='animate-spin mx-auto' />
+                    )}
                     Save as PDF
                   </Button>
                 </div>

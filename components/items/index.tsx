@@ -11,7 +11,9 @@ import { Checkbox } from "../ui/checkbox";
 export const certificationActionButton = [
   {
     name: "Certification",
-    icon: <BookmarkIcon className={cn("mr-2 h-[18px] w-[18px] ")} />,
+    icon: (
+      <BookmarkIcon className={cn("mr-2 h-[18px] w-[18px] text-green-600")} />
+    ),
     actionType: "item-certification",
   },
 ];
@@ -19,12 +21,12 @@ export const certificationActionButton = [
 export const actionMenu = [
   {
     name: "Type Plate",
-    icon: <QrCode className={cn("mr-2 h-[18px] w-[18px] ")} />,
+    icon: <QrCode className={cn("mr-2 h-[18px] w-[18px] text-red-600")} />,
     actionType: "type-plate",
   },
   {
     name: "QR Code",
-    icon: <QrCode className={cn("mr-2 h-[18px] w-[18px] ")} />,
+    icon: <QrCode className={cn("mr-2 h-[18px] w-[18px] text-blue-600")} />,
     actionType: "qr-code",
   },
 ];
@@ -32,7 +34,7 @@ export const actionMenu = [
 export const serialNumberAction = [
   {
     name: "View P/O",
-    icon: <Printer className={cn("mr-2 h-[18px] w-[18px] ")} strokeWidth={1} />,
+    icon: <Printer className={cn("mr-2 h-[18px] w-[18px] text-purple-600")} />,
     actionType: "po",
   },
   // {
@@ -96,8 +98,9 @@ export const SelectAll = React.forwardRef((props: CheckboxProps, ref: any) => {
   return (
     <label
       className={cn(
-        "p-2 h-auto bg-transparent text-stone-600 hover:bg-stone-200 rounded-sm",
-        "flex items-center font-normal text-sm cursor-pointer"
+        "p-2 py-1.5 h-auto bg-transparent font-medium hover:bg-stone-100 rounded-xl",
+        "flex items-center cursor-pointer",
+        props.checked && "bg-stone-100"
       )}
       htmlFor={props.id || "selectAll"}
     >

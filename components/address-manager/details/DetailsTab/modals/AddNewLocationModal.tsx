@@ -15,11 +15,11 @@ import { toast } from "@/components/ui/use-toast";
 import { cn } from "@/lib/utils";
 import { useSWRConfig } from "swr";
 import * as yup from "yup";
-import CountrySelect from "@/components/address-manager/country-select";
 import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { CmsDetailsContext } from "@/pages/address-manager/[cms_id]";
 import { AccessTokenContext } from "@/context/access-token-context";
+import CountrySelect from "@/components/app/country-select";
 
 const yupSchema = yup.object({
   cms_address_building: yup.string(),

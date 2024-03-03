@@ -12,8 +12,10 @@ import { LoadingListDetailsContext } from "..";
 
 const Preview = ({ access_token }: any) => {
   const router = useRouter();
-  console.log(access_token)
-  const { data, isLoading, error } = useSWR(`/api/loading-list/${router.query.loading_id}/details`, fetcher);
+  const { data, isLoading, error } = useSWR(
+    `/api/loading-list/${router.query.loading_id}/details`,
+    fetcher
+  );
 
   return (
     <AccessTokenContext.Provider value={access_token}>
@@ -22,7 +24,7 @@ const Preview = ({ access_token }: any) => {
       </LoadingListDetailsContext.Provider>
     </AccessTokenContext.Provider>
   );
-}
+};
 
 export default memo(Preview);
 
@@ -32,10 +34,10 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
   if (!session) {
     return {
       redirect: {
-        destination: '/auth/signin',
+        destination: "/auth/signin",
         permanent: false,
       },
-    }
+    };
   }
 
   let user = session ? session.user : null;
@@ -46,5 +48,5 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     props: {
       access_token,
     },
-  }
+  };
 }

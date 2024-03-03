@@ -5,9 +5,14 @@ import { formErrorClassNames } from "@/utils/app";
 import ErrorFormMessage from "./error-form-message";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
+import React, { useState } from "react";
+import useSWRInfinite from "swr/infinite";
+import { beginScrollDataPagerForInfiniteswr } from "../pagination";
 
 const VatSelect = (props: VatSelectProps) => {
   const { data: session }: any = useSession();
+  const [isOpenPopover, setIsOpenPopover] = useState(false);
+  const [search, setSearch] = useState("");
   const {
     value,
     onChangeValue,
@@ -18,39 +23,65 @@ const VatSelect = (props: VatSelectProps) => {
     byCompany = false,
     allowNoVat = true,
   } = props;
+  
+  const { data, isLoading, error, mutate, size, setSize, isValidating } = 
+  useSWRInfinite((index) => {
+    let paramsObj: any = {};
+    paramsObj["page"] = index + 1;
+    paramsObj["search"] = search;
+    let searchParams = new URLSearchParams(paramsObj);
+    return [session?.user?.access_token && `/api/vats${byCompany ? "/company" : ""}?${searchParams}`, session?.user?.access_token];
+  }, fetchApi);
 
-  const { data, isLoading } = useSWR(
-    session?.user?.access_token
-      ? [`/api/vats${byCompany ? "/company" : ""}`, session?.user?.access_token]
-      : null,
-    fetchApi,
-    { revalidateOnFocus: false }
-  );
+  const _data: any = data ? [].concat(...data) : [];
+  const isLoadingMore =
+    isLoading || (size > 0 && data && typeof data[size - 1] === "undefined");
+
+  const onscrollend = () => {
+    const currentPage = beginScrollDataPagerForInfiniteswr(_data, size);
+
+    if (currentPage) {
+      setSize(currentPage + 1);
+    }
+  };
 
   const contentData = () => {
-    if (Array.isArray(data) && data.length > 0) {
+    const items: any = [];
+    if (_data && Array.isArray(_data)) {
       const list = allowNoVat
-        ? [{ vat_id: "0", vat_description: "No VAT" }, ...data]
-        : data;
-      return list.map((item: any) => {
-        return {
-          value: item.vat_id,
-          text: (
-            <div className="flex gap-2 items-center justify-between w-full">
-              <span className="font-medium">
-                {item.vat_description}{" "}
-                {item.vat_percentage ? `(${item.vat_percentage}%)` : ""}{" "}
-              </span>
-            </div>
-          ),
-        };
+        ? [{ vat_id: "0", vat_description: "No VAT" }, ..._data]
+        : _data;
+
+      list.forEach((item: any) => {
+        if (item && Array.isArray(item.vat)) {
+          item.vat.forEach((item: any) => {
+            items.push({
+              text: (
+                <div
+                  className={cn(
+                    "flex justify-between py-1",
+                    "items-start hover:bg-stone-100 cursor-pointer"
+                  )}
+                >
+                  <div className="flex gap-2 items-center justify-between w-full">
+                    <span className="font-medium">
+                      {item.vat_description}{" "}
+                      {item.vat_percentage ? `(${item.vat_percentage}%)` : ""}{" "}
+                    </span>
+                  </div>
+                </div>
+              ),
+              value: item.vat_id,
+            });
+          });
+        }
       });
     }
-    return;
+    return items;
   };
 
   if (disabled) {
-    return contentData()?.find((data) => data.value == value)?.text || "";
+    return contentData()?.find((_data: any) => _data.value == value)?.text || "";
   }
 
   return (
@@ -60,8 +91,14 @@ const VatSelect = (props: VatSelectProps) => {
         contents={contentData()}
         placeholder={placeholder}
         value={value}
+        onScrollEnd={onscrollend}
         onChangeValue={onChangeValue}
         className={cn(formError && formErrorClassNames)}
+        isLoadingMore={isLoadingMore}
+        onOpenChange={open => setIsOpenPopover(open)}
+        onSearch={(value: any) => {
+          setSearch(value);
+        }}
       />
       {formError && <ErrorFormMessage message={formError.message} />}
     </div>

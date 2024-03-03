@@ -1,14 +1,17 @@
 import AdminLayout from "@/components/admin-layout";
 import CreateInvoiceDetails from "@/components/projects/invoices/CreateInvoiceDetails";
+import { AccessTokenContext } from "@/context/access-token-context";
 import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { GetServerSidePropsContext } from "next";
 import { getServerSession } from "next-auth";
 
-export default function CreateInvoice() {
+export default function CreateInvoice({ access_token }: any) {
   return (
     <>
       <AdminLayout>
-        <CreateInvoiceDetails />
+        <AccessTokenContext.Provider value={access_token}>
+          <CreateInvoiceDetails />
+        </AccessTokenContext.Provider>
       </AdminLayout>
     </>
   );
@@ -29,5 +32,9 @@ export async function getServerSideProps(context: GetServerSidePropsContext) {
     };
   }
 
-  return { props: {} };
+  return {
+    props: {
+      access_token: token,
+    },
+  };
 }
